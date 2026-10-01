@@ -321,55 +321,6 @@ svg.lucide{vertical-align:middle;display:inline-block}
 .chart-fullscreen-body svg.chart-svg{width:100%;height:auto;max-width:100%;max-height:70vh}
 .chart-fullscreen-body .chart-legend{margin-top:1rem;font-size:.85rem;justify-content:center}
 
-/* ═══════════ VIDEO CARD ═══════════ */
-.video-block{display:flex;flex-direction:column;gap:.5rem;margin:.5rem 0;width:100%}
-.video-card{
-  display:block;
-  background:var(--bg-input);
-  border:1px solid var(--border-color);
-  border-radius:var(--radius-md);
-  overflow:hidden;
-  width:100%;
-  max-width:100%;
-  text-decoration:none;
-  color:inherit;
-  line-height:0;
-  transition:border-color .15s ease, box-shadow .15s ease;
-}
-.video-card:hover{
-  border-color:var(--accent);
-  box-shadow:0 6px 24px -8px rgba(14,165,233,0.22);
-}
-.video-card-thumb{
-  position:relative;
-  aspect-ratio:16/9;
-  background:#000;
-  overflow:hidden;
-  line-height:0;
-}
-.video-card-thumb img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  display:block;
-  border:0;
-}
-.video-card-meta{
-  display:flex;
-  align-items:center;
-  gap:.45rem;
-  padding:.7rem .9rem;
-  font-size:.82rem;
-  color:var(--text-tertiary);
-  border-top:1px solid var(--border-color);
-  line-height:1.3;
-}
-.video-card:hover .video-card-meta{color:var(--text-secondary);}
-.video-card-meta svg{flex-shrink:0;}
-.message-bubble .video-card,
-.message-bubble .video-card:hover{text-decoration:none !important;}
-.message-bubble .video-card *{text-decoration:none !important;}
-
 /* MESSAGE CONTENT */
 .message-bubble pre{background:var(--code-bg);color:var(--code-text);border-radius:var(--radius-sm);padding:.8rem 1rem;overflow-x:auto;overflow-y:hidden;margin:.5rem 0;border:1px solid var(--border-color);font-size:.82rem;width:100%}
 .message-bubble code{font-family:var(--font-mono);font-size:.82em}
@@ -403,10 +354,6 @@ svg.lucide{vertical-align:middle;display:inline-block}
 .message-bubble .msg-content > .trace-block + .trace-block{margin-top:8px}
 .message-bubble .msg-content > .trace-block + p{margin-top:10px}
 .message-bubble .msg-content > p + .trace-block{margin-top:8px}
-.message-bubble .msg-content > .video-block{margin:6px 0 10px}
-.message-bubble .msg-content > .video-block + p{margin-top:10px}
-.message-bubble .msg-content > .video-block + .chart-block,
-.message-bubble .msg-content > .video-block + .trace-tool{margin-top:10px}
 
 .message-bubble .katex-display{overflow-x:auto;overflow-y:hidden;max-width:100%;text-align:center;padding:.4rem 0;scrollbar-width:none;-ms-overflow-style:none}
 .message-bubble .katex-display::-webkit-scrollbar{display:none;width:0;height:0}
@@ -742,7 +689,6 @@ body.fullscreen-drag::after{
 .search-results .search-source-card{animation:msgSlideIn .34s cubic-bezier(.21,1.02,.73,1) both}
 .weather-block,.finance-block,.math-card,.analyse-block{animation:msgSlideIn .35s cubic-bezier(.21,1.02,.73,1) both}
 .chart-block{animation:chartReveal .45s cubic-bezier(.21,1.02,.73,1) both}
-.video-card{animation:chartReveal .45s cubic-bezier(.21,1.02,.73,1) both}
 .trace-reason{animation:fadeIn .3s ease both}
 .chat-list-item{animation:fadeIn .22s ease both}
 
@@ -756,7 +702,6 @@ body.fullscreen-drag::after{
 .message-bubble.streaming .math-card,
 .message-bubble.streaming .analyse-block,
 .message-bubble.streaming .chart-block,
-.message-bubble.streaming .video-card,
 .message-bubble.streaming .trace-reason{animation:none !important}
 
 @media(max-width:768px){
@@ -776,7 +721,6 @@ body.fullscreen-drag::after{
   .chart-block svg.chart-svg{max-height:280px}
   .chart-fullscreen-overlay{padding:0}
   .chart-fullscreen-panel{max-height:100%;border-radius:0}
-  .video-card-meta{font-size:.78rem;padding:.6rem .75rem}
 }
 @media (prefers-reduced-motion: reduce){*{animation-duration:0.01ms !important;transition-duration:0.01ms !important}}
 </style>
@@ -929,7 +873,6 @@ const TOOL_LABELS = {
   math:      { active: 'Executing Code',       done: 'Executed Code' },
   run:       { active: 'Executing Code',       done: 'Executed Code' },
   chart:     { active: 'Creating A Chart',     done: 'Created A Chart' },
-  vid:       { active: 'Attaching Video',      done: 'Attached Video' },
   analyse:   { active: 'Reading Page',         done: 'Read Page' },
   analysing: { active: 'Reading File',         done: 'Read File' }
 };
@@ -996,18 +939,6 @@ const queueIcons=(el)=>{if(!el)return;iconQueue.add(el);if(!iconRaf)iconRaf=requ
 document.addEventListener('error',e=>{
   const img=e.target;
   if(!(img instanceof HTMLImageElement))return;
-
-  const ytId = img.dataset && img.dataset.ytThumbId;
-  if (ytId) {
-    const step = parseInt(img.dataset.ytThumbStep || '0', 10);
-    const chain = ['maxresdefault.jpg', 'sddefault.jpg', 'hqdefault.jpg'];
-    if (step < chain.length - 1) {
-      img.dataset.ytThumbStep = String(step + 1);
-      img.src = `https://i.ytimg.com/vi/${ytId}/${chain[step + 1]}`;
-    }
-    return;
-  }
-
   const fb=img.dataset&&img.dataset.fallback;
   if(!fb)return;
   const span=document.createElement('span');
@@ -1263,7 +1194,6 @@ const svgToolIcon = (name, size = 14, strokeWidth = 2) => {
     case 'math':      path = '<polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>'; break;
     case 'finance':   path = '<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>'; break;
     case 'chart':     path = '<line x1="12" x2="12" y1="20" y2="10"/><line x1="18" x2="18" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="16"/>'; break;
-    case 'vid':       path = '<polygon points="6 3 20 12 6 21 6 3"/>'; break;
     case 'think':     path = '<path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/>'; break;
     case 'zap':       path = '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>'; break;
     default:          path = '';
@@ -1313,33 +1243,6 @@ const generateChartPoints=val=>{
   const points=[];
   for(let i=0;i<=10;i++){const x=i*30;const y=70-(Math.sin(i*0.8+num*0.1)*20+20);points.push(`${x},${Math.round(y)}`);}
   return points.join(' ');
-};
-
-/* ═══════════ VIDEO CARD ═══════════ */
-const renderVideoBlock = (rawSpec) => {
-  let spec = rawSpec;
-  if (typeof spec === 'string') {
-    try { spec = JSON.parse(spec); } catch { return ''; }
-  }
-  if (!spec || typeof spec !== 'object') return '';
-  const id = String(spec.id || '').trim();
-  if (!/^[a-zA-Z0-9_-]{11}$/.test(id)) return '';
-  const startTime = Number.isFinite(Number(spec.startTime))
-    ? Math.max(0, Math.min(24 * 3600 - 1, Math.floor(Number(spec.startTime))))
-    : 0;
-  const tParam = startTime > 0 ? `&t=${startTime}s` : '';
-  const watchHref = `https://www.youtube.com/watch?v=${id}${tParam}`;
-  const thumb = `https://i.ytimg.com/vi/${id}/maxresdefault.jpg`;
-  return `<div class="video-block"><a class="video-card" href="${esc(watchHref)}" target="_blank" rel="noopener noreferrer" data-yt-id="${esc(id)}">
-    <div class="video-card-thumb">
-      <img src="${thumb}" alt="" loading="lazy" referrerpolicy="no-referrer"
-           data-yt-thumb-id="${esc(id)}" data-yt-thumb-step="0">
-    </div>
-    <div class="video-card-meta">
-      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
-      <span>Open with YouTube</span>
-    </div>
-  </a></div>`;
 };
 
 /* ═══════════ ATTACHMENT ═══════════ */
@@ -2338,12 +2241,10 @@ const renderBlocks=(blocks,msg)=>{
   const {cleanBlocks}=extractMeta(blocks||[]);
   const traceBlocks=[];
   const chartBlocks=[];
-  const videoBlocks=[];
   const answerBlocks=[];
   for(const b of cleanBlocks){
     if(b.type==='answer')answerBlocks.push(b);
     else if(b.type==='chart')chartBlocks.push(b);
-    else if(b.type==='video')videoBlocks.push(b);
     else traceBlocks.push(b);
   }
   const msgKey=(msg&&msg.id)?msg.id:'x';
@@ -2357,9 +2258,6 @@ const renderBlocks=(blocks,msg)=>{
       const openClass=isUserOpen?' open':'';
       html+=`<div class="trace-block${openClass}" data-toggle-key="${mainKey}"><div class="trace-header tool-hdr"><span class="swap-chevron">${CHEVRON_SVG}</span><span class="swap-icon">${svgToolIcon('think',13)}</span><span class="trace-label">${label}</span></div><div class="trace-body"><div class="trace-body-inner"><div class="trace-line">${timeline}</div></div></div></div>`;
     }
-    for(const b of videoBlocks){
-      html+=renderVideoBlock(b.spec||b.content);
-    }
     for(const b of chartBlocks){
       if(b.pending)html+=`<div class="trace-tool"><div class="chart-placeholder"><span class="chart-placeholder-dot"></span><span>Creating A Chart</span></div></div>`;
       else html+=`<div class="trace-tool">${renderChartBlock(b.spec||b.content)}</div>`;
@@ -2371,9 +2269,6 @@ const renderBlocks=(blocks,msg)=>{
       html+=renderStandaloneThinking(thinkingBlocks[i],`${msgKey}-standalone-${i}`,msg);
     }
     if(tools.length>0)html+=renderToolGroup(tools,`${msgKey}-exec`);
-    for(const b of videoBlocks){
-      html+=renderVideoBlock(b.spec||b.content);
-    }
     for(const b of chartBlocks){
       if(b.pending)html+=`<div class="trace-tool"><div class="chart-placeholder"><span class="chart-placeholder-dot"></span><span>Creating A Chart</span></div></div>`;
       else html+=`<div class="trace-tool">${renderChartBlock(b.spec||b.content)}</div>`;
@@ -2739,7 +2634,6 @@ const hasVisibleAnswer=msg=>{
   if(Array.isArray(msg.blocks)){
     if(msg.blocks.some(b=>b.type==='answer'&&b.text&&b.text.trim().length>0))return true;
     if(msg.blocks.some(b=>b.type==='chart'&&(b.spec||b.content)))return true;
-    if(msg.blocks.some(b=>b.type==='video'&&(b.spec||b.content)))return true;
     if(msg.blocks.some(b=>['search','weather','finance','math','analyse','analysing'].includes(b.type)&&!b.active&&!b.error))return true;
   }
   const withoutThinking=String(msg.content||'').replace(/<thinking>[\s\S]*?<\/thinking>/g,'').trim();
@@ -3597,10 +3491,6 @@ const handleSend=async(content,attachments)=>{
       const spec=typeof parsed.spec==='string'?parsed.spec:JSON.stringify(parsed.spec||parsed.content||'');
       insertBeforeAnswer({type:'chart',blockId:parsed.blockId||genId(),spec});
       scheduleStreamRender(placeholder,chatId);
-    }else if(parsed.type==='video_render'){
-      const spec=typeof parsed.spec==='string'?parsed.spec:JSON.stringify(parsed.spec||parsed.content||'');
-      insertBeforeAnswer({type:'video',blockId:parsed.blockId||genId(),spec});
-      scheduleStreamRender(placeholder,chatId);
     }else if(parsed.type==='text'||typeof parsed.content==='string'){
       const answerBlock=getAnswerBlock();
       answerBlock.text+=parsed.content||'';
@@ -3624,12 +3514,9 @@ const handleSend=async(content,attachments)=>{
   const signal=controller.signal;
 
   const blobIds = attachments.map(a=>a.blobId).filter(Boolean);
-  const inlineAttachments = attachments.map(a=>({
-    name: a.name,
-    mime: a.mime,
-    data: a.data,
-    blobId: a.blobId || null,
-  }));
+  const inlineAttachments = attachments
+    .filter(a => !a.blobId)
+    .map(a => ({ name: a.name, mime: a.mime, data: a.data }));
 
   try{
     const response=await fetch(API_BASE+'/api/chats/'+chatId+'/messages',{
@@ -3848,10 +3735,6 @@ const handleRegen=async()=>{
     }else if(parsed.type==='chart_render'){
       const spec=typeof parsed.spec==='string'?parsed.spec:JSON.stringify(parsed.spec||parsed.content||'');
       insertBeforeAnswer({type:'chart',blockId:parsed.blockId||genId(),spec});
-      scheduleStreamRender(placeholder,chatId);
-    }else if(parsed.type==='video_render'){
-      const spec=typeof parsed.spec==='string'?parsed.spec:JSON.stringify(parsed.spec||parsed.content||'');
-      insertBeforeAnswer({type:'video',blockId:parsed.blockId||genId(),spec});
       scheduleStreamRender(placeholder,chatId);
     }else if(parsed.type==='text'||typeof parsed.content==='string'){
       const ab=getAnswerBlock();
@@ -4105,7 +3988,15 @@ const __zebSpeak={
     if(!('speechSynthesis' in window)){toast('Text-to-speech is not supported in this browser','warning');return;}
     if(this.current&&this.currentBtn===btn){this.stop();return;}
     this.stop();
-    const clean=String(text||'').replace(/```[\s\S]*?```/g,' code block ').replace(/`([^`]+)`/g,'$1').replace(/!\[.*?\]\(.*?\)/g,'').replace(/\[([^\]]+)\]\(.*?\)/g,'$1').replace(/[#*_>~]/g,'').replace(/\n{2,}/g,'. ').replace(/\s+/g,' ').trim();
+    const clean=String(text||'')
+      .replace(/```[\s\S]*?```/g,' code block ')
+      .replace(/`([^`]+)`/g,' $1 ')
+      .replace(/!\[.*?\]\(.*?\)/g,'')
+      .replace(/\[([^\]]+)\]\([^)]*\)/g,'$1')
+      .replace(/[#*_>~]/g,' ')
+      .replace(/\n{2,}/g,'. ')
+      .replace(/\s+/g,' ')
+      .trim();
     if(!clean){toast('Nothing to read','warning');return;}
     const utter=new SpeechSynthesisUtterance(clean);
     utter.lang=navigator.language||'en-US';
@@ -4261,12 +4152,17 @@ const initApp=()=>{
       if(att && att.data){
         const m = String(att.data).match(/^data:([^;]+);base64,(.+)$/);
         if(m){
-          const isText = m[1].startsWith('text/') || /(json|xml|yaml|csv|javascript)/.test(m[1]);
-          if(isText){
+          const isPlainText = m[1].startsWith('text/') || /(json|jsonl|ndjson|xml|yaml|toml|csv|tsv|markdown|md|javascript|ecmascript|sql|graphql)/.test(m[1]);
+          if(isPlainText){
             try{ openPreviewModal('text', decodeURIComponent(escape(atob(m[2])))); }
             catch(_){ openPreviewModal('text', ''); }
           } else {
-            openPreviewModal('image', att.data);
+            openFilePreview({
+              blobId: att.blobId || null,
+              name: att.name || '',
+              mime: att.mime || '',
+              inlineData: att.data || null,
+            });
           }
         }
       }
