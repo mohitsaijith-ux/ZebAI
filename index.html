@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-<title>ZebAI</title> 
+<title>ZebAI</title>
 <link rel="icon" type="image/png" href="logo-dark.png" media="(prefers-color-scheme: dark)" />
 <link rel="icon" type="image/png" href="logo-light.png" media="(prefers-color-scheme: light)" />
 <link rel="apple-touch-icon" href="logo-light.png" />
@@ -725,7 +725,7 @@ body.fullscreen-drag::after{
 .run-modal-header h3{font-size:1rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .run-modal-close{background:none;border:none;color:var(--text-secondary);cursor:pointer;width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .run-modal-close:hover{background:var(--bg-hover);color:var(--text-primary)}
-.run-modal-body{flex:1;background:#fff;overflow:auto;position:relative}
+.run-modal-body{flex:1;background:#0a0a0a;overflow:auto;position:relative}
 .run-modal-body iframe{width:100%;height:100%;border:none;display:block}
 
 @keyframes msgSlideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
@@ -992,10 +992,7 @@ const refreshIcons=(scope)=>{try{lucide.createIcons({attrs:{'stroke-width':'2'},
 let iconQueue=new Set(),iconRaf=null;
 const queueIcons=(el)=>{if(!el)return;iconQueue.add(el);if(!iconRaf)iconRaf=requestAnimationFrame(()=>{iconQueue.forEach(e=>refreshIcons(e));iconQueue.clear();iconRaf=null;});};
 
-/* ═══════════ DOCUMENT-LEVEL IMAGE ERROR HANDLER ═══════════
-   Runs in capture phase, so it fires before any inline onerror.
-   • YouTube thumbnails: maxres → sd → hq fallback chain.
-   • Everything else with data-fallback: replace with letter span. */
+/* ═══════════ DOCUMENT-LEVEL IMAGE ERROR HANDLER ═══════════ */
 document.addEventListener('error',e=>{
   const img=e.target;
   if(!(img instanceof HTMLImageElement))return;
@@ -1123,7 +1120,7 @@ function getRuntime(chatId){
 function currentRuntime(){return getRuntime(state.currentChatId);}
 function anyStreamActive(){for(const rt of chatRuntime.values()){if(rt.isStreaming)return true;}return false;}
 
-/* ═══════════ MODE HELPERS (persisted on backend, cached in memory) ═══════════ */
+/* ═══════════ MODE HELPERS ═══════════ */
 const ensureModeForChat = cid => {
   if (!cid) return DEFAULT_MODE;
   const m = state.chatModes[cid];
@@ -3294,104 +3291,111 @@ const openFilePreview = async (opts) => {
   const body = $('run-modal-body');
   const title = $('run-modal-title');
   if (!overlay || !body || !title) return;
+
   title.textContent = name || 'File Preview';
   body.innerHTML = '<div style="padding:2rem;text-align:center;color:var(--text-secondary);font-size:.85rem">Loading…</div>';
   overlay.classList.add('open');
   queueIcons(overlay);
-  const isTextLike = (m) => {
-    const lowerMime = String(m || '').toLowerCase();
-    return lowerMime.startsWith('text/')
-      || /(json|jsonl|ndjson|xml|yaml|toml|csv|tsv|markdown|md|sh|shell|python|ruby|rust|go|java|javascript|ecmascript|sql|graphql)/.test(lowerMime);
-  };
+
+  let blob = null;
+  let resolvedMime = String(mime || '').toLowerCase().split(';')[0].trim();
+  let objUrl = null;
+
   try {
-    if (inlineData) {
-      const m = String(inlineData).match(/^data:([^;]+);base64,(.+)$/);
-      if (!m) throw new Error('Malformed inline data');
-      const lowerMime = (m[1] || mime || '').toLowerCase();
-      if (isTextLike(lowerMime)) {
-        const text = decodeURIComponent(escape(atob(m[2])));
-        body.innerHTML = '';
-        const pre = document.createElement('pre');
-        pre.style.cssText = "white-space:pre-wrap;word-break:break-word;padding:20px;background:#1a1a1a;color:#ececec;font-family:'Fira Code',monospace;font-size:0.82rem;height:100%;overflow:auto;margin:0";
-        pre.textContent = text.length > 500000 ? text.slice(0, 500000) + '\n\n…[truncated]' : text;
-        body.appendChild(pre);
-        return;
-      }
-      if (lowerMime.startsWith('image/')) {
-        body.innerHTML = '';
-        const img = document.createElement('img');
-        img.src = inlineData;
-        img.style.cssText = 'max-width:100%;max-height:100%;object-fit:contain;display:block;margin:auto';
-        body.appendChild(img);
-        return;
-      }
-      if (lowerMime === 'application/pdf') {
-        body.innerHTML = '';
-        const iframe = document.createElement('iframe');
-        iframe.src = inlineData;
-        iframe.style.cssText = 'width:100%;height:100%;border:none;background:#fff';
-        body.appendChild(iframe);
-        return;
-      }
-    }
     if (blobId) {
-      const url = `${API_BASE}/api/blobs/${blobId}?t=${encodeURIComponent(token||'')}`;
+      const url = `${API_BASE}/api/blobs/${blobId}?t=${encodeURIComponent(token || '')}`;
       const res = await fetch(url);
       if (!res.ok) throw new Error('HTTP ' + res.status);
-      const blob = await res.blob();
-      const lowerMime = String(mime || blob.type || '').toLowerCase();
-      if (isTextLike(lowerMime)) {
-        const text = await blob.text();
-        body.innerHTML = '';
-        const pre = document.createElement('pre');
-        pre.style.cssText = "white-space:pre-wrap;word-break:break-word;padding:20px;background:#1a1a1a;color:#ececec;font-family:'Fira Code',monospace;font-size:0.82rem;height:100%;overflow:auto;margin:0";
-        pre.textContent = text.length > 500000 ? text.slice(0, 500000) + '\n\n…[truncated]' : text;
-        body.appendChild(pre);
-        return;
-      }
-      if (lowerMime.startsWith('image/')) {
-        const objUrl = URL.createObjectURL(blob);
-        body.innerHTML = '';
-        const img = document.createElement('img');
-        img.src = objUrl;
-        img.style.cssText = 'max-width:100%;max-height:100%;object-fit:contain;display:block;margin:auto';
-        body.appendChild(img);
-        overlay._revokeOnClose = objUrl;
-        return;
-      }
-      if (lowerMime === 'application/pdf') {
-        const objUrl = URL.createObjectURL(blob);
-        body.innerHTML = '';
-        const iframe = document.createElement('iframe');
-        iframe.src = objUrl;
-        iframe.style.cssText = 'width:100%;height:100%;border:none;background:#fff';
-        body.appendChild(iframe);
-        overlay._revokeOnClose = objUrl;
-        return;
-      }
-      const objUrl = URL.createObjectURL(blob);
-      body.innerHTML = '';
+      blob = await res.blob();
+      if (!resolvedMime && blob.type) resolvedMime = String(blob.type).toLowerCase().split(';')[0].trim();
+    } else if (inlineData) {
+      const m = String(inlineData).match(/^data:([^;]+);base64,(.+)$/);
+      if (!m) throw new Error('Malformed inline data');
+      if (!resolvedMime) resolvedMime = String(m[1]).toLowerCase().split(';')[0].trim();
+      const bin = atob(m[2]);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      blob = new Blob([bytes], { type: m[1] });
+    } else {
+      throw new Error('Nothing to preview');
+    }
+
+    body.innerHTML = '';
+
+    if (resolvedMime.startsWith('image/')) {
+      objUrl = URL.createObjectURL(blob);
+      const img = document.createElement('img');
+      img.src = objUrl;
+      img.alt = name || 'image';
+      img.style.cssText = 'max-width:100%;max-height:100%;object-fit:contain;display:block;margin:auto';
+      body.appendChild(img);
+      overlay._revokeOnClose = objUrl;
+      return;
+    }
+
+    if (resolvedMime.startsWith('video/')) {
+      objUrl = URL.createObjectURL(blob);
+      const video = document.createElement('video');
+      video.src = objUrl;
+      video.controls = true;
+      video.autoplay = false;
+      video.playsInline = true;
+      video.preload = 'metadata';
+      video.style.cssText = 'max-width:100%;max-height:100%;width:100%;display:block;margin:auto;background:#000';
+      body.appendChild(video);
+      overlay._revokeOnClose = objUrl;
+      return;
+    }
+
+    if (resolvedMime.startsWith('audio/')) {
+      objUrl = URL.createObjectURL(blob);
       const wrap = document.createElement('div');
-      wrap.style.cssText = 'padding:2rem;text-align:center;color:var(--text-secondary);font-size:.85rem;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;height:100%';
-      wrap.innerHTML = '<div style="font-size:2rem;line-height:1">📎</div><div>'+esc(name||'File')+'<br><span style="font-size:.75rem;color:var(--text-tertiary)">'+esc(mime||'binary')+'</span></div>';
-      const a = document.createElement('a');
-      a.href = objUrl;
-      a.download = name || 'download';
-      a.className = 'chart-fs-download';
-      a.style.cssText = 'display:inline-flex;align-items:center;gap:.4rem;text-decoration:none';
-      a.textContent = 'Download';
-      wrap.appendChild(a);
+      wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.5rem;padding:3rem;height:100%';
+      wrap.innerHTML = '<div style="font-size:3rem;line-height:1">🎵</div><div style="font-size:.9rem;color:var(--text-secondary);text-align:center;word-break:break-word;max-width:320px">' + esc(name || 'Audio') + '</div>';
+      const audio = document.createElement('audio');
+      audio.src = objUrl;
+      audio.controls = true;
+      audio.style.cssText = 'width:100%;max-width:420px';
+      wrap.appendChild(audio);
       body.appendChild(wrap);
       overlay._revokeOnClose = objUrl;
       return;
     }
-    throw new Error('Nothing to preview');
+
+    if (resolvedMime === 'application/pdf') {
+      objUrl = URL.createObjectURL(blob);
+      const iframe = document.createElement('iframe');
+      iframe.src = objUrl;
+      iframe.style.cssText = 'width:100%;height:100%;border:none;background:#fff';
+      body.appendChild(iframe);
+      overlay._revokeOnClose = objUrl;
+      return;
+    }
+
+    const isTextLike = resolvedMime.startsWith('text/')
+      || /(json|jsonl|ndjson|xml|yaml|toml|csv|tsv|markdown|md|sh|shell|python|ruby|rust|go|java|javascript|ecmascript|sql|graphql|log)/.test(resolvedMime);
+    if (isTextLike || !resolvedMime) {
+      const text = await blob.text();
+      const pre = document.createElement('pre');
+      pre.style.cssText = "white-space:pre-wrap;word-break:break-word;padding:20px;background:#1a1a1a;color:#ececec;font-family:'Fira Code',monospace;font-size:0.82rem;height:100%;overflow:auto;margin:0";
+      pre.textContent = text.length > 500000 ? text.slice(0, 500000) + '\n\n…[truncated]' : text;
+      body.appendChild(pre);
+      return;
+    }
+
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'padding:2rem;text-align:center;color:var(--text-secondary);font-size:.9rem;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.8rem;height:100%';
+    wrap.innerHTML =
+      '<div style="font-size:2.5rem;line-height:1">📎</div>' +
+      '<div style="font-weight:600;color:var(--text-primary);word-break:break-word;max-width:360px">' + esc(name || 'File') + '</div>' +
+      '<div style="font-size:.75rem;color:var(--text-tertiary)">' + esc(resolvedMime || 'binary') + ' · preview not available</div>';
+    body.appendChild(wrap);
   } catch (e) {
     console.warn('[preview]', e);
     body.innerHTML = '';
     const err = document.createElement('div');
     err.style.cssText = 'padding:2rem;text-align:center;color:var(--text-tertiary);font-size:.85rem';
-    err.textContent = 'Could not preview this file.';
+    err.textContent = 'Could not load this file.';
     body.appendChild(err);
   }
 };
