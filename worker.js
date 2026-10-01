@@ -1,5 +1,5 @@
 // ============================================================================
-// ZEBAI WORKER – v106.27.0
+// ZEBAI WORKER – v106.27.1
 //   • Google Gemini only. Flash-Lite family + 2.5 fallbacks.
 //   • Chat: gemini-3.5-flash-lite, gemini-3.1-flash-lite,
 //           gemini-2.5-flash-lite, gemini-2.5-flash.
@@ -11,28 +11,19 @@
 //   • Structured error fingerprint: E=M1-code/M2-code/M3-code/M4-code
 //   • Search: Tavily discovery-only. Analyse: Firecrawl.
 //   • Gemini Files API native upload (cached 47h) for all attachments.
-//   • v106.27.0:
-//      - <vid> YouTube embedding tool removed end to end. The
-//        search-first requirement meant it only fired when Tavily
-//        happened to return a YouTube URL in the top 5 results,
-//        which was rare and produced broken cards more often than
-//        useful embeds. Removed:
-//          • sanitizeVideoSpec() helper
-//          • vid from StatefulXMLParser.SOFT_TOOLS
-//          • video branch in _closeTool
-//          • videos[] from parser + pipeStream return shape
-//          • video_render SSE event
-//          • hasVideo gate in handleMessages
-//          • the entire # Video section in the system prompt
-//          • <vid> references in tools list, checklist, formatting
-//            safety, anti-patterns, and reply contract
-//      - All v106.26.5 fixes retained: chats.mode column in D1,
-//        isTruncatedStop trusts provider, pipeStream flushes
-//        residual SSE, exact-URL citation rules for prose links.
+//   • v106.27.1:
+//      - Purged remaining <vid> references from sanitizeAssistantContent,
+//        escapeUserToolTags, and generateAITitle. The video tool was
+//        removed in v106.27.0; these were leftover regex terms that
+//        silently escaped user-typed <vid> for no reason.
+//      - All v106.27.0 fixes retained: <vid> YouTube embedding tool
+//        removed end to end, chats.mode column in D1, isTruncatedStop
+//        trusts provider, pipeStream flushes residual SSE, exact-URL
+//        citation rules for prose links.
 // ============================================================================
 
 const DEBUG = true;
-const WORKER_VERSION = '106.27.0';
+const WORKER_VERSION = '106.27.1';
 const ASSISTANT_NAME = 'ZebAI';
 const ASSISTANT_CREATOR = 'MCOS Private Limited';
 
@@ -262,13 +253,13 @@ function sanitizeAssistantContent(content) {
   text = text.replace(/<think>[\s\S]*?<\/think>/g, '');
   text = text.replace(/<thought>[\s\S]*?<\/thought>/g, '');
   text = text.replace(/<\/?(thinking|think|thought)>/g, '');
-  text = text.replace(/<(weather|search|finance|chart|analyse|run|analysing|vid)>[\s\S]*?<\/\1>/g, '');
+  text = text.replace(/<(weather|search|finance|chart|analyse|run|analysing)>[\s\S]*?<\/\1>/g, '');
   text = text.replace(/Tool execution result:[\s\S]*?(?=\n\n|$)/g, '');
   return text.replace(/\n{3,}/g, '\n\n').trim();
 }
 function escapeUserToolTags(text) {
   return String(text || '').replace(
-    /<\/?(search|analyse|weather|finance|chart|vid|run|analysing|open_url|fullscreen|thinking|think|thought|title|tool)>/gi,
+    /<\/?(search|analyse|weather|finance|chart|run|analysing|open_url|fullscreen|thinking|think|thought|title|tool)>/gi,
     (m) => m.replace(/</g, '&lt;').replace(/>/g, '&gt;')
   );
 }
@@ -320,7 +311,7 @@ function sanitizeChartSpec(raw) {
 }
 
 // ---------------------------------------------------------------------------
-// isTruncatedStop — v106.27.0
+// isTruncatedStop
 //
 // Google AI Studio does NOT send a finishReason when it cuts a stream short.
 // A genuinely truncated reply arrives as finishReason === null and is caught
@@ -826,7 +817,7 @@ async function tryTitleFromGemini(provider, key, prompt) {
 
 async function generateAITitle(env, userContent, assistantContent) {
   const cleanUser = String(userContent || '').replace(/!\[.*?\]\(.*?\)/g, '').replace(/\[Attached:[^\]]+\]/g, '').replace(/\[File:[^\]]*\][\s\S]*$/m, '').trim();
-  const cleanAssistant = String(assistantContent || '').replace(/<thinking>[\s\S]*?<\/thinking>/g, '').replace(/<(?:weather|search|finance|chart|vid|analyse|run|analysing)>[\s\S]*?<\/(?:weather|search|finance|chart|vid|analyse|run|analysing)>/g, '').replace(/\s+/g, ' ').trim();
+  const cleanAssistant = String(assistantContent || '').replace(/<thinking>[\s\S]*?<\/thinking>/g, '').replace(/<(?:weather|search|finance|chart|analyse|run|analysing)>[\s\S]*?<\/(?:weather|search|finance|chart|analyse|run|analysing)>/g, '').replace(/\s+/g, ' ').trim();
   let userSeed = cleanUser; if (!userSeed) userSeed = cleanAssistant.slice(0, 300);
   if (!userSeed) return null;
   const prompt = `You are a chat-title generator. Output a SHORT, SPECIFIC title describing WHAT THIS CONVERSATION IS ABOUT.
