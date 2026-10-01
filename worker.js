@@ -1,5 +1,5 @@
 // ============================================================================
-// ZEBAI WORKER – v106.26.5
+// ZEBAI WORKER – v106.27.0
 //   • Google Gemini only. Flash-Lite family + 2.5 fallbacks.
 //   • Chat: gemini-3.5-flash-lite, gemini-3.1-flash-lite,
 //           gemini-2.5-flash-lite, gemini-2.5-flash.
@@ -11,20 +11,28 @@
 //   • Structured error fingerprint: E=M1-code/M2-code/M3-code/M4-code
 //   • Search: Tavily discovery-only. Analyse: Firecrawl.
 //   • Gemini Files API native upload (cached 47h) for all attachments.
-//   • v106.26.5:
-//      - Video section: <vid> may only reference a YouTube URL that
-//        the search tool returned in a <search> result this turn. Copy
-//        character for character. Concrete example with the four
-//        failure modes (host rewrite, param added, ID swap, truncated).
-//        No external product names leaked into the prompt — the model
-//        just sees "the search tool".
-//      - All v106.26.4 fixes retained: chats.mode column in D1,
-//        isTruncatedStop trusts provider, pipeStream flushes residual
-//        SSE, mandatory search-then-embed video flow.
+//   • v106.27.0:
+//      - <vid> YouTube embedding tool removed end to end. The
+//        search-first requirement meant it only fired when Tavily
+//        happened to return a YouTube URL in the top 5 results,
+//        which was rare and produced broken cards more often than
+//        useful embeds. Removed:
+//          • sanitizeVideoSpec() helper
+//          • vid from StatefulXMLParser.SOFT_TOOLS
+//          • video branch in _closeTool
+//          • videos[] from parser + pipeStream return shape
+//          • video_render SSE event
+//          • hasVideo gate in handleMessages
+//          • the entire # Video section in the system prompt
+//          • <vid> references in tools list, checklist, formatting
+//            safety, anti-patterns, and reply contract
+//      - All v106.26.5 fixes retained: chats.mode column in D1,
+//        isTruncatedStop trusts provider, pipeStream flushes
+//        residual SSE, exact-URL citation rules for prose links.
 // ============================================================================
 
 const DEBUG = true;
-const WORKER_VERSION = '106.26.5';
+const WORKER_VERSION = '106.27.0';
 const ASSISTANT_NAME = 'ZebAI';
 const ASSISTANT_CREATOR = 'MCOS Private Limited';
 
@@ -311,47 +319,8 @@ function sanitizeChartSpec(raw) {
   return t;
 }
 
-function sanitizeVideoSpec(raw) {
-  const text = String(raw || '').trim();
-  if (!text) return null;
-  const urlOnly = text.split(/\s+/)[0];
-
-  let url;
-  try { url = new URL(urlOnly); } catch { return null; }
-
-  const host = url.hostname.replace(/^www\./, '').toLowerCase();
-  const allowedHosts = new Set([
-    'youtube.com',
-    'm.youtube.com',
-    'music.youtube.com',
-    'youtube-nocookie.com',
-    'youtu.be',
-  ]);
-  if (!allowedHosts.has(host)) return null;
-
-  let id = null;
-  if (host === 'youtu.be') {
-    id = url.pathname.replace(/^\//, '').split('/')[0];
-  } else if (url.pathname === '/watch') {
-    id = url.searchParams.get('v');
-  } else {
-    const m = url.pathname.match(/^\/(shorts|embed|v)\/([^/?#]+)/);
-    if (m) id = m[2];
-  }
-  if (!id || !/^[a-zA-Z0-9_-]{11}$/.test(id)) return null;
-
-  let startTime = 0;
-  const t = url.searchParams.get('t') || url.searchParams.get('start');
-  if (t) {
-    const n = parseInt(String(t).replace(/[^\d]/g, ''), 10);
-    if (Number.isFinite(n) && n > 0 && n < 24 * 3600) startTime = n;
-  }
-
-  return { id, startTime, original: urlOnly };
-}
-
 // ---------------------------------------------------------------------------
-// isTruncatedStop — v106.26.5
+// isTruncatedStop — v106.27.0
 //
 // Google AI Studio does NOT send a finishReason when it cuts a stream short.
 // A genuinely truncated reply arrives as finishReason === null and is caught
@@ -373,7 +342,7 @@ function isTruncatedStop(result) {
 // ---------------------------------------------------------------------------
 class StatefulXMLParser {
   static FETCH_TOOLS = new Set(['weather', 'search', 'finance', 'analyse', 'run', 'analysing']);
-  static SOFT_TOOLS = new Set(['chart', 'vid']);
+  static SOFT_TOOLS = new Set(['chart']);
   static ALL_TOOLS = new Set([...StatefulXMLParser.FETCH_TOOLS, ...StatefulXMLParser.SOFT_TOOLS]);
   static THINK_TAGS = new Set(['think', 'thinking', 'thought']);
   constructor(onEvent, options = {}) {
@@ -390,7 +359,6 @@ class StatefulXMLParser {
     this.thinkBatch = '';
     this.tools = [];
     this.charts = [];
-    this.videos = [];
     this.sawText = false;
     this.toolDetected = false;
     this.dropText = false;
@@ -403,14 +371,14 @@ class StatefulXMLParser {
   flush() {
     if (this.mode === 'THINKING') this._closeThinking();
     if (this.mode === 'TOOL') {
-      if ((this.toolName === 'chart' || this.toolName === 'vid') && this.toolContent.trim()) this._closeTool();
+      if (this.toolName === 'chart' && this.toolContent.trim()) this._closeTool();
       else { this.toolName = null; this.toolContent = ''; this.mode = 'NORMAL'; }
     }
     if (this.state === 'TAG_OPEN' && this.tagBuf) {
       this._appendToCurrent(this.tagBuf); this.tagBuf = ''; this.state = 'TEXT';
     }
     this._flushBatches();
-    return { tools: this.tools, charts: this.charts, videos: this.videos, sawText: this.sawText, toolDetected: this.toolDetected };
+    return { tools: this.tools, charts: this.charts, sawText: this.sawText, toolDetected: this.toolDetected };
   }
   _flushBatches() {
     if (this.textBatch) { this.onEvent({ type: 'text', content: this.textBatch }); this.textBatch = ''; }
@@ -477,14 +445,6 @@ class StatefulXMLParser {
       content = sanitizeChartSpec(content);
       this.charts.push({ name, content });
       this.onEvent({ type: 'chart', content });
-    } else if (name === 'vid') {
-      const spec = sanitizeVideoSpec(content);
-      if (spec) {
-        this.videos.push(spec);
-        this.onEvent({ type: 'video', content: JSON.stringify(spec) });
-      } else {
-        log('[parser] dropped invalid <vid>:', content.slice(0, 120));
-      }
     } else {
       this.tools.push({ name, content });
       this.onEvent({ type: 'tool_end', name, content });
@@ -515,10 +475,10 @@ Never both. When you emit a fetch tool tag, the reply ends there.
 
 A tool call reply contains ONLY the tags. No period, comma, space, newline, or prose around them. If a reply has any non-tag character while trying to call a tool, the parser drops your tool call and treats the reply as a final answer.
 
-    Correct:    <search>Tokyo weather</search><weather>Tokyo</weather>
-    Wrong:      Let me check. <search>Tokyo weather</search>.
-    Wrong:      <search>Tokyo weather</search>, <weather>Tokyo</weather>
-    Wrong:      <search>Tokyo</search>\n<weather>Tokyo</weather>
+    Correct:   <search>Tokyo weather</search><weather>Tokyo</weather>
+    Wrong:     Let me check. <search>Tokyo weather</search>.
+    Wrong:     <search>Tokyo weather</search>, <weather>Tokyo</weather>
+    Wrong:     <search>Tokyo</search>\n<weather>Tokyo</weather>
 
 # Parallel tool calls — same tool OR independent tools
 
@@ -526,23 +486,23 @@ Fire independent calls together in ONE reply. This is the single biggest speed l
 
 **Same tool, multiple arguments — always parallel:**
 
-    Correct:    <weather>Tokyo</weather><weather>London</weather><weather>NYC</weather>
-    Correct:    <finance>{"type":"stock","symbol":"AAPL"}</finance><finance>{"type":"stock","symbol":"MSFT"}</finance>
-    Wrong:      one tag per round
+    Correct:   <weather>Tokyo</weather><weather>London</weather><weather>NYC</weather>
+    Correct:   <finance>{"type":"stock","symbol":"AAPL"}</finance><finance>{"type":"stock","symbol":"MSFT"}</finance>
+    Wrong:     one tag per round
 
 **Different tools with independent jobs — also parallel:**
 
-    Correct:    <weather>NYC</weather><finance>{"type":"stock","symbol":"AAPL"}</finance><run>231331311/233</run>
+    Correct:   <weather>NYC</weather><finance>{"type":"stock","symbol":"AAPL"}</finance><run>231331311/233</run>
 
     These are three separate questions. None needs the output of the others. Batch them.
 
 **Sequential when one tool's output feeds another:**
 
-    Correct:    Round 1:  <finance>{"type":"stock","symbol":"AAPL"}</finance>
-                Round 2:  <run>price / 3</run>
+    Correct:   Round 1:  <finance>{"type":"stock","symbol":"AAPL"}</finance>
+               Round 2:  <run>price / 3</run>
 
-    Wrong:      <finance>{"type":"stock","symbol":"AAPL"}</finance><run>price / 3</run>
-                (the <run> can't see the price yet — it doesn't exist)
+    Wrong:     <finance>{"type":"stock","symbol":"AAPL"}</finance><run>price / 3</run>
+               (the <run> can't see the price yet — it doesn't exist)
 
 **The test before you batch:** does call B need output from call A? If no, batch them. If yes, sequence them across rounds.
 
@@ -637,6 +597,25 @@ Emit when it genuinely helps — 3+ comparisons, trends, distributions. Not for 
 - Never emit two charts in one reply.
 - If unsure of the type, use \`bar\` with labels + values.
 
+# URLs — hard rule
+
+Every URL in your answer must be one that **literally appeared in a tool result this turn**, or one **the user typed in their message**. Nothing else.
+
+**You may not invent, guess, shorten, lengthen, or modify a URL.** You may not use a URL from training data. You may not construct a plausible-looking URL like "openai.com/blog/gpt-5" — even if you are certain such a page exists, you don't have a verified URL for it this turn.
+
+When you want to cite a source:
+
+- **If a tool result this turn contains the URL** → use it exactly, character for character. Do not strip tracking parameters. Do not add or remove a trailing slash.
+- **If no tool result contains the URL** → mention the source by name in plain text. No link. No URL.
+
+    Bad:  [OpenAI's announcement](https://openai.com/blog/gpt-5)     ← invented
+    Bad:  [source](https://example.com)                              ← generic
+    Bad:  [Verge](https://theverge.com)                              ← bare domain
+    Good: [OpenAI's announcement](https://openai.com/index/gpt-5/)   ← exact match from search
+    Good: The Verge reported that…                                   ← plain text, no link
+
+This applies to every link in every reply: prose, bullet lists, tables, follow-ups. No exceptions.
+
 # Run — use it for everything it can do
 
 The \`<run>\` sandbox is a full JavaScript interpreter. It's exact. Your head is not. If the answer involves any of the following, use \`<run>\`:
@@ -658,7 +637,7 @@ The \`<run>\` sandbox is a full JavaScript interpreter. It's exact. Your head is
 
 **Patterns:**
 
-    Simple math:     <run>15/100 * 82</run>                                     → 12.3
+    Simple math:     <run>15/100 * 82</run>                                    → 12.3
     Compound:        <run>const p=1000,r=.05,n=12; console.log(p*Math.pow(1+r/n,n*10))</run>
     Date diff:       <run>(Date.UTC(2026,8,27) - Date.UTC(2024,0,15)) / 86400000</run>
     Data transform:  <run>console.log([3,1,2].sort((a,b)=>a-b).join(","))</run>
@@ -708,9 +687,9 @@ For "hi", "hey", "hello", "yo", "thanks", "bye", "good morning" — reply like a
 
 **Do:** say hi back. "Hey. What's up?" is complete. Match short with short.
 
-    "hi"        → "Hey. What's up?"
-    "thanks!"   → "Anytime."
-    "yo"        → "Yo."
+    "hi"       → "Hey. What's up?"
+    "thanks!"  → "Anytime."
+    "yo"       → "Yo."
 
 The single failure mode to avoid: "Hello! I'm ZebAI, an AI assistant with seven tools..." — never write that. Just say hi back.
 
@@ -730,9 +709,9 @@ The single failure mode to avoid: "Hello! I'm ZebAI, an AI assistant with seven 
 
 Use ONLY for real math, physics, chemistry notation.
 
-    Use:       $E = mc^2$, $\\int_0^1 x\\,dx$, $\\text{2H}_2 + \\text{O}_2$
-    NEVER:     prices ($49.99 plain), dates, temperatures, percentages,
-               distances, chemical names in prose.
+    Use:      $E = mc^2$, $\\int_0^1 x\\,dx$, $\\text{2H}_2 + \\text{O}_2$
+    NEVER:    prices ($49.99 plain), dates, temperatures, percentages,
+              distances, chemical names in prose.
 
 Rules:
 - No Markdown inside math — \`$x = 5$\`, never \`$**x** = 5$\`.
@@ -751,7 +730,7 @@ Rules:
 
 # Anti-patterns
 
-Never write: "What I looked up:", "Specific values:", "Interpretation:", a tool tag wrapped in prose, a trailing period after a tool tag, an invented tool result, a <chart> tag anywhere except the first position, a capabilities pitch in response to a greeting, a long preamble or "in conclusion" summary.`;
+Never write: "What I looked up:", "Specific values:", "Interpretation:", a tool tag wrapped in prose, a trailing period after a tool tag, an invented tool result, a <chart> tag anywhere except the first position, a capabilities pitch in response to a greeting, a long preamble or "in conclusion" summary, a URL that didn't appear in a tool result this turn, a URL from training data presented as if it came from a search.`;
 
   if (vision) {
     const attachmentLine = hasImage && hasFile
@@ -767,14 +746,14 @@ ${attachmentLine}
 
 Do NOT call \`<analysing>\` on them. Do NOT call \`<analyse>\` on them. Do NOT call any file tool. Just read them and answer.
 
-    WRONG:  <analysing>report.pdf</analysing>        ← already loaded, this re-fetches nothing
-    WRONG:  <analyse>report.pdf</analyse>            ← wrong tag entirely, this is for URLs
+    WRONG:  <analysing>report.pdf</analysing>       ← already loaded, this re-fetches nothing
+    WRONG:  <analyse>report.pdf</analyse>           ← wrong tag entirely, this is for URLs
     RIGHT:  (no tag) — answer directly from the file content
 
 **Tag reference — do not mix these up:**
 
-    <analyse>https://example.com</analyse>         reads a live WEB PAGE from a URL
-    <analysing>report.pdf</analysing>                re-attaches a FILE from an EARLIER turn
+    <analyse>https://example.com</analyse>          reads a live WEB PAGE from a URL
+    <analysing>report.pdf</analysing>               re-attaches a FILE from an EARLIER turn
 
 Neither applies to a file on the current message. Both apply only when the user is asking you to look at something that isn't already in your context.
 
@@ -2299,7 +2278,7 @@ async function pipeStream(providerResponse, mode, sendEventRaw, env, provider, o
 
   const rawStream = (providerResponse && typeof providerResponse.getReader === 'function') ? providerResponse
     : (providerResponse && providerResponse.body) ? providerResponse.body : null;
-  if (!rawStream) return { tools: [], charts: [], videos: [], sawText: false, sawThinking: false, toolDetected: false, error: 'no_stream', isNetworkError: false };
+  if (!rawStream) return { tools: [], charts: [], sawText: false, sawThinking: false, toolDetected: false, error: 'no_stream', isNetworkError: false };
 
   const thinkingState = { visible: false, sawThinking: false, charCount: 0, truncated: false };
   const sendEvent = (ev) => {
@@ -2320,7 +2299,6 @@ async function pipeStream(providerResponse, mode, sendEventRaw, env, provider, o
     if (ev.type === 'tool_end') return;
     if (ev.type === 'tool_start') { sendEventRaw({ done: false, type: 'tool_tag', name: ev.name }); return; }
     if (ev.type === 'chart') { sendEventRaw({ done: false, type: 'chart_render', blockId: genBlockId(), spec: ev.content || '' }); return; }
-    if (ev.type === 'video') { sendEventRaw({ done: false, type: 'video_render', blockId: genBlockId(), spec: ev.content || '' }); return; }
     if (ev.type === 'text') { sendEventRaw({ done: false, type: 'text', content: ev.content || '' }); return; }
     sendEventRaw({ done: false, ...ev });
   };
@@ -2426,7 +2404,7 @@ async function pipeStream(providerResponse, mode, sendEventRaw, env, provider, o
     parser.flush();
     log(`[pipeStream] ERR mode=${mode} cancelReason=${cancelReason || 'n/a'} msg="${msg}" sawFirstChunk=${sawFirstChunk} textLen=${acc.text.length}`);
     return {
-      tools: parser.tools, charts: parser.charts, videos: parser.videos, sawText: parser.sawText, sawThinking: thinkingState.sawThinking,
+      tools: parser.tools, charts: parser.charts, sawText: parser.sawText, sawThinking: thinkingState.sawThinking,
       toolDetected: parser.toolDetected, text: acc.text, raw: acc.raw, finishReason: lastFinishReason,
       error: isTimeout ? msg : (isExternalAbort ? 'external-abort' : msg),
       isNetworkError: isTimeout, isExternalAbort,
@@ -2443,10 +2421,10 @@ async function pipeStream(providerResponse, mode, sendEventRaw, env, provider, o
   parser.flush();
   closeRoundThinking();
 
-  log(`[pipeStream] DONE mode=${mode} finishReason=${lastFinishReason === null ? 'NULL' : lastFinishReason} textLen=${acc.text.length} sawText=${parser.sawText} tools=${parser.tools.length} charts=${parser.charts.length} videos=${parser.videos.length} duration=${Date.now() - t0Stream}ms`);
+  log(`[pipeStream] DONE mode=${mode} finishReason=${lastFinishReason === null ? 'NULL' : lastFinishReason} textLen=${acc.text.length} sawText=${parser.sawText} tools=${parser.tools.length} charts=${parser.charts.length} duration=${Date.now() - t0Stream}ms`);
 
   return {
-    tools: parser.tools, charts: parser.charts, videos: parser.videos, sawText: parser.sawText, sawThinking: thinkingState.sawThinking,
+    tools: parser.tools, charts: parser.charts, sawText: parser.sawText, sawThinking: thinkingState.sawThinking,
     toolDetected: parser.toolDetected, text: acc.text, raw: acc.raw, finishReason: lastFinishReason,
   };
 }
@@ -2982,8 +2960,7 @@ async function handleMessages(chat, mode, attachmentsOrLegacy, env, username, op
               if (!hasFetchTool) {
                 const hasText = result.sawText;
                 const hasChart = result.charts.length > 0;
-                const hasVideo = result.videos && result.videos.length > 0;
-                const hasAnything = hasText || hasChart || hasVideo;
+                const hasAnything = hasText || hasChart;
 
                 const isSafetyBlock =
                   result.finishReason === 'SAFETY' ||
@@ -3133,7 +3110,7 @@ async function handleMessages(chat, mode, attachmentsOrLegacy, env, username, op
               const forceMessages = [
                 messages[0],
                 ...convoOnly,
-                { role: 'user', content: `## FINAL ROUND\nWrite the detailed final answer now. No tool tag (except a leading <chart> or <vid>). If tools failed and you lack live data, say so — never invent numbers.` },
+                { role: 'user', content: `## FINAL ROUND\nWrite the detailed final answer now. No tool tag (except a leading <chart>). If tools failed and you lack live data, say so — never invent numbers.` },
               ];
               let sent = false;
               try {
