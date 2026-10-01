@@ -1,5 +1,5 @@
 // ============================================================================
-// ZEBAI WORKER – v106.26.2
+// ZEBAI WORKER – v106.26.5
 //   • Google Gemini only. Flash-Lite family + 2.5 fallbacks.
 //   • Chat: gemini-3.5-flash-lite, gemini-3.1-flash-lite,
 //           gemini-2.5-flash-lite, gemini-2.5-flash.
@@ -11,28 +11,20 @@
 //   • Structured error fingerprint: E=M1-code/M2-code/M3-code/M4-code
 //   • Search: Tavily discovery-only. Analyse: Firecrawl.
 //   • Gemini Files API native upload (cached 47h) for all attachments.
-//   • v106.26.2:
-//      - isTruncatedStop no longer second-guesses the provider. Google AI
-//        Studio does NOT send a finishReason when it cuts a stream short,
-//        so a genuinely truncated reply arrives as finishReason === null
-//        and is caught by missingFinishReason upstream. STOP is
-//        authoritative. The only structural signal we still act on is an
-//        unbalanced code fence.
-//      - pipeStream flushes any residual buffered SSE bytes before
-//        parser.flush(), so the final finishReason chunk is never lost
-//        when Gemini omits the trailing blank line.
-//      - System prompt: video suggestions are now a required step for
-//        how-to / tutorial / activity / learning / research / setup /
-//        explicit-request classes. Search-first is stated as the only
-//        legal way to emit <vid>; fabrication is called out as a hard
-//        failure. Anti-pattern list extended accordingly.
-//      - All v106.26.0 fixes retained: <vid> soft tool, pushContinuation
-//        merges into the same assistant message, raised continuation/
-//        tool/deadline limits, retained 106.25.0 and 106.24.0 fixes.
+//   • v106.26.5:
+//      - Video section: <vid> may only reference a YouTube URL that
+//        the search tool returned in a <search> result this turn. Copy
+//        character for character. Concrete example with the four
+//        failure modes (host rewrite, param added, ID swap, truncated).
+//        No external product names leaked into the prompt — the model
+//        just sees "the search tool".
+//      - All v106.26.4 fixes retained: chats.mode column in D1,
+//        isTruncatedStop trusts provider, pipeStream flushes residual
+//        SSE, mandatory search-then-embed video flow.
 // ============================================================================
 
 const DEBUG = true;
-const WORKER_VERSION = '106.26.2';
+const WORKER_VERSION = '106.26.5';
 const ASSISTANT_NAME = 'ZebAI';
 const ASSISTANT_CREATOR = 'MCOS Private Limited';
 
@@ -359,15 +351,13 @@ function sanitizeVideoSpec(raw) {
 }
 
 // ---------------------------------------------------------------------------
-// isTruncatedStop — v106.26.2
+// isTruncatedStop — v106.26.5
 //
 // Google AI Studio does NOT send a finishReason when it cuts a stream short.
 // A genuinely truncated reply arrives as finishReason === null and is caught
 // upstream by missingFinishReason. STOP is authoritative: the model finished
-// its turn. Do NOT second-guess it with length or content heuristics.
-//
-// The only structural signal we still trust is an unbalanced code fence,
-// which is unambiguous evidence of a cut mid-block.
+// its turn. The only structural signal we still trust is an unbalanced
+// code fence.
 // ---------------------------------------------------------------------------
 function isTruncatedStop(result) {
   if (result.finishReason !== 'STOP') return false;
@@ -656,6 +646,20 @@ A \`<vid>\` tag renders a YouTube card in the answer. Video IDs are exactly 11 c
 
 ## The only legal way to emit \`<vid>\`
 
+**The URL inside \`<vid>\` must be a YouTube URL that the search tool returned to you in a \`<search>\` result earlier in this same turn. Copy that URL character for character — the exact string, nothing changed. The video ID must be exactly 11 characters and must match an entry you can see in the search results you received.**
+
+**Example of correct behaviour:**
+
+    Search tool returns: { "url": "https://www.youtube.com/watch?v=_sVC0fkpiRw", ... }
+    You emit:            <vid>https://www.youtube.com/watch?v=_sVC0fkpiRw</vid>
+
+    Not:                 <vid>https://youtube.com/watch?v=_sVC0fkpiRw</vid>           ← host changed
+    Not:                 <vid>https://www.youtube.com/watch?v=_sVC0fkpiRw&t=30</vid>  ← param added
+    Not:                 <vid>https://www.youtube.com/watch?v=aBcD1234xYz</vid>       ← different ID
+    Not:                 <vid>https://www.youtube.com/watch?v=_sVC0fkpiR</vid>        ← 10 chars, truncated
+
+**If the search tool's results for this turn contain no YouTube URL — no youtube.com/watch, no youtu.be, no youtube.com/shorts, no music.youtube.com — then you cannot emit \`<vid>\`. Say in prose that you couldn't find a video and move on. Do not construct a URL. Do not recall one from memory. Do not complete a partial one. Do not guess an ID.**
+
 1. Round N: fire \`<search>YouTube video on <topic></search>\`.
 2. Search results return with real URLs in the tool result.
 3. Round N+1: copy a YouTube URL that appeared in those results into \`<vid>\`. Write the prose. Done.
@@ -699,7 +703,7 @@ Multiple good results → pick the best 1–2. More than two is noise. Don't pad
 - **First tokens of the reply.** Nothing before — no prose, no heading, no blank line. \`<vid>\` tags, then prose.
 - **One URL per tag.** Two videos → two \`<vid>\` tags, both at the top, then prose.
 - **Only YouTube.** \`youtube.com\`, \`youtu.be\`, \`m.youtube.com\`, \`music.youtube.com\`, \`youtube-nocookie.com\`. Reject Vimeo, Dailymotion, direct \`.mp4\`, and everything else.
-- **Extract the URL from a search result in this turn.** Never from memory. Never invented.
+- **Copy the URL verbatim from the search tool's results in this turn.** If the search tool returned no YouTube URL, do not emit \`<vid>\`.
 - **If search returns no YouTube URL**, say so in prose. Do not fabricate.
 
 ## Accepted URL shapes
@@ -1940,7 +1944,7 @@ async function requireAuth(req, env) {
 async function initDatabase(db) {
   await db.prepare(`CREATE TABLE IF NOT EXISTS users (username TEXT PRIMARY KEY, password TEXT NOT NULL)`).run();
   await db.prepare(`CREATE TABLE IF NOT EXISTS tokens (token TEXT PRIMARY KEY, username TEXT NOT NULL, created_at INTEGER NOT NULL)`).run();
-  await db.prepare(`CREATE TABLE IF NOT EXISTS chats (id TEXT PRIMARY KEY, username TEXT NOT NULL, title TEXT NOT NULL, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL)`).run();
+  await db.prepare(`CREATE TABLE IF NOT EXISTS chats (id TEXT PRIMARY KEY, username TEXT NOT NULL, title TEXT NOT NULL, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, mode TEXT DEFAULT 'quick')`).run();
   await db.prepare(`CREATE TABLE IF NOT EXISTS messages (id TEXT PRIMARY KEY, chat_id TEXT NOT NULL, role TEXT NOT NULL, content TEXT NOT NULL, mode TEXT, timestamp INTEGER NOT NULL, blocks TEXT)`).run();
   await db.prepare(`CREATE TABLE IF NOT EXISTS rate_limits (user_id TEXT NOT NULL, timestamp INTEGER NOT NULL)`).run();
   await db.prepare(`CREATE TABLE IF NOT EXISTS idempotency_keys (key TEXT PRIMARY KEY, message_id TEXT NOT NULL, created_at INTEGER NOT NULL)`).run();
@@ -1957,6 +1961,7 @@ async function initDatabase(db) {
   await db.prepare('CREATE INDEX IF NOT EXISTS idx_embeddings_chat ON embeddings (chat_id)').run();
   await db.prepare('CREATE INDEX IF NOT EXISTS idx_embeddings_blob ON embeddings (blob_id)').run();
   try { const t = await db.prepare('PRAGMA table_info(chats)').all(); if (!t.results.some(c => c.name === 'updated_at')) { await db.prepare('ALTER TABLE chats ADD COLUMN updated_at INTEGER NOT NULL DEFAULT 0').run(); await db.prepare('UPDATE chats SET updated_at = created_at WHERE updated_at = 0').run(); } } catch {}
+  try { const t = await db.prepare('PRAGMA table_info(chats)').all(); if (!t.results.some(c => c.name === 'mode')) await db.prepare("ALTER TABLE chats ADD COLUMN mode TEXT DEFAULT 'quick'").run(); } catch (e) {}
   try { const t = await db.prepare('PRAGMA table_info(messages)').all(); if (!t.results.some(c => c.name === 'blocks')) await db.prepare('ALTER TABLE messages ADD COLUMN blocks TEXT').run(); } catch (e) {}
 }
 let __dbReadyPromise = null, __dbReadyAt = 0;
@@ -3403,19 +3408,21 @@ export default {
       }
 
       if (path === '/chats' && method === 'GET') {
-        const { results } = await env.DB.prepare(`SELECT c.id, c.title, c.created_at, c.updated_at, (SELECT COUNT(*) FROM messages WHERE chat_id = c.id) AS messageCount FROM chats c WHERE c.username = ? ORDER BY COALESCE(c.updated_at, c.created_at) DESC`).bind(username).all();
+        const { results } = await env.DB.prepare(`SELECT c.id, c.title, c.mode, c.created_at, c.updated_at, (SELECT COUNT(*) FROM messages WHERE chat_id = c.id) AS messageCount FROM chats c WHERE c.username = ? ORDER BY COALESCE(c.updated_at, c.created_at) DESC`).bind(username).all();
         return json(results);
       }
       if (path === '/chats' && method === 'POST') {
         const id = crypto.randomUUID(); const now = Date.now();
-        await env.DB.prepare('INSERT INTO chats (id, username, title, created_at, updated_at) VALUES (?, ?, ?, ?, ?)').bind(id, username, 'New Chat', now, now).run();
-        return json({ id, title: 'New Chat', createdAt: now, messages: [] }, 201);
+        let mode = 'quick';
+        try { const body = await request.json(); if (body && (body.mode === 'quick' || body.mode === 'expert')) mode = body.mode; } catch (e) {}
+        await env.DB.prepare('INSERT INTO chats (id, username, title, created_at, updated_at, mode) VALUES (?, ?, ?, ?, ?, ?)').bind(id, username, 'New Chat', now, now, mode).run();
+        return json({ id, title: 'New Chat', mode, createdAt: now, messages: [] }, 201);
       }
 
       const chatMatch = path.match(/^\/chats\/([a-zA-Z0-9-]+)$/);
       if (chatMatch) {
         const chatId = chatMatch[1];
-        const chat = await env.DB.prepare('SELECT id, title FROM chats WHERE id = ? AND username = ?').bind(chatId, username).first();
+        const chat = await env.DB.prepare('SELECT id, title, mode FROM chats WHERE id = ? AND username = ?').bind(chatId, username).first();
         if (!chat) return errorResponse('Chat not found', 404);
         if (method === 'GET') {
           const messages = await env.DB.prepare('SELECT id, role, content, mode, timestamp, blocks FROM messages WHERE chat_id = ? ORDER BY timestamp ASC').bind(chatId).all();
@@ -3424,7 +3431,7 @@ export default {
             if (m.role === 'assistant' && m.blocks) { try { base.blocks = JSON.parse(m.blocks); } catch (e) {} }
             return base;
           });
-          return json({ id: chat.id, title: chat.title, messages: enriched });
+          return json({ id: chat.id, title: chat.title, mode: chat.mode || 'quick', messages: enriched });
         }
         if (method === 'DELETE') {
           try {
@@ -3439,9 +3446,20 @@ export default {
           return json({ success: true });
         }
         if (method === 'PATCH') {
-          const { title } = await request.json();
-          await env.DB.prepare('UPDATE chats SET title = ?, updated_at = ? WHERE id = ?').bind(title, Date.now(), chatId).run();
-          return json({ id: chatId, title });
+          const body = await request.json();
+          const sets = [];
+          const binds = [];
+          if (typeof body.title === 'string' && body.title.trim()) { sets.push('title = ?'); binds.push(body.title.trim()); }
+          if (body.mode === 'quick' || body.mode === 'expert') { sets.push('mode = ?'); binds.push(body.mode); }
+          if (sets.length) {
+            sets.push('updated_at = ?');
+            binds.push(Date.now());
+            binds.push(chatId);
+            binds.push(username);
+            await env.DB.prepare(`UPDATE chats SET ${sets.join(', ')} WHERE id = ? AND username = ?`).bind(...binds).run();
+          }
+          const fresh = await env.DB.prepare('SELECT id, title, mode FROM chats WHERE id = ? AND username = ?').bind(chatId, username).first();
+          return json({ id: fresh.id, title: fresh.title, mode: fresh.mode || 'quick' });
         }
       }
 
