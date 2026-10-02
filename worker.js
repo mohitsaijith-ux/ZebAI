@@ -1,5 +1,5 @@
 // ============================================================================
-// ZEBAI WORKER – v106.28.0
+// ZEBAI WORKER – v106.29.0
 //   • Google Gemini only. Flash-Lite family + 2.5 fallbacks.
 //   • Chat: gemini-3.5-flash-lite, gemini-3.1-flash-lite,
 //           gemini-2.5-flash-lite, gemini-2.5-flash.
@@ -11,27 +11,24 @@
 //   • Structured error fingerprint: E=M1-code/M2-code/M3-code/M4-code
 //   • Search: Tavily discovery-only. Analyse: Firecrawl.
 //   • Gemini Files API native upload (cached 47h) for all attachments.
-//   • v106.28.0:
-//      - Current-message attachments are hidden from the model's tool list.
-//        When the user attaches a file, <analysing> is removed from the
-//        system prompt's # Tools section and the checklist is collapsed
-//        to a single note. The tag remains available on follow-up turns
-//        with no attachments (for "re-read that PDF" style requests).
-//      - analysing_start/analysing_results are now emitted programmatically
-//        by handleMessages for every current-message attachment. The model
-//        does not need to emit anything — the file card renders on the
-//        frontend the moment the request lands.
-//      - Native Files API upload is mandatory. Inline fallback removed.
-//        If upload fails (no key, rate limit, service error), the file is
-//        stripped from context and an analysing_error fires, with a note
-//        appended to the user message explaining the absence.
-//      - All v106.27.x fixes retained: <vid> fully purged, chats.mode in
-//        D1, isTruncatedStop trusts provider, pipeStream flushes residual
-//        SSE, exact-URL citation rules for prose links.
+//   • v106.29.0:
+//      - File index is now chronological (oldest → newest) so "the first
+//        file I sent" resolves to #1 unambiguously.
+//      - Current-turn detection covers ALL attachments, not just images.
+//        PDFs, audio, video, and text files sent this turn are correctly
+//        marked ← CURRENT TURN in the index.
+//      - The <analysing> tag name is no longer mentioned anywhere on
+//        attachment turns — not in the file index entries, not in the
+//        vision system prompt. The model was reflexively firing it when
+//        it saw the tag spelled out in a "do not call" warning. Now it
+//        simply has no reason to reach for it.
+//      - All v106.28.x fixes retained: mandatory native upload, programmatic
+//        analysing_start/results emission, prompt-level tool carry-over
+//        guards, <vid> fully purged.
 // ============================================================================
 
 const DEBUG = true;
-const WORKER_VERSION = '106.28.0';
+const WORKER_VERSION = '106.29.0';
 const ASSISTANT_NAME = 'ZebAI';
 const ASSISTANT_CREATOR = 'MCOS Private Limited';
 
@@ -318,15 +315,6 @@ function sanitizeChartSpec(raw) {
   return t;
 }
 
-// ---------------------------------------------------------------------------
-// isTruncatedStop
-//
-// Google AI Studio does NOT send a finishReason when it cuts a stream short.
-// A genuinely truncated reply arrives as finishReason === null and is caught
-// upstream by missingFinishReason. STOP is authoritative: the model finished
-// its turn. The only structural signal we still trust is an unbalanced
-// code fence.
-// ---------------------------------------------------------------------------
 function isTruncatedStop(result) {
   if (result.finishReason !== 'STOP') return false;
   if (!result.sawText) return false;
@@ -765,7 +753,7 @@ ${attachmentLine}
 
 **On this turn you are reading the file and answering. You are not computing anything.**
 
-Do NOT fire \`<run>\`. Do NOT fire \`<search>\`, \`<weather>\`, \`<finance>\`, \`<analyse>\`, or \`<analysing>\`.
+Do NOT fire any fetch tool. \`<run>\`, \`<search>\`, \`<weather>\`, \`<finance>\`, and \`<analyse>\` are all off-limits on this turn.
 
 Most common failure: you see numbers, dates, tables, prices, code, or a UI in the image and your instinct says "run a calculation to be safe." Do not. The user asked you to look at the file. Nothing about the file is a computation request.
 
@@ -793,7 +781,7 @@ ${attachmentLine}
 
 **The file(s) attached to this exact message are ALREADY loaded as native input to this turn. They are in your context right now.**
 
-Do NOT call \`<analysing>\` on them. Do NOT call \`<analyse>\` on them. Do NOT call any file tool. Just read them and answer.
+Do NOT call any file tool on them. Just read them and answer.
 
     WRONG:  <analysing>report.pdf</analysing>       ← already loaded, this re-fetches nothing
     WRONG:  <analyse>report.pdf</analyse>           ← wrong tag entirely, this is for URLs
@@ -821,6 +809,7 @@ Your turn. Read the attached file(s) and answer. No tool tag needed.`;
 
 Your turn. Emit a tool tag, or write the answer.`;
 }
+
 // ---------------------------------------------------------------------------
 // 3. AI TITLE
 // ---------------------------------------------------------------------------
@@ -1687,17 +1676,30 @@ async function getBlobPreview(env, blob) {
   return preview;
 }
 
-async function buildFileIndex(env, chat, currentImageBlobIds = null) {
+// ---------------------------------------------------------------------------
+// buildFileIndex
+//
+// Chronological order: oldest first. Every caller passes chat.messages sorted
+// by timestamp ASC, so #1 is the oldest file, #N is the newest. That makes
+// "the first file I sent" resolve to #1 unambiguously.
+//
+// Current-turn files (anything referenced in the last user message, whether
+// image, PDF, audio, video, or text) are marked as already-native-input. The
+// <analysing> tag name is deliberately NOT mentioned for these — naming it in
+// a "do not call" warning still plants it in the prompt and the model
+// reflexively fires it.
+// ---------------------------------------------------------------------------
+async function buildFileIndex(env, chat, currentBlobIds = null) {
   if (!chat || !Array.isArray(chat.messages)) return '';
   const seen = new Set();
   const orderedIds = [];
-  for (let i = chat.messages.length - 1; i >= 0; i--) {
+  for (let i = 0; i < chat.messages.length; i++) {
     const m = chat.messages[i];
     if (m.role !== 'user' || !m.content) continue;
     for (const id of extractBlobIds(String(m.content))) {
       if (seen.has(id)) continue;
       seen.add(id);
-      orderedIds.push({ id, isCurrent: !!(currentImageBlobIds && currentImageBlobIds.has(id)) });
+      orderedIds.push({ id, isCurrent: !!(currentBlobIds && currentBlobIds.has(id)) });
     }
   }
   if (!orderedIds.length) return '';
@@ -1727,26 +1729,45 @@ async function buildFileIndex(env, chat, currentImageBlobIds = null) {
   for (const m of metas) {
     const nm = m.blob.name || 'file';
 
-    if (m.isCurrent && m.isImg) {
-      detailParts.push(`### ${nm} — IMAGE — ALREADY ATTACHED to the CURRENT message as native input. Do NOT call <analysing>. Read the pixels directly.`);
-      used += 200;
+    // ── CURRENT turn: file is already native input. Never name <analysing>.
+    if (m.isCurrent) {
+      if (m.isImg) {
+        detailParts.push(`### ${nm} — IMAGE — attached to the CURRENT message as native input. Read the pixels directly.`);
+        used += 180;
+        continue;
+      }
+      if (!m.preview) continue;
+      const lines = m.preview.totalLines || 0;
+      const status = m.preview.isBinary
+        ? `BINARY — attached to the CURRENT message as native input. The bytes are in your context.`
+        : m.preview.previewComplete
+          ? `COMPLETE — all ${lines} line${lines === 1 ? '' : 's'} shown.`
+          : `PARTIAL — first ${FILE_PREVIEW_LINES} of ${lines} lines shown here, but the FULL file is already in your context as native input. Read it and answer.`;
+      const block = `### ${nm} — ${status}\n${m.preview.text}`;
+      if (used + block.length > FILE_INDEX_CHARS) {
+        previewsOmitted++;
+        detailParts.push(`### ${nm} — attached to the CURRENT message as native input (preview omitted for size). Read the file you already have.`);
+        used += 120;
+        continue;
+      }
+      detailParts.push(block);
+      used += block.length + 2;
       continue;
     }
+
+    // ── EARLIER turn: not in current context. <analysing> is correct here.
     if (m.isImg) {
       detailParts.push(`### ${nm} — IMAGE (earlier turn). Call <analysing>${nm}</analysing> to load natively.`);
       used += 150;
       continue;
     }
     if (!m.preview) continue;
-
     const lines = m.preview.totalLines || 0;
-    const curSuffix = m.isCurrent ? ' ← CURRENT — read it and answer.' : '';
     const status = m.preview.isBinary
       ? `BINARY — call <analysing>${nm}</analysing> to attach.`
       : m.preview.previewComplete
-        ? `COMPLETE — all ${lines} line${lines === 1 ? '' : 's'} shown.${curSuffix}`
-        : `PARTIAL — first ${FILE_PREVIEW_LINES} of ${lines} lines. Full file via <analysing>${nm}</analysing>.${curSuffix}`;
-
+        ? `COMPLETE — all ${lines} line${lines === 1 ? '' : 's'} shown.`
+        : `PARTIAL — first ${FILE_PREVIEW_LINES} of ${lines} lines. Full file via <analysing>${nm}</analysing>.`;
     const block = `### ${nm} — ${status}\n${m.preview.text}`;
     if (used + block.length > FILE_INDEX_CHARS) {
       previewsOmitted++;
@@ -1758,12 +1779,15 @@ async function buildFileIndex(env, chat, currentImageBlobIds = null) {
     used += block.length + 2;
   }
 
-  let out = `## Files in this conversation (${metas.length})\n${roster}\n`;
+  let out = `## Files in this conversation (${metas.length}) — ordered oldest to newest. "First file" = #1, "last file" = #${metas.length}.\n${roster}\n`;
   if (detailParts.length) {
     out += `\n## Previews\n${detailParts.join('\n\n')}`;
   }
   if (previewsOmitted > 0) {
-    out += `\n\n_(${previewsOmitted} preview${previewsOmitted === 1 ? '' : 's'} omitted above — the full names are still listed. Use <analysing>filename.ext</analysing> to load any file's content.)_`;
+    const anyEarlier = metas.some(m => !m.isCurrent);
+    out += anyEarlier
+      ? `\n\n_(${previewsOmitted} preview${previewsOmitted === 1 ? '' : 's'} omitted above — the full names are still listed. Use <analysing>filename.ext</analysing> to load an earlier file's content.)_`
+      : `\n\n_(${previewsOmitted} preview${previewsOmitted === 1 ? '' : 's'} omitted above — the files are attached to the CURRENT message and are already in your context.)_`;
   }
   return out;
 }
@@ -2420,8 +2444,6 @@ async function pipeStream(providerResponse, mode, sendEventRaw, env, provider, o
       }
     }
 
-    // Flush residual SSE buffer — Gemini's final finishReason chunk
-    // sometimes arrives without a trailing newline, leaving it in `buffer`.
     if (buffer) {
       buffer += '\n\n';
       const leftover = buffer.split('\n');
@@ -2767,17 +2789,17 @@ async function handleMessages(chat, mode, attachmentsOrLegacy, env, username, op
 
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
-  const currentImageBlobIds = new Set();
+  // Every blob referenced in the LAST user message is natively attached to
+  // this turn. That includes PDFs, text, audio, video — not just images.
+  // The file index must never suggest <analysing> for any of these.
+  const currentBlobIds = new Set();
   const lastMsg = chat.messages && chat.messages[chat.messages.length - 1];
   if (lastMsg && lastMsg.role === 'user' && lastMsg.content) {
-    for (const bid of extractBlobIds(String(lastMsg.content))) {
-      const blob = await blobGet(env, bid);
-      if (blob && isImageMime(blob.mime)) currentImageBlobIds.add(bid);
-    }
+    for (const bid of extractBlobIds(String(lastMsg.content))) currentBlobIds.add(bid);
   }
 
   let fileIndex = '';
-  try { fileIndex = await buildFileIndex(env, chat, currentImageBlobIds); } catch (e) { log('[fileIndex] failed:', safeStr(e)); }
+  try { fileIndex = await buildFileIndex(env, chat, currentBlobIds); } catch (e) { log('[fileIndex] failed:', safeStr(e)); }
 
   let initialMessages;
   if (isVision) {
