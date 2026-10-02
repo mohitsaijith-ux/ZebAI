@@ -1,1289 +1,297 @@
-<!DOCTYPE html>
-<html lang="en" data-theme="dark">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-<title>ZebAI</title>
-<link rel="icon" type="image/png" href="logo-dark.png" media="(prefers-color-scheme: dark)" />
-<link rel="icon" type="image/png" href="logo-light.png" media="(prefers-color-scheme: light)" />
-<link rel="apple-touch-icon" href="logo-light.png" />
-<script>(function(){try{var s=JSON.parse(localStorage.getItem('zeb-settings'));var t=(s&&s.theme)||'dark';document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();</script>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
-<script src="https://unpkg.com/lucide@latest"></script>
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.9/purify.min.js"></script>
-<script>window.DOMPurify||document.write('<script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.9/dist/purify.min.js"><\/script>')</script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" />
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" />
-<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
-<style>
-:root{
-  --bg-primary:#0f0f0f;--bg-chat:#131313;--bg-sidebar:#171717;--bg-input:#1c1c1c;--bg-hover:#232323;
-  --border-color:#2c2c2c;--text-primary:#efefef;--text-secondary:#a4a4a4;--text-tertiary:#757575;
-  --accent:#0ea5e9;--accent-hover:#0284c7;--accent-subtle:rgba(14,165,233,0.1);
-  --danger:#ef4444;--danger-hover:#dc2626;--success:#22c55e;--warning:#f59e0b;
-  --radius-sm:6px;--radius-md:10px;--radius-lg:16px;--radius-xl:20px;
-  --font-sans:'Inter',system-ui,sans-serif;--font-mono:'Fira Code',monospace;
-  --transition-fast:0.15s ease;--transition:0.25s ease;
-  --shadow-sm:0 1px 2px rgba(0,0,0,0.4);--shadow-md:0 4px 16px rgba(0,0,0,0.5);
-  --code-bg:#000000;--code-text:#fff;
-  --think-bg:#1e1e24;--think-header-bg:#25252c;--think-border:#333;
-  --think-text:#d4d4d8;--think-header-text:#aaa;
-  --link-color:#60a5fa;
-  --finance-text:#ffffff;--finance-stroke:#ffffff;--finance-fill:rgba(255,255,255,0.1);
-  --weather-bg:var(--think-bg);--weather-header-bg:var(--think-header-bg);
-  --weather-border:var(--think-border);--weather-text:var(--finance-text);
-  --weather-secondary:var(--think-header-text);--weather-temp:var(--finance-text);
-  --scroll-bg:#1e1e24;--scroll-color:#d4d4d8;--scroll-border:#333;
-  --scroll-thumb:rgba(160,160,160,0.3);--scroll-thumb-hover:rgba(200,200,200,0.55);
-  --ease-panel:cubic-bezier(.32,.72,.28,1);--ease-drawer:cubic-bezier(.32,.72,.28,1);
-}
-[data-theme="light"]{
-  --bg-primary:#f5f5f5;--bg-chat:#ffffff;--bg-sidebar:#fafafa;--bg-input:#ffffff;--bg-hover:#f0f0f0;
-  --border-color:#e4e4e4;--text-primary:#171717;--text-secondary:#4d4d4d;--text-tertiary:#8f8f8f;
-  --accent-subtle:rgba(14,165,233,0.08);
-  --shadow-sm:0 1px 2px rgba(0,0,0,0.04);--shadow-md:0 4px 16px rgba(0,0,0,0.06);
-  --code-bg:#1a1a1a;--code-text:#ffffff;
-  --think-bg:#f3f3f3;--think-header-bg:#e8e8e8;--think-border:#c8c8c8;
-  --think-text:#1a1a1a;--think-header-text:#444444;
-  --link-color:#0369a1;
-  --finance-text:#1a1a1a;--finance-stroke:#1a1a1a;--finance-fill:rgba(0,0,0,0.06);
-  --weather-bg:var(--think-bg);--weather-header-bg:var(--think-header-bg);
-  --weather-border:var(--think-border);--weather-text:var(--finance-text);
-  --weather-secondary:var(--think-header-text);--weather-temp:var(--finance-text);
-  --scroll-bg:#f3f3f3;--scroll-color:#1a1a1a;--scroll-border:#c8c8c8;
-  --scroll-thumb:rgba(100,100,100,0.3);--scroll-thumb-hover:rgba(60,60,60,0.55);
-}
-[data-theme="midnight"]{
-  --bg-primary:#050507;--bg-chat:#08080b;--bg-sidebar:#07070a;--bg-input:#101017;--bg-hover:#17171f;
-  --border-color:#1c1c26;--text-primary:#e6e6ee;--text-secondary:#8f8f9e;--text-tertiary:#5a5a68;
-  --accent-subtle:rgba(14,165,233,0.12);
-  --shadow-sm:0 1px 2px rgba(0,0,0,0.6);--shadow-md:0 4px 20px rgba(0,0,0,0.7);
-  --code-bg:#000000;--code-text:#ffffff;
-  --think-bg:#111118;--think-header-bg:#17171f;--think-border:#252530;
-  --think-text:#d0d0dc;--think-header-text:#9a9aac;
-  --link-color:#60a5fa;
-  --finance-text:#ffffff;--finance-stroke:#ffffff;--finance-fill:rgba(255,255,255,0.1);
-  --weather-bg:var(--think-bg);--weather-header-bg:var(--think-header-bg);
-  --weather-border:var(--think-border);--weather-text:var(--finance-text);
-  --weather-secondary:var(--think-header-text);--weather-temp:var(--finance-text);
-  --scroll-bg:#111118;--scroll-color:#d0d0dc;--scroll-border:#252530;
-  --scroll-thumb:rgba(150,150,165,0.28);--scroll-thumb-hover:rgba(200,200,215,0.5);
-}
-*{margin:0;padding:0;box-sizing:border-box}
-html,body{height:100%;width:100%;overflow:hidden;background:var(--bg-primary);color:var(--text-primary);font-family:var(--font-sans);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
-body.locked{overflow:hidden;position:fixed;width:100%}
-::-webkit-scrollbar{width:6px;height:6px;background:transparent;-webkit-appearance:none;appearance:none}
-::-webkit-scrollbar-track,::-webkit-scrollbar-track-piece,::-webkit-scrollbar-corner,::-webkit-scrollbar-button{background:transparent !important;border:0 !important;display:none;width:0;height:0}
-::-webkit-scrollbar-thumb{background:var(--scroll-thumb) !important;border:none;border-radius:3px;min-height:32px}
-::-webkit-scrollbar-thumb:hover{background:var(--scroll-thumb-hover) !important}
-@supports (-moz-appearance:none){*{scrollbar-width:thin;scrollbar-color:var(--scroll-thumb) transparent}}
-::selection{background:var(--accent-subtle);color:var(--text-primary)}
-svg.lucide{vertical-align:middle;display:inline-block}
-.message-bubble hr{border:none;border-top:2px solid var(--border-color);opacity:0.6;margin:1.5rem 0}
-.message-bubble a{color:var(--link-color);text-decoration:underline;text-underline-offset:2px}
-.message-bubble a:hover{color:var(--accent)}
-.message-bubble a.search-source-card,.message-bubble a.search-source-card:hover,
-.message-bubble a.search-source-card *,.search-source-card,.search-source-card:hover,
-.search-source-card *{text-decoration:none !important;border-bottom:none !important;box-shadow:none}
-.message-bubble a.search-source-card,.message-bubble a.search-source-card:hover{color:var(--text-primary)}
+// ============================================================================
+// ZEBAI WORKER – v106.28.0
+//   • Google Gemini only. Flash-Lite family + 2.5 fallbacks.
+//   • Chat: gemini-3.5-flash-lite, gemini-3.1-flash-lite,
+//           gemini-2.5-flash-lite, gemini-2.5-flash.
+//   • Embeddings: gemini-embedding-2/001.
+//   • Key router rotates across API keys, tracks RPM vs RPD cooldowns.
+//   • Native CoT streamed as thinking events. No prompted thinking.
+//   • Blobs in KV CHATS, D1 spill. Ambient file index with COMPLETE/PARTIAL.
+//   • Exponential backoff on 5xx/429. Aborts classified as transient 503.
+//   • Structured error fingerprint: E=M1-code/M2-code/M3-code/M4-code
+//   • Search: Tavily discovery-only. Analyse: Firecrawl.
+//   • Gemini Files API native upload (cached 47h) for all attachments.
+//   • v106.28.0:
+//      - Current-message attachments are hidden from the model's tool list.
+//        When the user attaches a file, <analysing> is removed from the
+//        system prompt's # Tools section and the checklist is collapsed
+//        to a single note. The tag remains available on follow-up turns
+//        with no attachments (for "re-read that PDF" style requests).
+//      - analysing_start/analysing_results are now emitted programmatically
+//        by handleMessages for every current-message attachment. The model
+//        does not need to emit anything — the file card renders on the
+//        frontend the moment the request lands.
+//      - Native Files API upload is mandatory. Inline fallback removed.
+//        If upload fails (no key, rate limit, service error), the file is
+//        stripped from context and an analysing_error fires, with a note
+//        appended to the user message explaining the absence.
+//      - All v106.27.x fixes retained: <vid> fully purged, chats.mode in
+//        D1, isTruncatedStop trusts provider, pipeStream flushes residual
+//        SSE, exact-URL citation rules for prose links.
+// ============================================================================
 
-/* TRACE */
-.trace-block{border:1px solid var(--think-border);border-radius:var(--radius-md);margin:.5rem 0;background:var(--think-bg);overflow:visible;transition:border-color .3s var(--ease-panel),background-color .3s var(--ease-panel)}
-.trace-header{display:flex;align-items:center;gap:8px;padding:.5rem .75rem;background:var(--think-header-bg);cursor:pointer;user-select:none;border-bottom:1px solid transparent;min-height:28px;border-top-left-radius:calc(var(--radius-md) - 1px);border-top-right-radius:calc(var(--radius-md) - 1px);overflow:hidden}
-.trace-header:hover{background:var(--bg-hover)}
-.trace-block.open > .trace-header{border-bottom-color:var(--think-border)}
-.trace-block.open > .trace-header > .swap-chevron{transform:rotate(90deg)}
-.trace-block.open > .trace-body{grid-template-rows:1fr;opacity:1;padding:.7rem .8rem .7rem;transform:translateY(0)}
-.trace-label{font-size:.78rem;font-weight:600;color:var(--think-header-text)}
-.trace-body{display:grid;grid-template-rows:0fr;opacity:0;padding:0 .8rem;transform:translateY(-6px);transition:grid-template-rows .5s var(--ease-panel),opacity .3s ease,padding .5s var(--ease-panel),transform .45s var(--ease-panel);border-bottom-left-radius:calc(var(--radius-md) - 1px);border-bottom-right-radius:calc(var(--radius-md) - 1px)}
-.trace-body-inner{min-height:0;overflow:hidden}
-.trace-line{position:relative;padding-left:20px}
-.trace-line > *{min-width:0;position:relative}
-.trace-line > * + *{margin-top:.6rem}
-.trace-line > .trace-block{margin:0;padding:0}
-.trace-line > .trace-tool{margin:0;padding:0}
-.trace-line::before{content:'';position:absolute;left:7px;top:12px;bottom:12px;width:2px;background:var(--think-border);border-radius:1px}
-.trace-line > .trace-reason::after{content:'';position:absolute;left:5px;top:.62em;width:6px;height:6px;border-radius:50%;background:var(--think-header-text);box-shadow:0 0 0 2px var(--think-bg);box-sizing:border-box;z-index:50;transform:translateX(-20px)}
-.trace-line > .trace-reason::before{content:none}
-.trace-line > .trace-tool,.trace-line > .trace-block{margin-left:-20px;margin-right:0;position:relative;z-index:2;width:calc(100% + 20px);padding:0}
-.trace-line > .trace-tool{margin-top:0;margin-bottom:0}
-.trace-line > .trace-block{margin-top:16px;margin-bottom:16px}
-.trace-line > .trace-tool::before,.trace-line > .trace-block::before{content:'';position:absolute;top:-8px;bottom:-8px;left:6px;width:5px;background:var(--think-bg);z-index:-1;pointer-events:none}
-.trace-line > .trace-tool + .trace-tool,.trace-line > .trace-tool + .trace-block,.trace-line > .trace-block + .trace-tool,.trace-line > .trace-tool + .trace-reason,.trace-line > .trace-reason + .trace-tool{margin-top:8px}
-.trace-line > .trace-block .trace-line::before{display:none !important}
-.trace-line > .trace-block .trace-line{padding-left:0 !important}
-.trace-line > .trace-block .trace-line > .trace-tool,.trace-line > .trace-block .trace-line > .trace-block{margin-left:0 !important;width:100% !important}
-.trace-line > .trace-block .trace-line > .trace-tool::before{display:none !important}
-.trace-line > .trace-block{margin-top:6px !important;margin-bottom:6px !important}
-.trace-line > .trace-block:first-child{margin-top:0 !important}
-.trace-line > .trace-block:last-child{margin-bottom:0 !important}
-.trace-line > .trace-block > .trace-header{padding:.3rem .5rem !important;min-height:22px !important}
-.trace-line > .trace-block.open > .trace-body{padding:.35rem .55rem .4rem !important}
-.trace-line > .trace-block .trace-line > * + *{margin-top:.35rem !important}
-.trace-line > .trace-block .trace-line > .trace-reason:first-child,.trace-line > .trace-block .trace-line > .trace-tool:first-child,.trace-line > .trace-block .trace-line > .trace-block:first-child{margin-top:0 !important}
-.trace-line > .trace-block .trace-line > .trace-tool + .trace-tool{margin-top:6px !important}
-.trace-line > .trace-block .trace-line > .trace-reason{padding-left:14px !important;position:relative !important}
-.trace-line > .trace-block .trace-line > .trace-reason::after{left:3px !important;top:10px !important;width:5px !important;height:5px !important;transform:none !important;box-shadow:0 0 0 2px var(--think-bg) !important;z-index:3 !important}
-.trace-line > .trace-block .trace-line > .trace-reason + .trace-reason::after{display:none !important}
-.trace-reason{font-size:.82rem;line-height:1.7;color:var(--think-text);white-space:normal;word-break:break-word}
-.trace-reason p{margin:0 0 .6rem}
-.trace-reason p:last-child{margin-bottom:0}
-.trace-reason ul,.trace-reason ol{margin:.3rem 0 .6rem;padding-left:1.6rem}
-.trace-reason li{margin-bottom:.2rem}
-.trace-reason li>p{margin:0}
-.trace-reason strong{font-weight:700;color:var(--text-primary)}
-.trace-reason pre{background:var(--code-bg);color:var(--code-text);padding:.6rem .8rem;border-radius:var(--radius-sm);border:1px solid var(--border-color);overflow-x:auto;margin:.5rem 0;font-family:var(--font-mono);font-size:.78rem;line-height:1.5;white-space:pre}
-.trace-reason pre code{font-family:inherit;font-size:inherit;background:none;padding:0;color:inherit;white-space:pre}
-.trace-reason :not(pre)>code{background:rgba(255,255,255,.08);padding:.1em .35em;border-radius:3px;font-family:var(--font-mono);font-size:.85em}
-.trace-tool{position:relative}
-.exec-count{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:18px;padding:0 6px;border-radius:9px;background:var(--bg-hover);color:var(--text-secondary);font-size:.65rem;font-weight:600;margin-left:auto;flex-shrink:0}
+const DEBUG = true;
+const WORKER_VERSION = '106.28.0';
+const ASSISTANT_NAME = 'ZebAI';
+const ASSISTANT_CREATOR = 'MCOS Private Limited';
 
-/* SEARCH/ANALYSE/WEATHER/FINANCE/MATH */
-.analyse-block{border:1px solid var(--think-border);border-radius:var(--radius-sm);background:var(--think-bg);overflow:hidden;margin:0}
-.analyse-header{display:flex;align-items:center;padding:.5rem .75rem;background:var(--think-header-bg);font-size:.78rem;font-weight:600;color:var(--think-header-text);min-height:34px;user-select:none}
-.analyse-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.analyse-block.loading .analyse-header{opacity:.85}
-.search-block{border:1px solid var(--think-border);border-radius:var(--radius-sm);background:var(--think-bg);overflow:hidden}
-.search-header{display:flex;align-items:center;gap:8px;padding:.45rem .65rem;background:var(--think-header-bg);cursor:pointer;user-select:none;border-bottom:1px solid transparent;font-size:.75rem;font-weight:600;color:var(--think-header-text);min-height:28px}
-.search-header:hover{background:var(--bg-hover)}
-.search-block.open > .search-header{border-bottom-color:var(--think-border)}
-.search-block.open > .search-body{grid-template-rows:1fr;opacity:1;padding:.5rem .55rem .55rem;transform:translateY(0)}
-.search-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.search-body{display:grid;grid-template-rows:0fr;opacity:0;padding:0 .55rem;transform:translateY(-4px);transition:grid-template-rows .48s var(--ease-panel),opacity .28s ease,padding .48s var(--ease-panel),transform .4s var(--ease-panel)}
-.search-body-inner{min-height:0;overflow:hidden;max-height:340px;overflow-y:auto}
-.fav-stack{display:inline-flex;align-items:center;flex-shrink:0;margin-right:2px}
-.fav-stack img,.fav-stack .fav-stack-fallback{width:14px;height:14px;border-radius:50%;border:1px solid var(--think-header-bg);background:var(--bg-input);flex-shrink:0;display:block;position:relative;object-fit:cover}
-.fav-stack .fav-stack-fallback{background:var(--accent-subtle);color:var(--accent);font-size:9px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;line-height:1}
-.search-results{display:flex;flex-direction:column;gap:.4rem}
-.search-source-card{display:flex;align-items:flex-start;gap:10px;padding:8px 10px;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-sm);color:var(--text-primary);transition:background .15s ease}
-.search-source-card:hover{background:var(--bg-hover)}
-.search-source-icon{width:20px;height:20px;border-radius:50%;flex-shrink:0;margin-top:2px;background:var(--bg-hover);object-fit:cover;display:block}
-.search-source-icon.favicon-fallback{display:inline-flex;align-items:center;justify-content:center;background:var(--accent-subtle);color:var(--accent);font-size:10px;font-weight:700;text-transform:uppercase;line-height:1}
-.search-source-info{flex:1;min-width:0}
-.search-source-title{font-size:.82rem;font-weight:500;line-height:1.4;color:var(--text-primary)}
-.search-source-meta{font-size:.7rem;color:var(--text-tertiary);margin-top:2px}
-.search-source-snippet{font-size:.76rem;color:var(--text-secondary);margin-top:4px;line-height:1.5;word-break:break-word}
-.weather-block{border:1px solid var(--weather-border);border-radius:var(--radius-md);margin:0;overflow:hidden;background:var(--weather-bg)}
-.weather-header{display:flex;align-items:center;gap:8px;padding:.5rem .75rem;background:var(--weather-header-bg);cursor:pointer;user-select:none;border-bottom:1px solid transparent;font-size:.78rem;font-weight:500;color:var(--weather-secondary)}
-.weather-header:hover{background:var(--bg-hover)}
-.weather-block.open > .weather-header{border-bottom-color:var(--weather-border)}
-.weather-body{display:grid;grid-template-rows:0fr;opacity:0;padding:0 .8rem;transform:translateY(-4px);transition:grid-template-rows .48s var(--ease-panel),opacity .28s ease,padding .48s var(--ease-panel),transform .4s var(--ease-panel);font-size:.82rem;line-height:1.55;color:var(--weather-text)}
-.weather-block.open > .weather-body{grid-template-rows:1fr;opacity:1;padding:.75rem .8rem;transform:translateY(0)}
-.weather-body-inner{min-height:0;overflow:hidden}
-.weather-main{display:flex;align-items:center;gap:.8rem;margin-bottom:.4rem}
-.weather-icon{color:var(--weather-temp);display:inline-flex}
-.weather-temp{font-size:1.6rem;font-weight:700;color:var(--weather-temp)}
-.weather-details{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.4rem}
-.weather-details span{display:inline-flex;align-items:center;gap:.25rem;background:var(--bg-hover);padding:.25rem .5rem;border-radius:var(--radius-sm);font-size:.75rem;color:var(--weather-text)}
-.weather-timeline{margin-top:.6rem}
-.weather-timeline-label{font-size:.72rem;color:var(--weather-secondary);margin-bottom:.3rem;font-weight:600}
-.hourly-container{display:flex;gap:.4rem;overflow-x:auto;padding-bottom:.2rem}
-.hourly-item{display:flex;flex-direction:column;align-items:center;gap:.2rem;padding:.4rem .3rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-sm);min-width:56px}
-.hourly-time{font-size:.68rem;color:var(--weather-secondary)}
-.hourly-temp{font-size:.8rem;font-weight:600;color:var(--weather-temp)}
-.finance-block{border:1px solid var(--think-border);border-radius:var(--radius-md);background:var(--think-bg);overflow:hidden}
-.finance-block .think-header{display:flex;align-items:center;gap:8px;padding:.5rem .75rem;background:var(--think-header-bg);border-bottom:1px solid transparent;font-size:.78rem;font-weight:500;color:var(--think-header-text);cursor:pointer;user-select:none}
-.finance-block .think-header:hover{background:var(--bg-hover)}
-.finance-block.open .think-header{border-bottom-color:var(--think-border)}
-.finance-block .finance-body{display:grid;grid-template-rows:0fr;opacity:0;padding:0 .8rem;transform:translateY(-4px);transition:grid-template-rows .48s var(--ease-panel),opacity .28s ease,padding .48s var(--ease-panel),transform .4s var(--ease-panel);font-size:.82rem;color:var(--think-text)}
-.finance-block.open .finance-body{grid-template-rows:1fr;opacity:1;padding:.75rem .8rem;transform:translateY(0)}
-.finance-body-inner{min-height:0;overflow:hidden}
-.finance-value{font-size:1.4rem;font-weight:700;color:var(--finance-text);margin-bottom:.35rem}
-.finance-details{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.4rem}
-.finance-details span{background:var(--bg-hover);padding:.25rem .5rem;border-radius:var(--radius-sm);font-size:.72rem;color:var(--finance-text)}
-.chart-container{width:100%;height:70px;margin-top:.5rem}
-.chart-container svg{width:100%;height:100%;display:block}
-.math-card{border:1px solid var(--think-border);border-radius:var(--radius-md);background:var(--think-bg);overflow:hidden;width:100%}
-.math-header{display:flex;align-items:center;gap:8px;padding:.55rem .75rem;background:var(--think-header-bg);cursor:pointer;user-select:none;font-size:.78rem;font-weight:500;color:var(--think-header-text);border-bottom:1px solid transparent;min-height:32px}
-.math-header:hover{background:var(--bg-hover)}
-.math-card.open .math-header{border-bottom-color:var(--think-border)}
-.math-body{display:grid;grid-template-rows:0fr;opacity:0;padding:0 .8rem;transform:translateY(-4px);transition:grid-template-rows .48s var(--ease-panel),opacity .28s ease,padding .48s var(--ease-panel),transform .4s var(--ease-panel)}
-.math-card.open .math-body{grid-template-rows:1fr;opacity:1;padding:.7rem .8rem;transform:translateY(0)}
-.math-body-inner{min-height:0;overflow:hidden}
-.code-block-header{display:flex;justify-content:space-between;align-items:center;padding:.3rem .6rem;background:#111;color:#999;border-radius:var(--radius-sm) var(--radius-sm) 0 0;font-size:.75rem;border-bottom:1px solid #000}
-.code-btn-group{display:flex;gap:2px;align-items:center}
-.code-btn{background:none;border:none;color:var(--text-tertiary);padding:3px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:.7;border-radius:0;outline:none;line-height:1}
-.code-btn:hover:not(:disabled){color:var(--text-primary);opacity:1;background:none;border:none}
-.code-btn[disabled],.code-btn:disabled{opacity:.25;cursor:not-allowed;pointer-events:none}
-.math-code-block{background:var(--code-bg);border:1px solid var(--border-color);border-top:none;border-radius:0 0 var(--radius-sm) var(--radius-sm);padding:.8rem;font-family:var(--font-mono);font-size:.82rem;white-space:pre-wrap;word-break:break-word;color:#ffffff;margin:0;overflow-x:auto;overflow-y:auto;max-height:340px}
-.tool-error{padding:.5rem .75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-sm);font-size:.8rem;color:var(--think-text);line-height:1.5}
-.tool-icon{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:14px;height:14px;color:var(--think-header-text)}
-.tool-icon svg{display:block;width:100%;height:100%}
-.tool-hdr{display:flex;align-items:center;gap:8px}
-.tool-hdr .swap-chevron{display:none !important;flex-shrink:0;align-items:center;justify-content:center;color:var(--think-header-text);width:14px;height:14px;transition:transform .4s var(--ease-panel)}
-.tool-hdr .swap-chevron svg{display:block;width:100%;height:100%}
-.tool-hdr:hover .swap-chevron{display:inline-flex !important}
-.tool-hdr .swap-icon{display:inline-flex !important;flex-shrink:0;align-items:center;justify-content:center;color:var(--think-header-text);min-width:14px;min-height:14px}
-.tool-hdr .swap-icon > svg{width:14px;height:14px;display:block}
-.tool-hdr .swap-icon .fav-stack{display:inline-flex;margin-right:0}
-.tool-hdr:hover .swap-icon{display:none !important}
-.tool-hdr .th-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.search-block.open > .search-header > .swap-chevron,
-.weather-block.open > .weather-header > .swap-chevron,
-.finance-block.open > .think-header > .swap-chevron,
-.math-card.open > .math-header > .swap-chevron,
-.trace-block.open > .trace-header > .swap-chevron{transform:rotate(90deg)}
-.analyse-header.static-icon{display:flex;align-items:center;gap:8px}
-.analyse-header.static-icon .analyse-icon{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:14px;height:14px;color:var(--think-header-text)}
-.analyse-header.static-icon .analyse-icon svg{width:100%;height:100%;display:block}
-.analyse-header.static-icon .analyse-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+const TTFT_TEXT_MS   = 35000;
+const TTFT_CODE_MS   = 45000;
+const TTFT_VISION_MS = 40000;
+const CHUNK_WATCHDOG_MS = 120000;
 
-/* CHART */
-.chart-block{background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);padding:1rem;margin:.5rem 0;width:100%}
-.chart-block-header{display:flex;align-items:center;justify-content:space-between;gap:.6rem;margin-bottom:.7rem}
-.chart-block-title{font-size:.85rem;font-weight:600;color:var(--text-primary);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.chart-block-actions{display:flex;gap:2px;flex-shrink:0}
-.chart-action-btn{background:none;border:none;color:var(--text-tertiary);cursor:pointer;padding:5px;border-radius:6px;display:flex;align-items:center;justify-content:center}
-.chart-action-btn:hover{background:var(--bg-hover);color:var(--text-primary)}
-.chart-block-body{width:100%}
-.chart-block svg.chart-svg{width:100%;height:auto;display:block;max-height:420px}
-.chart-block .chart-legend{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.6rem;font-size:.75rem;color:var(--text-secondary)}
-.chart-block .chart-legend-item{display:inline-flex;align-items:center;gap:.35rem}
-.chart-block .chart-legend-swatch{width:10px;height:10px;border-radius:2px;display:inline-block}
-.chart-placeholder{display:flex;align-items:center;gap:.6rem;padding:1.4rem 1rem;background:var(--bg-input);border:1px dashed var(--border-color);border-radius:var(--radius-md);color:var(--text-tertiary);font-size:.82rem;font-weight:500;width:100%}
-.chart-placeholder-dot{width:10px;height:10px;border-radius:50%;background:var(--accent);flex-shrink:0;animation:softPulse 1.4s ease-in-out infinite}
-.chart-fullscreen-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:90;display:none;align-items:center;justify-content:center;padding:1.5rem}
-.chart-fullscreen-overlay.open{display:flex}
-.chart-fullscreen-panel{background:var(--bg-sidebar);border:1px solid var(--border-color);border-radius:var(--radius-xl);width:100%;max-width:1200px;height:100%;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.6)}
-.chart-fullscreen-header{display:flex;align-items:center;justify-content:space-between;gap:.6rem;padding:.9rem 1.1rem;border-bottom:1px solid var(--border-color);flex-shrink:0}
-.chart-fullscreen-header h3{font-size:1rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.chart-fullscreen-actions{display:flex;gap:.4rem;flex-shrink:0}
-.chart-fs-download{display:inline-flex;align-items:center;gap:.4rem;background:var(--accent);color:#fff;border:none;padding:.45rem .8rem;border-radius:var(--radius-sm);font-family:inherit;font-size:.78rem;font-weight:600;cursor:pointer;text-decoration:none}
-.chart-fs-download:hover{background:var(--accent-hover)}
-.chart-fs-close{background:none;border:none;color:var(--text-tertiary);cursor:pointer;padding:6px;border-radius:6px;display:flex;align-items:center;justify-content:center}
-.chart-fs-close:hover{background:var(--bg-hover);color:var(--text-primary)}
-.chart-fullscreen-body{flex:1;overflow:auto;padding:1.5rem;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.chart-fullscreen-body svg.chart-svg{width:100%;height:auto;max-width:100%;max-height:70vh}
-.chart-fullscreen-body .chart-legend{margin-top:1rem;font-size:.85rem;justify-content:center}
+const DISABLE_FAILURE_COOLDOWN = false;
+const MAX_HISTORY_MESSAGES = 6;
+const MAX_TOOL_RESULT_CHARS = 1200;
+const MAX_SEARCH_SOURCES = 5;
+const MAX_SEARCH_SNIPPET_CHARS = 500;
+const MAX_SEARCH_RAW_CHARS = 6000;
+const FAILURE_COOLDOWN_SECONDS = 30;
+const TOKEN_TTL = 30 * 24 * 60 * 60;
+const MAX_MSG = 50;
+const RATE_LIMIT_WINDOW = 60;
+const RATE_LIMIT_MAX = 20;
+const MAX_ATTACHMENTS_PER_MESSAGE = 5;
+const MAX_ATTACHMENT_BYTES = 15 * 1024 * 1024;
+const MAX_TOTAL_ATTACHMENT_BYTES = 20 * 1024 * 1024;
+const TOOL_FETCH_TIMEOUT_MS = 15000;
+const SEARCH_TIMEOUT_MS = 8000;
+const ANALYSE_TIMEOUT_MS = 15000;
+const MAX_TOOL_ROUNDS = 40;
+const SOFT_TOOL_ROUND_LIMIT = 10;
+const MAX_PARALLEL_TOOLS = 4;
+const TOOL_BATCH_TIMEOUT_MS = 45000;
+const MAX_READ_CHARS = 4000;
+const MAX_CONTINUATIONS = 25;
+const FASTEST_TTL = 86400;
+const LLM_MAX_ATTEMPTS = 3;
+const LLM_MAX_ATTEMPTS_CAPACITY = 4;
+const MAX_THINKING_CHARS = 6000;
+const TURN_DEADLINE_MS = 900000;
+const STREAM_HEARTBEAT_MS = 10000;
+const MAX_HISTORY_FOR_TOOLS = 20;
+const LLM_SILENCE_MS = 3000;
+const MAX_OUTPUT_TOKENS_PER_ROUND = 65535;
 
-/* MESSAGE CONTENT */
-.message-bubble pre{background:var(--code-bg);color:var(--code-text);border-radius:var(--radius-sm);padding:.8rem 1rem;overflow-x:auto;overflow-y:hidden;margin:.5rem 0;border:1px solid var(--border-color);font-size:.82rem;width:100%}
-.message-bubble code{font-family:var(--font-mono);font-size:.82em}
-.message-bubble pre code{color:var(--code-text);background:none}
-.message-bubble :not(pre)>code{background:rgba(255,255,255,.08);padding:.1em .3em;border-radius:3px}
-.message-row.user .message-bubble :not(pre)>code{background:rgba(255,255,255,.18)}
-.message-bubble p{margin-bottom:1rem;text-align:left}
-.message-bubble p:first-child{margin-top:0}
-.message-bubble p:last-child{margin-bottom:0}
-.message-bubble ul,.message-bubble ol{margin:.3rem 0;padding-left:1.6rem}
-.message-bubble li{margin-bottom:.2rem}
-.message-bubble li>p{margin:0}
-.message-bubble p:empty{display:none}
-.message-bubble h1{font-size:1.8rem;font-weight:700;margin-top:1.4rem;margin-bottom:.6rem;line-height:1.3}
-.message-bubble h2{font-size:1.5rem;font-weight:700;margin-top:1.3rem;margin-bottom:.5rem;line-height:1.35}
-.message-bubble h3{font-size:1.3rem;font-weight:600;margin-top:1.1rem;margin-bottom:.4rem;line-height:1.4}
-.message-bubble h4{font-size:1.1rem;font-weight:600;margin-top:1rem;margin-bottom:.3rem}
-.message-bubble h5{font-size:1rem;font-weight:500;margin-top:.9rem;margin-bottom:.2rem}
-.message-bubble h6{font-size:.9rem;font-weight:500;margin-top:.8rem;margin-bottom:.2rem}
-.message-bubble .msg-content > .trace-tool{margin:6px 0}
-.message-bubble .msg-content > .trace-tool + p,.message-bubble .msg-content > .trace-tool + ul,.message-bubble .msg-content > .trace-tool + ol,.message-bubble .msg-content > .trace-tool + .trace-block{margin-top:10px}
-.message-bubble .msg-content > p + .trace-tool,.message-bubble .msg-content > ul + .trace-tool,.message-bubble .msg-content > ol + .trace-tool,.message-bubble .msg-content > .trace-block + .trace-tool{margin-top:8px}
-.message-bubble .msg-content > .trace-block{margin:6px 0}
-.message-bubble .msg-content > .trace-block + .trace-block{margin-top:8px}
-.message-bubble .msg-content > .trace-block + p{margin-top:10px}
-.message-bubble .msg-content > p + .trace-block{margin-top:8px}
-.message-bubble .katex-display{overflow-x:auto;overflow-y:hidden;max-width:100%;text-align:center;padding:.4rem 0;scrollbar-width:none;-ms-overflow-style:none}
-.message-bubble .katex-display::-webkit-scrollbar{display:none;width:0;height:0}
-span.katex-inline-block{display:block;width:100%;text-align:center;margin:.8rem 0;padding:.3rem 0;overflow-x:auto;overflow-y:hidden;max-width:100%;vertical-align:baseline}
-span.katex-inline-block::-webkit-scrollbar{display:none;width:0;height:0}
-span.katex-inline-block > .katex{display:inline-block;text-align:center}
+const MAX_EMBED_TEXTS_PER_CALL = 32;
+const MAX_EMBED_CHARS = 8000;
+const EMBED_TIMEOUT_MS = 15000;
 
-/* TABLE — vertical scroll only */
-.table-scroll{display:block;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;margin:0.8rem 0;border-radius:var(--radius-sm);border:1px solid var(--border-color);width:100%;max-width:100%;max-height:70vh}
-.table-scroll table{width:100%;table-layout:auto;border-collapse:collapse}
-.message-bubble table{border-collapse:collapse;font-size:0.85rem;display:table;border-spacing:0}
-.message-bubble thead{border-bottom:2px solid var(--border-color)}
-.message-bubble th{text-align:left;padding:0.5rem 0.75rem;font-weight:600;color:var(--text-primary);background:var(--bg-hover);white-space:normal}
-.message-bubble td{padding:0.45rem 0.75rem;border-bottom:1px solid var(--border-color);color:var(--text-primary);vertical-align:top;white-space:normal;overflow-wrap:anywhere;word-break:break-word;min-width:0}
-.message-bubble tbody tr:hover{background:var(--bg-hover)}
-.message-bubble td .katex,.message-bubble th .katex{font-size:.95em;line-height:1.4}
-.message-bubble td .katex-display,.message-bubble th .katex-display{margin:.15em 0;text-align:left;overflow-x:auto;overflow-y:hidden}
-.message-bubble td > p,.message-bubble th > p{margin:0}
-.message-bubble td code,.message-bubble th code{background:rgba(255,255,255,.08);padding:.1em .35em;border-radius:3px;font-family:var(--font-mono);font-size:.85em;white-space:normal;word-break:break-word;overflow-wrap:anywhere}
-[data-theme="light"] .message-bubble td code,[data-theme="light"] .message-bubble th code{background:rgba(0,0,0,.06)}
-.message-bubble td a,.message-bubble th a{color:var(--link-color);text-decoration:underline;text-underline-offset:2px}
-.message-bubble .code-block-header{display:flex;justify-content:space-between;align-items:center;padding:.3rem .6rem;background:var(--bg-hover);border-radius:var(--radius-sm) var(--radius-sm) 0 0;font-size:.75rem;color:var(--text-secondary);border-bottom:1px solid var(--border-color)}
-.message-bubble pre[data-header-added]{border-top-left-radius:0;border-top-right-radius:0;margin-top:0}
+const FILE_PREVIEW_LINES = 10;
+const FILE_PREVIEW_CHARS = 500;
+const FILE_INDEX_CHARS = 2500;
 
-.pulsing-dots{display:flex;align-items:center;justify-content:flex-start;padding:.55rem 0 .2rem 0;margin-top:auto;height:16px}
-.pulsing-dots.hidden{display:none}
-.pulsing-dots::before{content:'';width:12px;height:12px;border-radius:50%;background:#ffffff;animation:softPulse 1.6s ease-in-out infinite}
-.pulsing-dots span{display:none}
-@keyframes softPulse{0%,100%{transform:scale(.6);opacity:.35;}50%{transform:scale(1);opacity:1;}}
-[data-theme="light"] .pulsing-dots::before{background:#111111;}
-.msg-actions{display:flex;gap:2px;margin-top:.2rem;padding:0 .1rem;min-height:0}
-.msg-actions:empty{display:none}
-.message-row.user .msg-actions{justify-content:flex-end}
-.message-row.assistant .msg-actions{justify-content:flex-start}
-.msg-actions button{background:none;border:none;color:var(--text-tertiary);cursor:pointer;padding:5px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:inherit;line-height:1;touch-action:manipulation}
-.msg-actions button:hover{background:var(--bg-hover);color:var(--text-primary)}
-.msg-actions button.speak-btn.speaking{color:var(--accent);background:var(--accent-subtle)}
+const FREE_TIER_TPM_LIMIT = 250000;
+const ESTIMATED_TOKENS_PER_CHAR = 0.25;
 
-#loading-screen{display:flex;height:100vh;width:100vw;background:var(--bg-primary)}
-#auth-screen{display:flex;align-items:center;justify-content:center;height:100vh;width:100vw;background:var(--bg-primary)}
-.auth-card{background:var(--bg-sidebar);border:1px solid var(--border-color);border-radius:var(--radius-xl);padding:2rem;width:90%;max-width:400px;box-shadow:var(--shadow-md)}
-.auth-card h2{font-size:1.5rem;font-weight:700;margin-bottom:1.5rem;text-align:center}
-.auth-tabs{display:flex;gap:.5rem;margin-bottom:1.5rem}
-.auth-tab{flex:1;padding:.5rem;text-align:center;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-sm);cursor:pointer;color:var(--text-secondary);font-weight:500;transition:all var(--transition-fast)}
-.auth-tab.active{background:var(--accent-subtle);color:var(--accent);border-color:var(--accent)}
-.auth-field{margin-bottom:1rem}
-.auth-field label{display:block;font-size:.75rem;color:var(--text-secondary);margin-bottom:.25rem}
-.auth-field input{width:100%;padding:.6rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-sm);color:var(--text-primary);font-family:inherit;font-size:.9rem}
-.auth-field input:focus{outline:none;border-color:var(--accent)}
-.auth-btn{width:100%;padding:.7rem;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-weight:600;font-size:.9rem;cursor:pointer;transition:background var(--transition-fast);margin-top:.5rem}
-.auth-btn:hover{background:var(--accent-hover)}
-.auth-error{color:var(--danger);font-size:.8rem;margin-top:.5rem;text-align:center}
+const GEMINI_FILES_UPLOAD_URL = 'https://generativelanguage.googleapis.com/upload/v1beta/files';
+const GEMINI_FILES_BASE       = 'https://generativelanguage.googleapis.com/v1beta';
+const GEMINI_FILE_CACHE_PREFIX = 'gfile:';
+const GEMINI_FILE_CACHE_TTL    = 47 * 60 * 60;
+const GEMINI_FILE_UPLOAD_TIMEOUT_MS = 60000;
+const GEMINI_FILE_UPLOAD_BUCKET = 'gfile_rl';
+const GEMINI_FILE_UPLOAD_MAX_PER_MIN = 2;
 
-#app{display:flex;height:100dvh;width:100vw;overflow:hidden}
-.sidebar{width:280px;min-width:280px;height:100%;background:var(--bg-sidebar);border-right:1px solid var(--border-color);display:flex;flex-direction:column;transition:width var(--transition),min-width var(--transition),opacity var(--transition);z-index:30;overflow:hidden}
-.sidebar.collapsed{width:0;min-width:0;opacity:0;pointer-events:none;border-right:none}
-.sidebar-inner{width:280px;min-width:280px;height:100%;display:flex;flex-direction:column;padding:.8rem .6rem}
-.sidebar-logo{display:flex;align-items:center;gap:.5rem;padding:.4rem .5rem;margin-bottom:.8rem;font-weight:700;font-size:1.1rem;user-select:none}
-.sidebar-logo .logo-icon{width:26px;height:26px;flex-shrink:0;display:inline-block;background:var(--accent);-webkit-mask:url("logo-dark.png") center/contain no-repeat;mask:url("logo-dark.png") center/contain no-repeat;-webkit-mask-mode:luminance;mask-mode:luminance;}
-.btn-new-chat{display:flex;align-items:center;gap:.5rem;width:100%;padding:.6rem .8rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-weight:500;font-size:.88rem;cursor:pointer;transition:all var(--transition-fast);margin-bottom:.6rem;font-family:inherit}
-.btn-new-chat:hover{background:var(--bg-hover);border-color:var(--text-tertiary)}
-.btn-new-chat:disabled{opacity:.5;cursor:not-allowed}
-.search-wrapper{position:relative;margin-bottom:.6rem}
-.search-wrapper input{width:100%;padding:.5rem .6rem .5rem 2rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-sm);color:var(--text-primary);font-size:.82rem;font-family:inherit}
-.search-wrapper input:focus{outline:none;border-color:var(--accent)}
-.search-wrapper .search-icon{position:absolute;left:.55rem;top:50%;transform:translateY(-50%);color:var(--text-tertiary);pointer-events:none}
-.chat-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:2px;min-height:0}
-.chat-list-item{display:flex;align-items:center;justify-content:space-between;padding:.5rem .7rem;border-radius:var(--radius-sm);cursor:pointer;transition:all var(--transition-fast);color:var(--text-secondary);font-size:.82rem;gap:.3rem;min-height:38px;user-select:none;position:relative}
-.chat-list-item:hover{background:var(--bg-hover);color:var(--text-primary)}
-.chat-list-item.active{background:var(--accent-subtle);color:var(--text-primary);font-weight:500}
-.chat-list-item .chat-title{flex:1 1 auto;min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;display:block}
-.chat-list-item .chat-title.generating{color:var(--text-tertiary);font-style:italic}
-.chat-list-item .chat-spinner{width:10px;height:10px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-right:.4rem;animation:softPulse 1.4s ease-in-out infinite}
-.chat-list-item .chat-actions{display:flex;gap:2px;opacity:0;transition:opacity var(--transition-fast)}
-.chat-list-item:hover .chat-actions{opacity:1}
-.chat-list-item .chat-actions button{padding:3px 5px;border-radius:4px;color:var(--text-tertiary);cursor:pointer;transition:all var(--transition-fast);background:none;border:none;display:flex;align-items:center;justify-content:center}
-.chat-list-item .chat-actions button:hover{color:var(--text-primary);background:var(--bg-input)}
-.chat-list-item .chat-actions button.danger:hover{color:var(--danger)}
-.sidebar-bottom{padding-top:.4rem;display:flex;flex-direction:column;gap:2px}
-.sidebar-bottom button,.sidebar-bottom .user-info{display:flex;align-items:center;gap:.4rem;padding:.5rem .7rem;border-radius:var(--radius-sm);cursor:pointer;color:var(--text-secondary);font-size:.82rem;transition:all var(--transition-fast);background:none;border:none;font-family:inherit;width:100%;text-align:left}
-.sidebar-bottom button:hover,.sidebar-bottom .user-info:hover{background:var(--bg-hover);color:var(--text-primary)}
-.user-avatar{width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:.7rem;text-transform:uppercase}
-.toggle-sidebar-btn{position:fixed;top:.7rem;left:.7rem;z-index:50;width:36px;height:36px;border-radius:var(--radius-sm);background:var(--bg-sidebar);border:1px solid var(--border-color);color:var(--text-secondary);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:left var(--transition),background var(--transition-fast),color var(--transition-fast);box-shadow:var(--shadow-sm)}
-.sidebar:not(.collapsed)~.toggle-sidebar-btn{left:calc(280px - 36px - .6rem)}
-.toggle-sidebar-btn:hover{color:var(--text-primary);background:var(--bg-hover)}
-.toggle-sidebar-btn:active{transform:scale(.92)}
-.main-area{flex:1;display:flex;flex-direction:column;height:100%;min-width:0;background:var(--bg-chat)}
-.chat-container{flex:1;display:flex;flex-direction:column;min-height:0}
-.messages-area{flex:1;overflow-y:auto;padding:1rem .8rem;display:flex;flex-direction:column;gap:.9rem;-webkit-overflow-scrolling:touch}
-.welcome-screen{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;text-align:center;gap:1.2rem}
-.welcome-screen h2{font-size:1.7rem;font-weight:700;letter-spacing:-.5px}
-.welcome-screen p{color:var(--text-secondary);font-size:.95rem;max-width:440px}
-.modes-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.7rem;max-width:520px;width:100%;margin-bottom:.4rem}
-.mode-card{display:flex;align-items:center;gap:.7rem;padding:.95rem 1.05rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-lg);cursor:pointer;text-align:left;font-family:inherit;color:var(--text-primary);transition:background var(--transition),border-color var(--transition),transform var(--transition)}
-.mode-card:hover{background:var(--bg-hover);border-color:var(--text-tertiary);transform:translateY(-1px)}
-.mode-card:active{transform:translateY(0) scale(.99)}
-.mode-card.active{border-color:var(--accent);background:var(--accent-subtle);box-shadow:0 0 0 1px var(--accent)}
-.mode-card .mode-icon{width:38px;height:38px;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;background:var(--accent-subtle);color:var(--accent);flex-shrink:0}
-.mode-card.active .mode-icon{background:var(--accent);color:#fff}
-.mode-card .mode-info{flex:1;min-width:0}
-.mode-card .mode-title{font-size:.9rem;font-weight:600;margin-bottom:.1rem}
-.mode-card .mode-desc{font-size:.72rem;color:var(--text-secondary);line-height:1.35}
-.mode-card.active .mode-desc{color:var(--text-primary);opacity:.85}
+const STICKY_MODEL_KEY = 'sticky:model';
+const STICKY_MODEL_TTL = 5 * 60;
 
-.message-row{display:flex;flex-direction:column;gap:.3rem;max-width:1100px;width:100%;margin:0 auto}
-.message-row.user{align-items:flex-end}
-.message-row.assistant{align-items:flex-start}
-.message-bubble{max-width:90%;padding:.9rem 1.1rem;border-radius:var(--radius-md);word-break:break-word;position:relative;line-height:1.7;font-size:.88rem;display:flex;flex-direction:column}
-.message-row.user .message-bubble{background:var(--accent);color:#fff;border-bottom-right-radius:4px;max-width:80%}
-.message-row.user .message-bubble .msg-content{white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere}
-.message-row.assistant .message-bubble{background:transparent !important;border:none !important;padding:0 !important;max-width:100%;width:100%;border-radius:0;box-shadow:none !important}
-.message-row.user .image-bubble{padding:0;background:transparent;border:none;border-radius:var(--radius-md);overflow:hidden;max-width:min(320px, 80%);box-shadow:0 2px 10px rgba(0,0,0,0.28);line-height:0;margin-bottom:6px}
-.message-row.user .image-bubble img{display:block;width:100%;height:auto;max-height:340px;object-fit:cover;border-radius:var(--radius-md);cursor:pointer;margin:0}
-.message-row.user .image-bubble:last-child{margin-bottom:0}
-.message-row.user .image-gallery{display:grid;gap:6px;align-self:flex-end;margin-bottom:6px;max-width:min(520px, 80%)}
-.message-row.user .image-gallery.g2{grid-template-columns:repeat(2, 1fr)}
-.message-row.user .image-gallery.g3{grid-template-columns:repeat(3, 1fr);max-width:min(620px, 85%)}
-.message-row.user .image-gallery .image-bubble{max-width:100%;margin-bottom:0;align-self:auto}
-.message-row.user .image-gallery .image-bubble img{max-height:220px;aspect-ratio:1;object-fit:cover}
-.message-row.user .file-card-external{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);cursor:pointer;align-self:flex-end;max-width:min(360px,80%);margin-bottom:6px;transition:border-color .15s ease,background .15s ease,transform .1s ease;font-family:inherit;text-align:left;user-select:none}
-.message-row.user .file-card-external:hover{border-color:var(--accent);background:var(--bg-hover)}
-.message-row.user .file-card-external:active{transform:scale(.995)}
-.message-row.user .file-card-external:last-of-type{margin-bottom:0}
-.message-row.user .file-card-external .file-icon{width:36px;height:36px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border-radius:8px;background:var(--accent-subtle);color:var(--accent)}
-.message-row.user .file-card-external .file-icon svg{width:18px;height:18px;display:block}
-.message-row.user .file-card-external .file-info{flex:1;min-width:0}
-.message-row.user .file-card-external .file-name{font-size:.82rem;font-weight:500;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.3}
-.message-row.user .file-card-external .file-meta{font-size:.68rem;color:var(--text-tertiary);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.message-row.user .message-bubble.collapsed .msg-content{max-height:180px;overflow:hidden;-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 44px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 44px),transparent)}
-.message-row.user .msg-expand-btn{display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,0.14);border:none;color:#fff;padding:4px 10px;margin:6px auto 0;border-radius:14px;font-size:.7rem;font-family:inherit;font-weight:600;cursor:pointer;align-self:center}
-.message-row.user .msg-expand-btn:hover{background:rgba(255,255,255,0.24)}
-.message-row.user .msg-expand-btn svg{width:12px;height:12px;transition:transform .3s ease}
+const SEARCH_CACHE_PREFIX = 'scache:';
+const SEARCH_CACHE_TTL = 10 * 60;
 
-.input-area{padding:.6rem .8rem .8rem;background:transparent;position:relative}
-.attach-strip{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:.5rem;max-width:1100px;margin-left:auto;margin-right:auto;}
-.attach-strip:empty{display:none}
-.thumb{position:relative;width:56px;height:56px;border-radius:8px;flex-shrink:0}
-.thumb img{width:100%;height:100%;border-radius:8px;object-fit:cover;display:block;cursor:zoom-in;border:1px solid var(--border-color);transition:border-color .15s}
-.thumb img:hover{border-color:var(--accent)}
-.thumb .thumb-remove{position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--bg-sidebar);border:1px solid var(--border-color);color:var(--text-secondary);cursor:pointer;font-size:12px;line-height:1;display:flex;align-items:center;justify-content:center;padding:0;z-index:2;transition:all .15s}
-.thumb .thumb-remove:hover{background:var(--danger);color:#fff;border-color:var(--danger)}
-.att-file-card{display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--bg-input);border:1px solid var(--border-color);border-radius:8px;min-width:200px;max-width:280px;position:relative;transition:border-color .15s;cursor:pointer}
-.att-file-card:hover{border-color:var(--accent)}
-.att-file-card .file-icon{width:34px;height:34px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border-radius:6px;background:var(--accent-subtle);color:var(--accent)}
-.att-file-card .file-icon svg{width:16px;height:16px}
-.att-file-card .file-info{flex:1;min-width:0}
-.att-file-card .file-name{font-size:.8rem;font-weight:500;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.3}
-.att-file-card .file-meta{font-size:.68rem;color:var(--text-tertiary);margin-top:2px}
-.att-file-card .file-remove{width:20px;height:20px;flex-shrink:0;background:none;border:none;color:var(--text-tertiary);cursor:pointer;border-radius:4px;display:flex;align-items:center;justify-content:center;transition:all .15s}
-.att-file-card .file-remove:hover{background:var(--bg-hover);color:var(--danger)}
-body.fullscreen-drag::after{content:'Drop files here';position:fixed;inset:12px;z-index:400;border:2px dashed var(--accent);border-radius:var(--radius-xl);background:var(--accent-subtle);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:600;pointer-events:none}
-.actions-row{position:relative;max-width:1100px;margin:0 auto .4rem auto;display:flex;justify-content:flex-end;gap:.4rem;padding:0 .5rem}
-.actions-row button{background:none;border:1px solid transparent;color:var(--text-tertiary);cursor:pointer;border-radius:10px;transition:all var(--transition-fast);display:flex;align-items:center;justify-content:center;width:40px;height:40px;position:relative;flex-shrink:0}
-.actions-row button:hover{color:var(--text-primary);background:var(--bg-hover);border-color:var(--border-color)}
-.actions-row button:active{transform:scale(.9)}
-.actions-row button.send-btn{color:var(--accent)}
-.actions-row button.send-btn:hover{background:var(--accent-subtle)}
-.actions-row button.send-btn:disabled{color:var(--text-tertiary);cursor:not-allowed;opacity:.4}
-.actions-row button.stop-btn{color:var(--danger)}
-.actions-row button.stop-btn:hover{background:rgba(239,68,68,0.15);border-color:var(--danger)}
-.actions-row button .badge{position:absolute;top:2px;right:2px;min-width:14px;height:14px;padding:0 3px;border-radius:7px;background:var(--accent);color:#fff;font-size:.6rem;font-weight:700;line-height:14px;text-align:center;pointer-events:none;}
-.actions-row button.scroll-to-bottom-btn{position:absolute !important;right:.5rem !important;bottom:100% !important;margin:0 0 8px 0 !important;width:34px !important;height:34px !important;min-width:0 !important;border-radius:50% !important;background:var(--scroll-bg) !important;color:var(--scroll-color) !important;border:1px solid var(--scroll-border) !important;cursor:pointer;padding:0 !important;line-height:0 !important;font-size:0 !important;display:block !important;opacity:0;transform:translateY(8px);pointer-events:none;z-index:26;transition:opacity .25s ease,transform .25s ease,filter .15s ease}
-.actions-row button.scroll-to-bottom-btn:hover{filter:brightness(1.15)}
-.actions-row button.scroll-to-bottom-btn.visible{opacity:1 !important;transform:translateY(0) !important;pointer-events:auto !important}
-.actions-row button.scroll-to-bottom-btn svg,.actions-row button.scroll-to-bottom-btn i{position:absolute !important;top:50% !important;left:50% !important;transform:translate(-50%,-50%) !important;width:16px !important;height:16px !important;stroke:currentColor;color:currentColor;stroke-width:2.25;fill:none;display:block;pointer-events:none}
-.input-wrapper{max-width:1100px;margin:0 auto;display:flex;align-items:center;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-lg);padding:.2rem .5rem;transition:border var(--transition-fast),box-shadow var(--transition-fast);box-shadow:var(--shadow-sm)}
-.input-wrapper:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-subtle)}
-.input-wrapper textarea{flex:1;background:transparent;border:none;resize:none;color:var(--text-primary);font-size:.88rem;font-family:inherit;outline:none;max-height:none;line-height:1.8;padding:.2rem 0;margin:0;-webkit-appearance:none;appearance:none;overflow-y:hidden}
-.input-wrapper textarea::placeholder{color:var(--text-tertiary)}
+const CONTINUATION_PROMPT =
+  'Resume exactly where the previous message stopped. Output only the continuation — do not repeat any earlier text, do not add a prefix, do not acknowledge this instruction. Start mid-sentence as if the previous message and this one are one continuous reply.';
 
-/* SETTINGS / MODALS / TOASTS */
-.settings-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:60;display:none;align-items:center;justify-content:center;opacity:0;transition:opacity .22s ease;}
-.settings-overlay.open{display:flex;opacity:1}
-.settings-panel{position:relative;background:var(--bg-sidebar);border:1px solid var(--border-color);border-radius:var(--radius-xl);padding:1.4rem;width:90%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.6);transform:translateY(14px) scale(.96);transition:transform .32s cubic-bezier(.22,1,.36,1);display:flex;flex-direction:column;gap:.55rem;max-height:85vh;overflow-y:auto;}
-.settings-overlay.open .settings-panel{transform:translateY(0) scale(1)}
-.settings-panel h3{font-size:1rem;font-weight:700;text-align:center;margin-bottom:.4rem;color:var(--text-primary);display:flex;align-items:center;justify-content:center;gap:.4rem;}
-.settings-close{position:absolute;top:.7rem;right:.7rem;background:none;border:none;color:var(--text-tertiary);cursor:pointer;padding:6px;border-radius:6px;display:flex;align-items:center;justify-content:center;}
-.settings-close:hover{background:var(--bg-hover);color:var(--text-primary)}
-.customize-row{display:flex;gap:.3rem;flex-wrap:wrap;padding:.55rem .2rem;border-top:1px solid var(--border-color);}
-.customize-row:first-of-type{border-top:none;padding-top:0}
-.customize-row .row-label{font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-tertiary);width:100%;margin-bottom:.2rem;}
-.customize-slider-row .slider-value{float:right;color:var(--text-primary);font-weight:600}
-.theme-swatches{display:grid;grid-template-columns:repeat(3,1fr);gap:.3rem;width:100%}
-.theme-swatch{padding:.55rem .2rem;border-radius:var(--radius-sm);border:2px solid var(--border-color);cursor:pointer;font-size:.65rem;font-weight:700;text-align:center;color:#fff;font-family:inherit;transition:border-color .15s ease,box-shadow .15s ease;}
-.theme-swatch.active{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-subtle)}
-.swatch-dark{background:linear-gradient(135deg,#0f0f0f 50%,#232323 50%)}
-.swatch-light{background:linear-gradient(135deg,#ffffff 50%,#e4e4e4 50%);color:#111}
-.swatch-midnight{background:linear-gradient(135deg,#050507 50%,#17171f 50%)}
-.accent-swatches{display:grid;grid-template-columns:repeat(5,1fr);gap:.4rem;width:100%}
-.accent-swatch{aspect-ratio:1;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:transform .15s ease,box-shadow .15s ease;}
-.accent-swatch:hover{transform:scale(1.08)}
-.accent-swatch.active{border-color:var(--text-primary);box-shadow:0 0 0 2px var(--bg-sidebar),0 0 0 4px var(--text-primary);}
-.customize-slider-row{width:100%}
-.customize-slider-row input[type="range"]{width:100%;padding:0;height:6px;-webkit-appearance:none;appearance:none;background:var(--border-color);border-radius:3px;cursor:pointer;}
-.customize-slider-row input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;background:var(--accent);border-radius:50%;cursor:pointer;border:2px solid var(--bg-sidebar);}
-.customize-actions{display:flex;gap:.5rem;width:100%;margin-top:.6rem;}
-.customize-actions button{flex:1;padding:.55rem .9rem;border-radius:var(--radius-sm);font-family:inherit;font-size:.82rem;font-weight:600;cursor:pointer;border:none;display:inline-flex;align-items:center;justify-content:center;gap:.4rem;}
-.btn-primary{background:var(--accent);color:#fff}
-.btn-primary:hover{background:var(--accent-hover)}
-.btn-secondary{background:var(--bg-input);color:var(--text-primary);border:1px solid var(--border-color)}
-.btn-secondary:hover{background:var(--bg-hover)}
-.confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;display:none;align-items:center;justify-content:center}
-.confirm-overlay.open{display:flex}
-.confirm-dialog{background:var(--bg-sidebar);border:1px solid var(--border-color);border-radius:var(--radius-xl);padding:1.5rem;width:90%;max-width:400px;box-shadow:var(--shadow-md);text-align:center}
-.confirm-dialog p{font-size:.95rem;margin-bottom:1.5rem}
-.confirm-actions{display:flex;gap:.5rem;justify-content:center}
-.confirm-actions button{padding:.5rem 1.2rem;border-radius:var(--radius-sm);font-size:.85rem;cursor:pointer;border:1px solid var(--border-color);background:var(--bg-input);color:var(--text-primary);font-weight:500}
-.confirm-actions button.btn-confirm-danger{background:var(--danger);color:#fff;border-color:var(--danger)}
-.confirm-actions button.btn-confirm-danger:hover{background:var(--danger-hover)}
-.confirm-actions button:hover{background:var(--bg-hover)}
-.profile-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:65;display:none;align-items:center;justify-content:center}
-.profile-overlay.open{display:flex}
-.profile-panel{position:relative;background:var(--bg-sidebar);border:1px solid var(--border-color);border-radius:var(--radius-xl);padding:2rem 1.8rem 1.5rem;width:90%;max-width:440px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-md);text-align:center}
-.profile-close{position:absolute;top:.7rem;right:.7rem;background:none;border:none;color:var(--text-tertiary);cursor:pointer;padding:6px;border-radius:6px;display:flex;align-items:center;justify-content:center}
-.profile-close:hover{background:var(--bg-hover);color:var(--text-primary)}
-.profile-avatar{width:72px;height:72px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.8rem;text-transform:uppercase;margin:0 auto .8rem}
-.profile-name{font-size:1.1rem;font-weight:700;margin-bottom:.1rem}
-.profile-username{font-size:.8rem;color:var(--text-secondary);margin-bottom:1.4rem}
-.profile-actions{display:flex;flex-direction:column;gap:.5rem}
-.profile-actions .profile-btn{display:flex;align-items:center;justify-content:center;gap:.5rem;padding:.65rem 1rem;border-radius:var(--radius-md);font-size:.85rem;font-weight:600;font-family:inherit;cursor:pointer;border:1px solid var(--border-color);background:var(--bg-input);color:var(--text-primary)}
-.profile-actions .profile-btn:hover{background:var(--bg-hover)}
-.profile-actions .profile-btn.danger{border-color:var(--danger);color:var(--danger);background:transparent}
-.profile-actions .profile-btn.danger:hover{background:var(--danger);color:#fff}
-.sources-overlay{position:fixed;inset:0;background:rgba(0,0,0,0);z-index:68;pointer-events:none;transition:background .3s ease}
-.sources-overlay.open{background:rgba(0,0,0,.5);pointer-events:auto}
-.sources-panel{position:absolute;top:0;right:0;bottom:0;width:100%;max-width:420px;background:var(--bg-sidebar);border-left:1px solid var(--border-color);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .36s var(--ease-drawer);box-shadow:-12px 0 40px rgba(0,0,0,.45)}
-.sources-overlay.open .sources-panel{transform:translateX(0)}
-.sources-header{display:flex;align-items:center;justify-content:space-between;padding:.9rem 1rem;border-bottom:1px solid var(--border-color);flex-shrink:0}
-.sources-header h3{font-size:.95rem;font-weight:700;display:flex;align-items:center;gap:.5rem}
-.sources-header h3 svg{color:var(--accent)}
-.sources-close{background:none;border:none;color:var(--text-tertiary);cursor:pointer;padding:6px;border-radius:6px;display:flex;align-items:center;justify-content:center}
-.sources-close:hover{background:var(--bg-hover);color:var(--text-primary)}
-.sources-body{flex:1;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:1.4rem}
-.sources-section{display:flex;flex-direction:column;gap:.55rem}
-.sources-section-title{font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-tertiary);padding:0 .15rem}
-.sources-list{display:flex;flex-direction:column;gap:.5rem}
-.sources-list .search-source-card{padding:9px 11px}
-.sources-empty{color:var(--text-tertiary);font-size:.82rem;text-align:center;padding:2rem 1rem}
-.tool-summary-row{display:flex;align-items:center;gap:.7rem;padding:.6rem .75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-sm);font-size:.78rem}
-.tool-summary-label{font-weight:600;color:var(--text-secondary);flex-shrink:0;min-width:78px}
-.tool-summary-value{color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
-.toast-container{position:fixed;top:1.2rem;right:1.2rem;z-index:70;display:flex;flex-direction:column;gap:.55rem;pointer-events:none;max-width:min(400px,calc(100vw - 2rem))}
-.toast{pointer-events:auto;position:relative;display:flex;align-items:center;gap:.7rem;padding:.75rem 1.05rem .75rem .85rem;border-radius:14px;background:var(--bg-sidebar);border:1px solid var(--border-color);color:var(--text-primary);font-size:.82rem;font-weight:500;line-height:1.35;box-shadow:0 12px 36px rgba(0,0,0,.45);opacity:0;transform:translateX(20px) scale(.96);animation:toastIn .38s cubic-bezier(.21,1.02,.73,1) forwards;overflow:hidden}
-.toast-icon{width:22px;height:22px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border-radius:50%;background:var(--bg-hover);color:var(--text-secondary)}
-.toast-icon svg{width:13px;height:13px;display:block}
-.toast-message{flex:1;min-width:0;word-break:break-word}
-.toast.success{border-color:rgba(34,197,94,.35)}
-.toast.success .toast-icon{background:rgba(34,197,94,.15);color:var(--success)}
-.toast.error{border-color:rgba(239,68,68,.35)}
-.toast.error .toast-icon{background:rgba(239,68,68,.15);color:var(--danger)}
-.toast.warning{border-color:rgba(245,158,11,.35)}
-.toast.warning .toast-icon{background:rgba(245,158,11,.15);color:var(--warning)}
-.toast.info{border-color:rgba(14,165,233,.35)}
-.toast.info .toast-icon{background:var(--accent-subtle);color:var(--accent)}
-.toast::after{content:'';position:absolute;bottom:0;left:0;height:2px;background:var(--text-tertiary);animation:toastProgress var(--dur,2400ms) linear forwards}
-.toast.success::after{background:var(--success)}
-.toast.error::after{background:var(--danger)}
-.toast.warning::after{background:var(--warning)}
-.toast.info::after{background:var(--accent)}
-.toast.out{opacity:0;transform:translateX(20px) scale(.96)}
-@keyframes toastIn{to{opacity:1;transform:translateX(0) scale(1)}}
-@keyframes toastProgress{from{width:100%}to{width:0}}
+const RECITATION_CONTINUATION_PROMPT =
+  'Resume the analysis from exactly where the previous message stopped. Rewrite every idea in completely different sentence structures and word choices — paraphrase aggressively. Do NOT quote, do NOT reproduce section headings or list items verbatim, do NOT copy any sentence from the source document. Output only the continuation, mid-sentence, with no prefix and no acknowledgment.';
 
-/* RUN MODAL / PREVIEW */
-.run-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;display:none;align-items:center;justify-content:center}
-.run-modal-overlay.open{display:flex}
-.run-modal{background:var(--bg-sidebar);border:1px solid var(--border-color);border-radius:var(--radius-xl);width:90%;max-width:900px;height:80vh;display:flex;flex-direction:column;overflow:hidden}
-.run-modal-header{display:flex;justify-content:space-between;align-items:center;gap:.6rem;padding:.8rem 1rem;border-bottom:1px solid var(--border-color)}
-.run-modal-header h3{font-size:1rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;margin:0}
-.run-modal-actions{display:flex;gap:.3rem;align-items:center;flex-shrink:0}
-.run-modal-action{background:none;border:none;color:var(--text-secondary);cursor:pointer;width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s ease,color .15s ease}
-.run-modal-action:hover{background:var(--bg-hover);color:var(--text-primary)}
-.run-modal-close{background:none;border:none;color:var(--text-secondary);cursor:pointer;width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.run-modal-close:hover{background:var(--bg-hover);color:var(--text-primary)}
-.run-modal-body{flex:1;background:#0a0a0a;overflow:hidden;position:relative;min-height:0}
-.preview-fill{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
-.preview-iframe{width:100%;height:100%;border:0;display:block;background:#fff}
-.preview-image-wrap{background:#0a0a0a}
-.preview-image{max-width:100%;max-height:100%;object-fit:contain;display:block}
-.preview-video{max-width:100%;max-height:100%;width:100%;display:block;background:#000}
-.preview-audio-wrap{flex-direction:column;gap:1.5rem;padding:3rem}
-.preview-audio-icon{font-size:3rem;line-height:1}
-.preview-audio-name{font-size:.9rem;color:var(--text-secondary);text-align:center;word-break:break-word;max-width:320px}
-.preview-audio{width:100%;max-width:420px}
-.preview-text{white-space:pre-wrap;word-break:break-word;padding:20px;background:#1a1a1a;color:#ececec;font-family:'Fira Code',monospace;font-size:.82rem;height:100%;overflow:auto;margin:0;width:100%;box-sizing:border-box}
-.preview-status{padding:2rem;text-align:center;color:var(--text-secondary);font-size:.85rem;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;height:100%}
-.preview-spinner{width:24px;height:24px;border:2px solid var(--border-color);border-top-color:var(--accent);border-radius:50%;animation:previewSpin .8s linear infinite;display:inline-block}
-@keyframes previewSpin{to{transform:rotate(360deg)}}
-.preview-error{color:var(--text-primary)}
-.preview-retry{background:var(--accent);color:#fff;border:none;padding:.5rem 1rem;border-radius:6px;font-family:inherit;font-size:.8rem;font-weight:600;cursor:pointer}
-.preview-unsupported{flex-direction:column;gap:.8rem;padding:2rem;text-align:center}
-.preview-unsupported-icon{font-size:2.5rem;line-height:1}
-.preview-unsupported-name{font-weight:600;color:var(--text-primary);word-break:break-word;max-width:360px}
-.preview-unsupported-mime{font-size:.75rem;color:var(--text-tertiary);font-family:var(--font-mono)}
-.preview-unsupported-msg{font-size:.82rem;color:var(--text-secondary);max-width:360px}
-
-@keyframes msgSlideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-@keyframes scaleIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
-@keyframes chartReveal{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-.message-row{animation:msgSlideIn .32s cubic-bezier(.21,1.02,.73,1) both}
-.message-row[data-animated="true"]{animation:none !important}
-.message-row.user .message-bubble{animation:scaleIn .28s cubic-bezier(.21,1.02,.73,1) both}
-.message-row.user[data-animated="true"] .message-bubble{animation:none !important}
-.trace-block{animation:fadeIn .25s ease both}
-.trace-block .trace-body-inner > *{animation:fadeIn .3s ease both}
-.search-results .search-source-card{animation:msgSlideIn .34s cubic-bezier(.21,1.02,.73,1) both}
-.weather-block,.finance-block,.math-card,.analyse-block{animation:msgSlideIn .35s cubic-bezier(.21,1.02,.73,1) both}
-.chart-block{animation:chartReveal .45s cubic-bezier(.21,1.02,.73,1) both}
-.trace-reason{animation:fadeIn .3s ease both}
-.chat-list-item{animation:fadeIn .22s ease both}
-.message-bubble.streaming .msg-content > *,
-.message-bubble.streaming .msg-content > * *,
-.message-bubble.streaming .trace-block,
-.message-bubble.streaming .trace-block *,
-.message-bubble.streaming .search-results .search-source-card,
-.message-bubble.streaming .weather-block,
-.message-bubble.streaming .finance-block,
-.message-bubble.streaming .math-card,
-.message-bubble.streaming .analyse-block,
-.message-bubble.streaming .chart-block,
-.message-bubble.streaming .trace-reason{animation:none !important}
-@media(max-width:768px){
-  .sidebar{position:fixed;left:0;top:0;height:100%;z-index:40;box-shadow:var(--shadow-md)}
-  .sidebar.collapsed{width:0;min-width:0}
-  .sidebar:not(.collapsed){width:280px;min-width:280px}
-  .toggle-sidebar-btn{left:.6rem}
-  .sidebar:not(.collapsed)~.toggle-sidebar-btn{left:calc(280px - 36px - .6rem)}
-  .messages-area{padding:1rem}
-  .input-area{padding:.5rem 1rem .8rem}
-  .message-row{max-width:100%;padding:0}
-  .message-bubble{max-width:100%}
-  .message-row.user .message-bubble{max-width:88%}
-  .modes-grid{grid-template-columns:1fr;max-width:320px}
-  .settings-panel{padding:1.2rem;max-width:95%}
-  .sources-panel{max-width:100%}
-  .chart-block svg.chart-svg{max-height:280px}
-  .chart-fullscreen-overlay{padding:0}
-  .chart-fullscreen-panel{max-height:100%;border-radius:0}
-}
-@media (prefers-reduced-motion: reduce){*{animation-duration:0.01ms !important;transition-duration:0.01ms !important}}
-</style>
-</head>
-<body>
-<div id="loading-screen"></div>
-<div id="auth-screen" style="display:none">
-  <div class="auth-card">
-    <h2>Welcome to ZebAI</h2>
-    <form onsubmit="return false">
-      <div class="auth-tabs"><div class="auth-tab active" id="tab-login">Login</div><div class="auth-tab" id="tab-signup">Sign Up</div></div>
-      <div class="auth-field"><label>Username</label><input type="text" id="auth-username" placeholder="Your username"/></div>
-      <div class="auth-field"><label>Password</label><input type="password" id="auth-password" placeholder="Your password"/></div>
-      <button type="button" class="auth-btn" id="auth-submit">Login</button>
-    </form>
-    <div class="auth-error" id="auth-error"></div>
-  </div>
-</div>
-<div id="app" style="display:none">
-  <aside class="sidebar" id="sidebar">
-    <div class="sidebar-inner" id="sidebar-inner">
-      <div class="sidebar-logo"><span class="logo-icon" aria-hidden="true"></span><span>ZebAI</span></div>
-      <button class="btn-new-chat" id="btn-new-chat"><i data-lucide="plus" style="width:18px;height:18px"></i> New Chat</button>
-      <div class="search-wrapper"><span class="search-icon"><i data-lucide="search" style="width:15px;height:15px"></i></span><input placeholder="Search..." id="search-input"></div>
-      <div class="chat-list" id="chat-list"></div>
-      <div class="sidebar-bottom">
-        <button id="settings-btn"><i data-lucide="palette" style="width:16px;height:16px"></i> Customize</button>
-        <button class="user-info" id="user-info-btn"><span class="user-avatar" id="user-avatar"></span><span id="username-display"></span></button>
-      </div>
-    </div>
-  </aside>
-  <button class="toggle-sidebar-btn" id="toggle-sidebar-btn"><i data-lucide="panel-left-close" style="width:18px;height:18px"></i></button>
-  <div class="main-area">
-    <div class="chat-container">
-      <div class="messages-area" id="messages-area"></div>
-      <div class="input-area" id="input-area">
-        <div class="attach-strip" id="attach-strip"></div>
-        <div class="actions-row" id="actions-row">
-          <button class="scroll-to-bottom-btn" id="scroll-to-bottom-btn" title="Scroll to bottom"><i data-lucide="chevron-down" width="16" height="16"></i></button>
-          <button id="upload-btn" title="Attach files"><i data-lucide="paperclip" style="width:20px;height:20px"></i><span class="badge" id="attach-badge" style="display:none">0</span></button>
-          <input type="file" id="upload-input" multiple style="display:none" />
-          <button id="regen-btn" style="display:none"><i data-lucide="refresh-cw" style="width:20px;height:20px"></i></button>
-          <button id="stop-btn" style="display:none" class="stop-btn"><i data-lucide="square" style="width:20px;height:20px"></i></button>
-          <button id="send-btn" class="send-btn" disabled><i data-lucide="send" style="width:20px;height:20px"></i></button>
-        </div>
-        <div class="input-wrapper" id="input-wrapper"><textarea id="chat-input" placeholder="Message ZebAI…" rows="1"></textarea></div>
-      </div>
-    </div>
-  </div>
-</div>
-<div id="settings-overlay" class="settings-overlay"></div>
-<div id="confirm-overlay" class="confirm-overlay">
-  <div class="confirm-dialog"><p id="confirm-message"></p><div class="confirm-actions"><button id="confirm-cancel">Cancel</button><button id="confirm-ok" class="btn-confirm-danger">Confirm</button></div></div>
-</div>
-<div id="profile-overlay" class="profile-overlay">
-  <div class="profile-panel">
-    <button class="profile-close" id="profile-close"><i data-lucide="x" style="width:16px;height:16px"></i></button>
-    <div class="profile-avatar" id="profile-avatar"></div>
-    <div class="profile-name" id="profile-name"></div>
-    <div class="profile-username" id="profile-username"></div>
-    <div class="profile-actions">
-      <button class="profile-btn" id="profile-logout"><i data-lucide="log-out" style="width:15px;height:15px"></i> Log Out</button>
-      <button class="profile-btn danger" id="profile-delete"><i data-lucide="user-x" style="width:15px;height:15px"></i> Delete Account</button>
-    </div>
-  </div>
-</div>
-<div id="chart-fullscreen-overlay" class="chart-fullscreen-overlay">
-  <div class="chart-fullscreen-panel">
-    <div class="chart-fullscreen-header">
-      <h3 id="chart-fullscreen-title">Chart</h3>
-      <div class="chart-fullscreen-actions">
-        <button class="chart-fs-download" id="chart-fullscreen-download"><i data-lucide="download" style="width:16px;height:16px"></i> Download</button>
-        <button class="chart-fs-close" id="chart-fullscreen-close"><i data-lucide="x" style="width:18px;height:18px"></i></button>
-      </div>
-    </div>
-    <div class="chart-fullscreen-body" id="chart-fullscreen-body"></div>
-  </div>
-</div>
-<div id="sources-overlay" class="sources-overlay">
-  <aside class="sources-panel">
-    <div class="sources-header">
-      <h3><i data-lucide="link-2" style="width:16px;height:16px"></i> Sources</h3>
-      <button class="sources-close" id="sources-close"><i data-lucide="x" style="width:16px;height:16px"></i></button>
-    </div>
-    <div class="sources-body" id="sources-body"></div>
-  </aside>
-</div>
-<div id="toast-container" class="toast-container"></div>
-<div id="code-runner-overlay" class="run-modal-overlay">
-  <div class="run-modal">
-    <div class="run-modal-header">
-      <h3 id="run-modal-title">Live Preview</h3>
-      <div class="run-modal-actions">
-        <button class="run-modal-action" id="run-modal-open-tab" title="Open in new tab" style="display:none"><i data-lucide="external-link" style="width:14px;height:14px"></i></button>
-        <button class="run-modal-action" id="run-modal-download" title="Download" style="display:none"><i data-lucide="download" style="width:14px;height:14px"></i></button>
-        <button class="run-modal-close" id="run-modal-close"><i data-lucide="x" style="width:18px;height:18px"></i></button>
-      </div>
-    </div>
-    <div class="run-modal-body" id="run-modal-body"></div>
-  </div>
-</div>
-<script>
-(() => {
-'use strict';
-
-const API_BASE = 'https://zebaibackend.mohitsaijith.workers.dev';
-const SETTINGS_KEY='zeb-settings', TOKEN_KEY='zeb-token', USERNAME_KEY='zeb-username';
-const MAX_MSG=50, RATE_LIMIT=20, RATE_WINDOW=60000;
-const MAX_FILE_CHARS=100000;
-const MAX_ATTACHMENTS = 5;
-const MAX_ATTACHMENT_MB = 15;
-const MAX_TOTAL_ATTACHMENT_MB = 20;
-const DEFAULT_MODE = 'quick';
-const NATIVE_MIMES = new Set([
+const SUPPORTED_MIMES = new Set([
+  'image/png','image/jpeg','image/jpg','image/webp','image/heic','image/heif',
+  'image/gif','image/bmp','image/tiff','image/svg+xml',
   'application/pdf',
-  'audio/mpeg','audio/mp3','audio/wav','audio/x-wav','audio/aiff','audio/aac','audio/ogg','audio/flac','audio/x-flac',
+  'audio/mpeg','audio/mp3','audio/wav','audio/x-wav','audio/aiff','audio/aac',
+  'audio/ogg','audio/flac','audio/x-flac',
   'video/mp4','video/mpeg','video/mov','video/quicktime','video/avi','video/x-msvideo',
   'video/webm','video/x-ms-wmv','video/3gpp','video/x-flv','video/mpg',
+  'text/plain','text/markdown','text/csv','text/tsv','text/tab-separated-values',
+  'text/html','text/css','text/xml','text/yaml','text/x-yaml','text/x-log',
+  'text/x-python','text/x-java','text/x-c','text/x-cpp','text/x-rust',
+  'application/json','application/jsonl','application/x-ndjson','application/ld+json',
+  'application/xml','application/xhtml+xml','application/atom+xml','application/rss+xml',
+  'application/javascript','application/x-javascript','application/ecmascript',
+  'application/x-yaml','application/yaml','application/toml',
+  'application/x-sh','application/x-shellscript','application/sql','application/graphql',
+  'application/x-python','application/x-ruby','application/x-rust','application/x-go','application/x-java',
 ]);
-function isNativeMime(m){
-  if(!m) return false;
+
+function isSupportedMime(m) {
+  if (!m) return false;
   const lower = String(m).toLowerCase().split(';')[0].trim();
-  if(lower.startsWith('image/')) return true;
-  if(NATIVE_MIMES.has(lower)) return true;
+  if (SUPPORTED_MIMES.has(lower)) return true;
+  if (lower.startsWith('image/'))  return true;
+  if (lower.startsWith('audio/'))  return true;
+  if (lower.startsWith('video/'))  return true;
+  if (lower.startsWith('text/'))   return true;
+  if (lower.startsWith('application/')
+      && /(json|ndjson|jsonl|xml|yaml|toml|csv|javascript|ecmascript|sql|graphql|sh\b|shell)/.test(lower))
+    return true;
   return false;
 }
-function isTextMime(m){
-  if(!m) return false;
-  const lower = String(m).toLowerCase().split(';')[0].trim();
-  if(lower.startsWith('text/')) return true;
-  if(/(json|jsonl|ndjson|javascript|xml|yaml|x-yaml|markdown|md|sh|x-sh|sql|graphql|toml|csv|tsv)/.test(lower)) return true;
-  return false;
+function isImageMime(m) { return !!m && String(m).toLowerCase().startsWith('image/'); }
+
+function safeStr(x) {
+  if (x == null) return 'Unknown error';
+  if (typeof x === 'string') return x;
+  if (x instanceof Error) return x.message || 'Error';
+  if (typeof x === 'object') { try { return JSON.stringify(x); } catch { return String(x); } }
+  return String(x);
 }
-function isTextLikeByName(name, mime){
-  if (isTextMime(mime)) return true;
-  const ext = String(name || '').split('.').pop().toLowerCase();
-  return ['txt','md','markdown','json','jsonl','ndjson','csv','tsv','yaml','yml','toml','xml','html','htm','css','js','jsx','ts','tsx','py','rb','go','rs','java','c','cpp','h','hpp','cs','php','swift','kt','scala','sh','bash','zsh','fish','sql','graphql','gql','log','ini','env','conf','cfg','svg'].includes(ext);
+function log(...args) { if (DEBUG) console.log(`[zebai ${WORKER_VERSION}]`, ...args); }
+
+function extractStatus(e) {
+  const errStr = String(e);
+  const httpMatch = errStr.match(/\b(\d{3})\b/);
+  if (e && e.status) return e.status;
+  if (httpMatch) { const n = parseInt(httpMatch[1]); if (n >= 100 && n < 600) return n; }
+  if (/abort|timeout|network|fetch failed|ECONNRESET|ETIMEDOUT/i.test(errStr)) return 503;
+  return 500;
 }
-
-const REGENERATED_MARKER='__REGENERATED__';
-const META_BLOCK_TYPE='_meta';
-const chartSpecs={};
-const openState={};
-const TOOL_LABELS = {
-  search:    { active: 'Searching The Web',    done: 'Searched The Web' },
-  weather:   { active: 'Fetching Weather',     done: 'Fetched Weather' },
-  finance:   { active: 'Fetching Market Data', done: 'Fetched Market Data' },
-  math:      { active: 'Executing Code',       done: 'Executed Code' },
-  run:       { active: 'Executing Code',       done: 'Executed Code' },
-  chart:     { active: 'Creating A Chart',     done: 'Created A Chart' },
-  analyse:   { active: 'Reading Page',         done: 'Read Page' },
-  analysing: { active: 'Reading File',         done: 'Read File' }
-};
-const THEMES = {
-  ice:'#0ea5e9', iris:'#818cf8', jade:'#10b981', honey:'#f59e0b', ruby:'#f43f5e',
-  violet:'#a855f7', coral:'#fb7185', teal:'#14b8a6', lime:'#84cc16', pink:'#ec4899'
-};
-const $=id=>document.getElementById(id);
-const genId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,9);
-const esc=str=>{
-  if(str==null)return '';
-  const d=document.createElement('div');
-  d.textContent=String(str);
-  return d.innerHTML.replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-};
-const sanitizeInitial=s=>{
-  const c=String(s||'W').trim().charAt(0).toUpperCase();
-  return /[A-Z0-9]/.test(c)?c:'W';
-};
-const BLOB_URL_CACHE = new Map();
-const BLOB_URL_CACHE_MAX = 40;
-const cacheBlobUrl = (id, dataUrl) => {
-  if (!id || !dataUrl) return;
-  if (BLOB_URL_CACHE.size >= BLOB_URL_CACHE_MAX) {
-    const first = BLOB_URL_CACHE.keys().next().value;
-    if (first !== undefined) BLOB_URL_CACHE.delete(first);
-  }
-  BLOB_URL_CACHE.set(id, dataUrl);
-};
-const resolveBlobUrl=url=>{
-  if(!url)return url;
-  const s=String(url);
-  if(s.startsWith('blob:')){
-    const id=s.slice(5).replace(/[?&].*$/,'');
-    const cached = BLOB_URL_CACHE.get(id);
-    if (cached) return cached;
-    return `${API_BASE}/api/blobs/${id}?t=${encodeURIComponent(token||'')}`;
-  }
-  return url;
-};
-const safeUrl=u=>{
-  try{
-    const p=new URL(String(u),location.href);
-    if(p.protocol==='http:'||p.protocol==='https:')return p.href;
-  }catch(e){}
-  return '#';
-};
-const debounce=(fn,ms)=>{let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms);};};
-const clampTitle=(t,n=40)=>{const s=String(t||'');return s.length>n?s.slice(0,n).trim()+'…':s;};
-const refreshIcons=(scope)=>{try{lucide.createIcons({attrs:{'stroke-width':'2'},...(scope&&{scope})});}catch(e){}};
-let iconQueue=new Set(),iconRaf=null;
-const queueIcons=(el)=>{if(!el)return;iconQueue.add(el);if(!iconRaf)iconRaf=requestAnimationFrame(()=>{iconQueue.forEach(e=>refreshIcons(e));iconQueue.clear();iconRaf=null;});};
-
-document.addEventListener('error',e=>{
-  const img=e.target;
-  if(!(img instanceof HTMLImageElement))return;
-  const fb=img.dataset&&img.dataset.fallback;
-  if(!fb)return;
-  const span=document.createElement('span');
-  span.className=(img.className||'')+' favicon-fallback';
-  span.textContent=sanitizeInitial(fb);
-  if(img.getAttribute('style'))span.setAttribute('style',img.getAttribute('style'));
-  img.replaceWith(span);
-},true);
-
-let _lastToggleTime=0,_lastToggleKey=null;
-const _isCollapsibleHeader=el=>el&&el.closest('.trace-header, .search-header, .weather-header, .math-header, .finance-block > .think-header');
-const _findToggleBlock=header=>header.closest('.trace-block, .search-block, .weather-block, .finance-block, .math-card');
-const _handleTogglePointer=(e)=>{
-  const header=_isCollapsibleHeader(e.target);
-  if(!header)return;
-  if(e.target.closest('button, a'))return;
-  const block=_findToggleBlock(header);
-  if(!block)return;
-  const key=block.dataset.toggleKey;
-  if(!key)return;
-  const now=Date.now();
-  if(key===_lastToggleKey&&now-_lastToggleTime<300)return;
-  _lastToggleKey=key;_lastToggleTime=now;
-  const isOpen=block.classList.toggle('open');
-  openState[key]=isOpen;
-  if(isOpen){
-    const body=block.querySelector('.trace-body, .search-body, .weather-body, .finance-body, .math-body');
-    if(body){
-      requestAnimationFrame(()=>{
-        try{bulletproofRenderMath(body);addCodeBlockHeaders(body,{stillStreaming:false,rawText:''});wrapTablesInContainer(body);}catch(err){}
-      });
-    }
-  }
-  try{e.stopPropagation();}catch(err){}
-};
-document.addEventListener('pointerdown',_handleTogglePointer);
-document.addEventListener('click',e=>{if(e.detail===0)_handleTogglePointer(e);});
-
-const forceCollapseUnopened=(mc)=>{
-  if(!mc)return;
-  mc.querySelectorAll('.trace-block, .search-block, .weather-block, .finance-block, .math-card').forEach(el=>{
-    const key=el.dataset.toggleKey;
-    if(!key)return;
-    const isWeatherOrFinance=el.classList.contains('weather-block')||el.classList.contains('finance-block');
-    const wantOpen = openState[key]===undefined ? isWeatherOrFinance : openState[key]===true;
-    if(wantOpen){
-      const wasOpen=el.classList.contains('open');
-      el.classList.add('open');
-      if(!wasOpen){
-        const body=el.querySelector('.trace-body, .search-body, .weather-body, .finance-body, .math-body');
-        if(body){
-          requestAnimationFrame(()=>{
-            try{bulletproofRenderMath(body);addCodeBlockHeaders(body,{stillStreaming:false,rawText:''});wrapTablesInContainer(body);}catch(err){}
-          });
-        }
-      }
-    }else{
-      el.classList.remove('open');
-    }
-  });
-};
-
-const hlCache=new Map();
-const HL_CACHE_MAX=300;
-const highlightCode=(code,lang)=>{
-  const key=lang+':'+code.length+':'+code;
-  if(hlCache.has(key))return hlCache.get(key);
-  let out;
-  try{
-    if(lang&&hljs.getLanguage(lang))out=hljs.highlight(code,{language:lang,ignoreIllegals:true}).value;
-    else out=esc(code);
-  }catch(e){out=esc(code);}
-  if(hlCache.size>=HL_CACHE_MAX){const first=hlCache.keys().next().value;if(first!==undefined)hlCache.delete(first);}
-  hlCache.set(key,out);
-  return out;
-};
-
-let token=localStorage.getItem(TOKEN_KEY)||null;
-let loggedUsername=localStorage.getItem(USERNAME_KEY)||null;
-
-const state={
-  chats:[],currentChatId:null,theme:'dark',fontSize:16,loggedUsername,
-  accentColor:'ice',sidebarOpen:true,searchTerm:'',settingsOpen:false,
-  creatingChat:false,chatModes:{},
-  renamingChatId:null,titleGeneratingChatId:null
-};
-
-const chatRuntime=new Map();
-function getRuntime(chatId){
-  if(!chatId)return null;
-  let rt=chatRuntime.get(chatId);
-  if(!rt){
-    rt={ isStreaming:false, currentStream:null, abortController:null, attachments:[], draft:'',
-      requestTimestamps:[], userScrolledUp:false, pendingRender:false, _scrollScheduled:false };
-    chatRuntime.set(chatId,rt);
-  }
-  return rt;
+function isCapacityError(status, msg) {
+  const m = String(msg || '').toLowerCase();
+  return status === 503 || status === 502 || status === 504
+    || /high demand|overloaded|capacity|unavailable/i.test(m);
 }
-function currentRuntime(){return getRuntime(state.currentChatId);}
-function anyStreamActive(){for(const rt of chatRuntime.values()){if(rt.isStreaming)return true;}return false;}
-
-const ensureModeForChat = cid => {
-  if (!cid) return DEFAULT_MODE;
-  const m = state.chatModes[cid];
-  if (m === 'quick' || m === 'expert') return m;
-  const c = state.chats.find(x=>x.id===cid);
-  if (c && (c.mode === 'quick' || c.mode === 'expert')) {
-    state.chatModes[cid] = c.mode;
-    return c.mode;
-  }
-  return DEFAULT_MODE;
-};
-const setModeForChat = async (cid, mode) => {
-  if (!cid) return;
-  if (mode !== 'quick' && mode !== 'expert') return;
-  state.chatModes[cid] = mode;
-  const chat = state.chats.find(c=>c.id===cid);
-  if (chat) chat.mode = mode;
-  try { await api('PATCH', '/api/chats/' + cid, { mode }); }
-  catch (e) { toast('Failed to save chat mode', 'error'); }
-};
-
-const loadSettings=()=>{
-  try{
-    const raw=localStorage.getItem(SETTINGS_KEY);
-    if(raw){
-      const s=JSON.parse(raw);
-      Object.assign(state,s);
-      state.chatModes={};
-      if(!s.fontSize)state.fontSize=16;
-    }
-  }catch(e){}
-  state.loggedUsername=loggedUsername;
-  if(!THEMES[state.accentColor])state.accentColor='ice';
-};
-const saveSettings=()=>{
-  localStorage.setItem(SETTINGS_KEY,JSON.stringify({theme:state.theme,fontSize:state.fontSize,accentColor:state.accentColor}));
-};
-loadSettings();
-document.documentElement.setAttribute('data-theme',state.theme);
-document.documentElement.style.fontSize=state.fontSize+'px';
-
-const logout=()=>{
-  localStorage.removeItem(TOKEN_KEY);localStorage.removeItem(USERNAME_KEY);
-  token=null;loggedUsername=null;
-  state.chats=[];state.currentChatId=null;state.chatModes={};
-  state.creatingChat=false;
-  chatRuntime.clear();
-  blankArea();renderSidebar();updateInputUI();updateAttachmentPreviews();
-  showScreen('auth');
-};
-
-class SafeSSEParser{
-  constructor(onMessage){this.buffer='';this.onMessage=onMessage;}
-  feed(chunk){
-    this.buffer+=chunk;
-    const lines=this.buffer.split(/\r\n|\r|\n/);
-    this.buffer=lines.pop()||'';
-    for(const line of lines){
-      if(!line.startsWith('data:'))continue;
-      const dataContent=line.slice(5).trim();
-      if(!dataContent||dataContent==='[DONE]')continue;
-      try{this.onMessage(JSON.parse(dataContent));}catch(e){this.onMessage({content:dataContent});}
-    }
-  }
-}
-
-const promoteLongInlineMath=(container)=>{
-  if(!container)return;
-  const blocks=container.querySelectorAll('p, li');
-  blocks.forEach(block=>{
-    const spans=block.querySelectorAll('.katex');
-    if(!spans.length)return;
-    const blockWidth=block.getBoundingClientRect().width||0;
-    if(blockWidth===0)return;
-    const threshold=blockWidth*0.65;
-    spans.forEach(span=>{
-      if(span.closest('.katex-display'))return;
-      if(span.closest('span.katex-inline-block'))return;
-      const w=span.getBoundingClientRect().width;
-      if(w>threshold){
-        const wrapper=document.createElement('span');
-        wrapper.className='katex-inline-block';
-        span.parentNode.insertBefore(wrapper,span);
-        wrapper.appendChild(span);
-      }
-    });
-  });
-};
-const bulletproofRenderMath=(element)=>{
-  if(!element||typeof renderMathInElement==='undefined')return;
-  const options={
-    delimiters:[{left:'\\[',right:'\\]',display:true},{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false}],
-    throwOnError:false,
-    errorCallback:(msg,err)=>console.error(`KaTeX: ${msg}`,err)
-  };
-  try{
-    renderMathInElement(element,options);
-    if(element.dataset)element.dataset.mathRendered='1';
-    requestAnimationFrame(()=>promoteLongInlineMath(element));
-  }catch(e){console.error("KaTeX failure:",e);}
-};
-
-const protectMath=text=>{
-  const blocks=[];
-  const regex=/(\$\$[\s\S]*?\$\$|\$(?!\s)[^\s$\\](?:[^$\\]|\\.)*?(?<![\s\\])\$(?![\d])|\\\[[\s\S]*?\\\]|\\\([\s\S]*?\\\))/g;
-  const protectedText=text.replace(regex,m=>{blocks.push(m);return `{{MATH_${blocks.length-1}}}`;});
-  return {text:protectedText,blocks};
-};
-const restoreMath=(html,blocks)=>html.replace(/\{\{MATH_(\d+)\}\}/g,(_,idx)=>blocks[idx]||'');
-const safeMarked=content=>{
-  const {text,blocks}=protectMath(content||'');
-  const condensed=text.replace(/\n{3,}/g,'\n\n');
-  let raw=marked.parse(condensed,{gfm:true,breaks:true});
-  if(window.DOMPurify&&typeof DOMPurify.sanitize==='function'){
-    raw=DOMPurify.sanitize(raw,{
-      ALLOWED_TAGS:['a','b','i','em','strong','p','br','ul','ol','li','code','pre','h1','h2','h3','h4','h5','h6','blockquote','img','table','thead','tbody','tr','th','td','hr','sub','sup','del','ins','kbd','mark','s','samp','var','details','summary','span','div'],
-      ALLOWED_ATTR:['href','target','rel','class','id','src','alt','width','height']
-    });
-  }
-  return restoreMath(raw,blocks);
-};
-const looksLikeHTML=text=>{const t=(text||'').trim().toLowerCase();return t.startsWith('<!doctype html>')||t.startsWith('<html')||t.startsWith('<head')||t.startsWith('<body');};
-
-const CHEVRON_SVG='<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>';
-const CHEVRON_SVG_SM='<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>';
-const TOOL_ICON_CACHE = new Map();
-const svgToolIcon = (name, size = 14, strokeWidth = 2) => {
-  const cacheKey = `${name}:${size}:${strokeWidth}`;
-  const cached = TOOL_ICON_CACHE.get(cacheKey);
-  if (cached !== undefined) return cached;
-  const wrap = p => `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
-  let path = '';
-  switch (name) {
-    case 'search':    path = '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>'; break;
-    case 'weather':   path = '<path d="M12 2v2M4.93 4.93l1.41 1.41M20 12h2M4.93 19.07l1.41-1.41M2 12h2M18.36 5.64l1.41-1.41M22 12h-2M16 12a4 4 0 0 0-8 0"/><path d="M20 21a5 5 0 0 0-9-3 5 5 0 0 0-8 3"/>'; break;
-    case 'analyse':   path = '<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>'; break;
-    case 'analysing': path = '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><circle cx="11.5" cy="14.5" r="2.5"/><path d="m13.3 16.3 2.2 2.2"/>'; break;
-    case 'run':
-    case 'math':      path = '<polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>'; break;
-    case 'finance':   path = '<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>'; break;
-    case 'chart':     path = '<line x1="12" x2="12" y1="20" y2="10"/><line x1="18" x2="18" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="16"/>'; break;
-    case 'think':     path = '<path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/>'; break;
-    case 'zap':       path = '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>'; break;
-    default:          path = '';
-  }
-  const out = wrap(path);
-  TOOL_ICON_CACHE.set(cacheKey, out);
-  return out;
-};
-const getFaviconUrl=(url,sourceName)=>{
-  let domain=(sourceName||'').trim();
-  if(!domain&&url){try{domain=new URL(url).hostname;}catch{domain='';}}
-  if(!domain)return null;
-  domain=domain.replace(/^www\./,'');
-  return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=64`;
-};
-const svgWeatherIcon=(name,size=24,strokeWidth=1.5)=>{
-  const svg=p=>`<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
-  switch(name){
-    case 'cloud-sun':return svg('<path d="M12 2v2M4.93 4.93l1.41 1.41M20 12h2M4.93 19.07l1.41-1.41M2 12h2M18.36 5.64l1.41-1.41M22 12h-2M16 12a4 4 0 0 0-8 0"/><path d="M20 21a5 5 0 0 0-9-3 5 5 0 0 0-8 3"/>');
-    case 'sun':return svg('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>');
-    case 'cloud':return svg('<path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>');
-    case 'cloud-rain':return svg('<path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M16 14v6"/><path d="M8 14v6"/><path d="M12 16v6"/>');
-    case 'cloud-snow':return svg('<path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M8 15h.01"/><path d="M8 19h.01"/><path d="M12 17h.01"/><path d="M12 21h.01"/><path d="M16 15h.01"/><path d="M16 19h.01"/>');
-    case 'cloud-lightning':return svg('<path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M13 11l-3 5h4l-3 5"/>');
-    case 'cloud-fog':return svg('<path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M3 15h18"/><path d="M3 19h18"/>');
-    case 'thermometer':return svg('<path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/>');
-    case 'droplet':return svg('<path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/>');
-    case 'wind':return svg('<path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2"/><path d="M9.6 4.6A2 2 0 1 1 11 8H2"/><path d="M12.6 19.4A2 2 0 1 0 14 16H2"/>');
-    default:return '';
-  }
-};
-const pickWeatherIcon=text=>{
-  const c=(text||'').toLowerCase();
-  if(c.includes('sun')||c.includes('clear'))return 'sun';
-  if(c.includes('partly'))return 'cloud-sun';
-  if(c.includes('cloud')||c.includes('overcast'))return 'cloud';
-  if(c.includes('rain')||c.includes('drizzle'))return 'cloud-rain';
-  if(c.includes('snow'))return 'cloud-snow';
-  if(c.includes('thunder'))return 'cloud-lightning';
-  if(c.includes('fog')||c.includes('mist'))return 'cloud-fog';
-  return 'cloud';
-};
-const generateChartPoints=val=>{
-  const num=Number(val)||1;
-  const points=[];
-  for(let i=0;i<=10;i++){const x=i*30;const y=70-(Math.sin(i*0.8+num*0.1)*20+20);points.push(`${x},${Math.round(y)}`);}
-  return points.join(' ');
-};
-
-/* ATTACHMENT */
-const compressImageFile=file=>new Promise((resolve,reject)=>{
-  const reader=new FileReader();
-  reader.onload=ev=>{
-    const img=new Image();
-    img.onload=()=>{
-      const MAX_W=1024,MAX_H=1024;
-      let w=img.width,h=img.height;
-      if(w>h){if(w>MAX_W){h*=MAX_W/w;w=MAX_W;}}else{if(h>MAX_H){w*=MAX_H/h;h=MAX_H;}}
-      const canvas=document.createElement('canvas');
-      canvas.width=w;canvas.height=h;
-      canvas.getContext('2d').drawImage(img,0,0,w,h);
-      canvas.toBlob(blob=>{
-        if(!blob){reject(new Error('Compression failed'));return;}
-        const r=new FileReader();
-        r.onload=e2=>resolve(e2.target.result);
-        r.onerror=reject;
-        r.readAsDataURL(blob);
-      },'image/jpeg',0.7);
-    };
-    img.onerror=reject;
-    img.src=ev.target.result;
-  };
-  reader.onerror=reject;
-  reader.readAsDataURL(file);
-});
-const readFileAsDataURL=file=>new Promise((resolve,reject)=>{
-  const reader=new FileReader();
-  reader.onload=ev=>resolve(ev.target.result);
-  reader.onerror=reject;
-  reader.readAsDataURL(file);
-});
-const uploadBlobToServer = async (name, mime, dataUrl) => {
+function parseRetryAfterMs(response, errorBody) {
   try {
-    const res = await api('POST','/api/blobs', { name, mime, data: dataUrl });
-    if (res && res.id) return res.id;
-  } catch (e) { }
-  return null;
-};
-const addAttachmentFromFile=async(file)=>{
-  if(!file)return;
-  const rt=currentRuntime();
-  if(!rt)return;
-  if(rt.attachments.length>=MAX_ATTACHMENTS){
-    toast(`Max ${MAX_ATTACHMENTS} attachments per message`,'warning');
-    return;
-  }
-  const rawMime = file.type || '';
-  const mime = rawMime.split(';')[0].trim();
-  const sizeMB = file.size / 1024 / 1024;
-  if (isTextLikeByName(file.name, mime) && !isNativeMime(mime)) {
-    if (file.size > MAX_FILE_CHARS * 4) {
-      toast(`Text file too large (max ~${Math.round(MAX_FILE_CHARS / 1024)}KB)`, 'warning');
-      return;
+    const h = response && response.headers && typeof response.headers.get === 'function'
+            ? response.headers.get('Retry-After') : null;
+    if (h) {
+      const n = parseFloat(h);
+      if (!isNaN(n) && n > 0) return Math.min(n * 1000, 60000);
+      const d = Date.parse(h);
+      if (!isNaN(d)) return Math.min(Math.max(0, d - Date.now()), 60000);
     }
-    try {
-      const dataUrl = await readFileAsDataURL(file);
-      const finalMime = mime || 'text/plain';
-      const blobId = await uploadBlobToServer(file.name || 'file.txt', finalMime, dataUrl);
-      if (blobId) cacheBlobUrl(blobId, dataUrl);
-      rt.attachments.push({ name: file.name || 'file.txt', mime: finalMime, data: dataUrl, isImage: false, size: file.size, blobId });
-      const totalMB = rt.attachments.reduce((s, a) => s + (a.size || 0), 0) / 1024 / 1024;
-      if (totalMB > MAX_TOTAL_ATTACHMENT_MB) {
-        toast(`Total attachment size exceeds ${MAX_TOTAL_ATTACHMENT_MB}MB`, 'warning');
-        rt.attachments.pop();
+  } catch (e) {}
+  try {
+    const parsed = typeof errorBody === 'string' ? JSON.parse(errorBody) : errorBody;
+    const details = parsed?.error?.details || [];
+    for (const d of details) {
+      if (d['@type'] === 'type.googleapis.com/google.rpc.RetryInfo' && d.retryDelay) {
+        const m = String(d.retryDelay).match(/^([\d.]+)s$/);
+        if (m) return Math.min(parseFloat(m[1]) * 1000, 60000);
       }
-      updateAttachmentPreviews();
-      updateInputUI();
-    } catch (e) {
-      toast('Failed to read file', 'error');
     }
-    return;
-  }
-  if (!isNativeMime(mime)) {
-    toast(`Unsupported file type: ${mime || 'unknown'}`, 'warning');
-    return;
-  }
-  if (sizeMB > MAX_ATTACHMENT_MB) {
-    toast(`File too large (max ${MAX_ATTACHMENT_MB}MB)`, 'warning');
-    return;
-  }
-  let data;
-  let finalMime = mime;
-  if (mime.startsWith('image/')) {
-    try {
-      data = await compressImageFile(file);
-      finalMime = 'image/jpeg';
-    } catch (e) {
-      toast('Failed to process image', 'error');
-      return;
-    }
-  } else {
-    try {
-      data = await readFileAsDataURL(file);
-    } catch (e) {
-      toast('Failed to read file', 'error');
-      return;
-    }
-  }
-  const blobId = await uploadBlobToServer(file.name || ('attachment-' + Date.now()), finalMime, data);
-  if (blobId) cacheBlobUrl(blobId, data);
-  rt.attachments.push({ name: file.name || ('attachment-' + Date.now()), mime: finalMime, data, isImage: mime.startsWith('image/'), size: file.size, blobId });
-  const totalMB = rt.attachments.reduce((s, a) => s + (a.size || 0), 0) / 1024 / 1024;
-  if (totalMB > MAX_TOTAL_ATTACHMENT_MB) {
-    toast(`Total attachment size exceeds ${MAX_TOTAL_ATTACHMENT_MB}MB`, 'warning');
-    rt.attachments.pop();
-  }
-  updateAttachmentPreviews();
-  updateInputUI();
-};
+  } catch (e) {}
+  return null;
+}
 
-const wrapLabelLines=(label,maxChars)=>{
-  const text=String(label||'').trim();
-  if(!text)return [''];
-  if(text.length<=maxChars)return [text];
-  const words=text.split(/\s+/).filter(Boolean);
-  if(words.length===0)return [text];
-  const lines=[];
-  let current='';
-  for(const word of words){
-    if(!current){current=word;continue;}
-    if((current+' '+word).length<=maxChars){current+=' '+word;continue;}
-    lines.push(current);current=word;
-  }
-  if(current)lines.push(current);
-  const final=[];
-  for(const line of lines){
-    if(line.length<=maxChars){final.push(line);continue;}
-    for(let i=0;i<line.length;i+=maxChars)final.push(line.slice(i,i+maxChars));
-  }
-  return final;
+const ERROR_CODES = {
+  OK:'success',429:'rate limit',503:'capacity',500:'server error',
+  502:'bad gateway',504:'gateway timeout',404:'model not found',
+  401:'unauthorized',403:'forbidden',C:'worker cooldown',K:'no keys',
+  T:'timeout',N:'network error',S:'stream failed',X:'unknown',
 };
-const renderWrappedLabel=(x,y,label,maxChars=20,lineHeight=12,anchor='middle')=>{
-  const lines=wrapLabelLines(label,maxChars);
-  if(lines.length===1)return `<text x="${x}" y="${y}" fill="var(--text-secondary)" font-size="11" text-anchor="${anchor}">${esc(lines[0])}</text>`;
-  const startY = y - (lines.length - 1) * lineHeight;
-  const tspans=lines.map((ln,i)=>`<tspan x="${x}" dy="${i===0?0:lineHeight}">${esc(ln)}</tspan>`).join('');
-  return `<text x="${x}" y="${startY}" fill="var(--text-secondary)" font-size="11" text-anchor="${anchor}">${tspans}</text>`;
-};
+function codeForStatus(status, msg) {
+  const m = String(msg || '').toLowerCase();
+  if (status === 0 || status === 200) return 'OK';
+  if (status === 429) return '429';
+  if (status === 503) return '503';
+  if (status === 500) return '500';
+  if (status === 502) return '502';
+  if (status === 504) return '504';
+  if (status === 404) return '404';
+  if (status === 401) return '401';
+  if (status === 403) return '403';
+  if (/abort|timeout/i.test(m)) return 'T';
+  if (/network|econnreset|etimedout|fetch failed/i.test(m)) return 'N';
+  return 'X';
+}
+function formatErrorFingerprint(slotCodes) {
+  const parts = Object.keys(slotCodes)
+    .sort((a, b) => parseInt(a.slice(1), 10) - parseInt(b.slice(1), 10))
+    .map(slot => `${slot}-${slotCodes[slot] || 'X'}`);
+  return `E=${parts.join('/')}`;
+}
 
-/* CHART ENGINE */
-const CHART_COLORS = ['#0ea5e9','#f43f5e','#10b981','#f59e0b','#818cf8','#06b6d4','#ec4899','#a855f7','#14b8a6','#f97316'];
-const CHART_TYPE_ALIASES = {
-  'pie':'pie','doughnut':'doughnut','donut':'doughnut','ring':'doughnut',
-  'line':'line','spline':'line','curve':'line','area':'area','filled':'area',
-  'stackedarea':'stackedArea','stacked-area':'stackedArea','stacked_area':'stackedArea',
-  'bar':'bar','column':'bar','columns':'bar','columnchart':'bar',
-  'hbar':'hbar','horizontalbar':'hbar','horizontal-bar':'hbar','horizontal_bar':'hbar','barhorizontal':'hbar',
-  'stackedbar':'stackedBar','stacked-bar':'stackedBar','stacked_bar':'stackedBar','stackedcolumn':'stackedBar',
-  'scatter':'scatter','scatterplot':'scatter','xy':'scatter','points':'scatter','bubble':'bubble',
-  'radar':'radar','spider':'radar','web':'radar',
-  'polararea':'polarArea','polar-area':'polarArea','polar_area':'polarArea','polar':'polarArea',
-  'gauge':'gauge','progress':'gauge','meter':'gauge','dial':'gauge',
-};
-const normalizeChartType = t => {
-  if (!t) return 'bar';
-  const k = String(t).toLowerCase().trim().replace(/\s+/g,'');
-  return CHART_TYPE_ALIASES[k] || 'bar';
-};
-const stripChartFences = (s) => {
-  if (typeof s !== 'string') return s;
-  let t = s.trim().replace(/^```[a-zA-Z0-9_-]*\s*/, '').replace(/\s*```\s*$/, '').trim();
+async function fetchWithTimeout(url, opts, timeout, label = '', retries = 0, externalSignal = null) {
+  let lastErr = null;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const controller = new AbortController();
+    let signal = controller.signal;
+    if (externalSignal) {
+      if (typeof AbortSignal !== 'undefined' && typeof AbortSignal.any === 'function') {
+        signal = AbortSignal.any([controller.signal, externalSignal]);
+      } else {
+        if (externalSignal.aborted) controller.abort();
+        else externalSignal.addEventListener('abort', () => controller.abort(), { once: true });
+      }
+    }
+    const timer = setTimeout(() => controller.abort(), timeout);
+    const t0 = Date.now();
+    try {
+      const res = await fetch(url, { ...opts, signal });
+      clearTimeout(timer);
+      if (DEBUG) log(`[fetch${label ? ' ' + label : ''}] ${res.status} (${Date.now() - t0}ms)${attempt > 0 ? ` [retry ${attempt}]` : ''}`);
+      if (res.status >= 500 && attempt < retries) {
+        lastErr = new Error(`HTTP ${res.status}`);
+        await new Promise(r => setTimeout(r, Math.pow(2, attempt) * 500));
+        continue;
+      }
+      return res;
+    } catch (e) {
+      clearTimeout(timer);
+      lastErr = e;
+      log(`[fetch${label ? ' ' + label : ''}] FAILED (${Date.now() - t0}ms)${attempt > 0 ? ` [retry ${attempt}]` : ''} — ${safeStr(e)}`);
+      if (externalSignal && externalSignal.aborted) throw e;
+      if (attempt < retries) { await new Promise(r => setTimeout(r, Math.pow(2, attempt) * 500)); continue; }
+      throw e;
+    }
+  }
+  throw lastErr;
+}
+
+function capToolResult(text, max = MAX_TOOL_RESULT_CHARS) {
+  if (typeof text !== 'string') return text;
+  if (text.length <= max) return text;
+  return text.slice(0, max) + `\n…[truncated ${text.length - max} chars]`;
+}
+
+function sanitizeAssistantContent(content) {
+  let text = String(content || '');
+  text = text.replace(/<thinking>[\s\S]*?<\/thinking>/g, '');
+  text = text.replace(/<think>[\s\S]*?<\/think>/g, '');
+  text = text.replace(/<thought>[\s\S]*?<\/thought>/g, '');
+  text = text.replace(/<\/?(thinking|think|thought)>/g, '');
+  text = text.replace(/<(weather|search|finance|chart|analyse|run|analysing)>[\s\S]*?<\/\1>/g, '');
+  text = text.replace(/Tool execution result:[\s\S]*?(?=\n\n|$)/g, '');
+  return text.replace(/\n{3,}/g, '\n\n').trim();
+}
+function escapeUserToolTags(text) {
+  return String(text || '').replace(
+    /<\/?(search|analyse|weather|finance|chart|run|analysing|open_url|fullscreen|thinking|think|thought|title|tool)>/gi,
+    (m) => m.replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  );
+}
+function buildHistoryForLLM(chatMessages) {
+  const out = [];
+  for (const m of chatMessages) {
+    if (m.role === 'assistant') {
+      const clean = sanitizeAssistantContent(m.content);
+      if (clean) out.push({ role: 'assistant', content: clean });
+    } else if (m.role === 'user' && m.content) {
+      const stripped = String(m.content)
+        .replace(/!\[.*?\]\((?:data|blob):[^)]+\)\n?/g, '')
+        .replace(/\[Attached:\s*([^\]]+?)\s*\(([^)]+)\)(?:\s*blob:[a-zA-Z0-9-]+)?\]/g, '[Attached: $1 ($2)]')
+        .trim();
+      const finalContent = stripped || '[User sent a file with no accompanying text.]';
+      out.push({ role: 'user', content: escapeUserToolTags(finalContent) });
+    }
+  }
+  return out;
+}
+
+function sanitizeChartSpec(raw) {
+  let t = String(raw || '').trim();
+  t = t.replace(/^```[a-zA-Z0-9_-]*\s*/, '').replace(/\s*```\s*$/, '').trim();
   if (!t.startsWith('{') && !t.startsWith('[')) {
     const startObj = t.indexOf('{');
     const startArr = t.indexOf('[');
@@ -1292,2901 +300,3364 @@ const stripChartFences = (s) => {
     else if (startArr === -1) start = startObj;
     else start = Math.min(startObj, startArr);
     if (start !== -1) {
-      const openCh = t[start];
+      const openCh  = t[start];
       const closeCh = openCh === '{' ? '}' : ']';
-      let depth=0, inStr=false, esc=false, end=-1;
-      for (let i=start; i<t.length; i++) {
-        const c=t[i];
-        if (esc) { esc=false; continue; }
-        if (c==='\\') { esc=true; continue; }
-        if (inStr) { if (c==='"') inStr=false; continue; }
-        if (c==='"') { inStr=true; continue; }
-        if (c===openCh) depth++;
-        else if (c===closeCh) { depth--; if (depth===0) { end=i; break; } }
+      let depth = 0, inStr = false, esc = false, end = -1;
+      for (let i = start; i < t.length; i++) {
+        const c = t[i];
+        if (esc) { esc = false; continue; }
+        if (c === '\\') { esc = true; continue; }
+        if (inStr) { if (c === '"') inStr = false; continue; }
+        if (c === '"') { inStr = true; continue; }
+        if (c === openCh) depth++;
+        else if (c === closeCh) { depth--; if (depth === 0) { end = i; break; } }
       }
-      if (end !== -1) t = t.slice(start, end+1);
+      if (end !== -1) t = t.slice(start, end + 1);
     }
   }
   return t;
-};
-const repairJSONish = (s) => {
-  let t = String(s || '').trim();
-  t = t.replace(/,\s*([}\]])/g, '$1');
-  t = t.replace(/([{,]\s*)([a-zA-Z_$][a-zA-Z0-9_$]*)(\s*:)/g, '$1"$2"$3');
-  if (!/"/.test(t)) t = t.replace(/'/g, '"');
-  return t;
-};
-const normalizeChartSpec = (raw) => {
-  let parsed = raw;
-  if (typeof parsed === 'string') {
-    const cleaned = stripChartFences(parsed);
-    try { parsed = JSON.parse(cleaned); }
-    catch (e1) {
-      try { parsed = JSON.parse(repairJSONish(cleaned)); }
-      catch (e2) { throw new Error('unparseable chart spec'); }
+}
+
+// ---------------------------------------------------------------------------
+// isTruncatedStop
+//
+// Google AI Studio does NOT send a finishReason when it cuts a stream short.
+// A genuinely truncated reply arrives as finishReason === null and is caught
+// upstream by missingFinishReason. STOP is authoritative: the model finished
+// its turn. The only structural signal we still trust is an unbalanced
+// code fence.
+// ---------------------------------------------------------------------------
+function isTruncatedStop(result) {
+  if (result.finishReason !== 'STOP') return false;
+  if (!result.sawText) return false;
+  const text = String(result.text || '').trimEnd();
+  if (!text) return false;
+  const fenceCount = (text.match(/```/g) || []).length;
+  return fenceCount % 2 !== 0;
+}
+
+// ---------------------------------------------------------------------------
+// 1. STATEFUL XML PARSER
+// ---------------------------------------------------------------------------
+class StatefulXMLParser {
+  static FETCH_TOOLS = new Set(['weather', 'search', 'finance', 'analyse', 'run', 'analysing']);
+  static SOFT_TOOLS = new Set(['chart']);
+  static ALL_TOOLS = new Set([...StatefulXMLParser.FETCH_TOOLS, ...StatefulXMLParser.SOFT_TOOLS]);
+  static THINK_TAGS = new Set(['think', 'thinking', 'thought']);
+  constructor(onEvent, options = {}) {
+    this.onEvent = onEvent;
+    this.allowTools = options.allowTools !== false;
+    this.allowThinking = options.allowThinking === true;
+    this.state = 'TEXT';
+    this.tagBuf = '';
+    this.mode = 'NORMAL';
+    this.thinkTag = null;
+    this.toolName = null;
+    this.toolContent = '';
+    this.textBatch = '';
+    this.thinkBatch = '';
+    this.tools = [];
+    this.charts = [];
+    this.sawText = false;
+    this.toolDetected = false;
+    this.dropText = false;
+  }
+  feed(chunk) {
+    if (typeof chunk !== 'string' || !chunk) return;
+    for (let i = 0; i < chunk.length; i++) this._step(chunk[i]);
+    this._flushBatches();
+  }
+  flush() {
+    if (this.mode === 'THINKING') this._closeThinking();
+    if (this.mode === 'TOOL') {
+      if (this.toolName === 'chart' && this.toolContent.trim()) this._closeTool();
+      else { this.toolName = null; this.toolContent = ''; this.mode = 'NORMAL'; }
     }
-  }
-  if (!parsed || typeof parsed !== 'object') throw new Error('not an object');
-  if (Array.isArray(parsed)) {
-    const nums = parsed.map(v => typeof v === 'number' ? v : parseFloat(v) || 0);
-    parsed = { type: 'bar', values: nums, labels: nums.map((_, i) => String(i + 1)) };
-  }
-  const typeRaw = parsed.type || parsed.chartType || parsed.chart_type || parsed.chart || parsed.kind || parsed.viz;
-  const type = normalizeChartType(typeRaw);
-  const title = parsed.title || parsed.name || parsed.heading || parsed.label || parsed.caption || '';
-  let labels = Array.isArray(parsed.labels) ? parsed.labels.map(String) :
-               Array.isArray(parsed.categories) ? parsed.categories.map(String) :
-               Array.isArray(parsed.xAxis) ? parsed.xAxis.map(String) :
-               Array.isArray(parsed.xaxis) ? parsed.xaxis.map(String) :
-               Array.isArray(parsed.x) ? parsed.x.map(String) : [];
-  const toNumArr = a => Array.isArray(a) ? a.map(v => typeof v === 'number' ? v : (parseFloat(v) || 0)) : [];
-  let values = toNumArr(parsed.values ?? parsed.value ?? parsed.y ?? parsed.yAxis ?? parsed.yaxis);
-  let datasets = [];
-  const pickSeries = arr => arr.map((ds, i) => ({
-    label: ds.label || ds.name || ds.series || `Series ${i + 1}`,
-    data: toNumArr(ds.data ?? ds.values ?? ds.points ?? ds.y),
-  }));
-  if (Array.isArray(parsed.datasets) && parsed.datasets.length) datasets = pickSeries(parsed.datasets);
-  else if (Array.isArray(parsed.series) && parsed.series.length) datasets = pickSeries(parsed.series);
-  else if (values.length) datasets = [{ label: title || 'Data', data: values }];
-  if (!values.length && !labels.length && Array.isArray(parsed.data) && parsed.data.length) {
-    const first = parsed.data[0];
-    if (first && typeof first === 'object' && !Array.isArray(first)) {
-      const lk = ['label','name','key','category','x','id'].find(k => k in first);
-      const vk = ['value','count','y','amount','total','n'].find(k => k in first);
-      if (lk && vk) {
-        labels = parsed.data.map(d => String(d[lk] ?? ''));
-        values = parsed.data.map(d => typeof d[vk] === 'number' ? d[vk] : (parseFloat(d[vk]) || 0));
-        datasets = [{ label: title || 'Data', data: values }];
-      }
+    if (this.state === 'TAG_OPEN' && this.tagBuf) {
+      this._appendToCurrent(this.tagBuf); this.tagBuf = ''; this.state = 'TEXT';
     }
-    if (!values.length && Array.isArray(first)) {
-      labels = parsed.data.map((_, i) => String(i + 1));
-      values = parsed.data.map(d => typeof d[1] === 'number' ? d[1] : (parseFloat(d[1]) || 0));
-      datasets = [{ label: title || 'Data', data: values }];
+    this._flushBatches();
+    return { tools: this.tools, charts: this.charts, sawText: this.sawText, toolDetected: this.toolDetected };
+  }
+  _flushBatches() {
+    if (this.textBatch) { this.onEvent({ type: 'text', content: this.textBatch }); this.textBatch = ''; }
+    if (this.thinkBatch) { this.onEvent({ type: 'thinking', content: this.thinkBatch }); this.thinkBatch = ''; }
+  }
+  _appendToCurrent(s) {
+    if (!s) return;
+    if (this.mode === 'THINKING') this.thinkBatch += s;
+    else if (this.mode === 'TOOL') this.toolContent += s;
+    else { if (this.dropText) return; this.textBatch += s; this.sawText = true; }
+  }
+  _step(ch) {
+    if (this.state === 'TEXT') {
+      if (ch === '<') { this.state = 'TAG_OPEN'; this.tagBuf = '<'; return; }
+      this._appendToCurrent(ch); return;
     }
+    if (ch === '>') { this.tagBuf += '>'; this._processTag(); return; }
+    if (ch === '<') { this._appendToCurrent(this.tagBuf); this.tagBuf = '<'; return; }
+    this.tagBuf += ch;
   }
-  if ((type === 'pie' || type === 'doughnut' || type === 'polarArea' || type === 'gauge') && !values.length && datasets.length) {
-    values = datasets[0].data.slice();
-  }
-  if (type === 'radar' && !datasets.length && values.length) {
-    datasets = [{ label: title || 'Series 1', data: values }];
-  }
-  if (!labels.length && datasets.length && datasets[0].data.length) {
-    for (let i = 0; i < datasets[0].data.length; i++) labels.push(String(i + 1));
-  }
-  return { type, title, labels, values, datasets };
-};
-const renderCartesianGrid = (labels, W, H, PAD, innerW, innerH, maxVal, minVal, fmt) => {
-  let svg = '';
-  for (let g = 0; g <= 4; g++) {
-    const y = PAD + (innerH * g) / 4;
-    svg += `<line x1="${PAD}" y1="${y}" x2="${PAD + innerW}" y2="${y}" stroke="var(--border-color)" stroke-width="0.5"/>`;
-    const val = maxVal - ((maxVal - minVal) * g) / 4;
-    svg += `<text x="${PAD - 8}" y="${y + 4}" fill="var(--text-tertiary)" font-size="10" text-anchor="end">${fmt(val)}</text>`;
-  }
-  return svg;
-};
-const renderXLabels = (labels, PAD, innerW, H, denseMax = 6, baseMaxChars = 16) => {
-  let svg = '';
-  const dense = labels.length > denseMax;
-  labels.forEach((l, i) => {
-    const x = PAD + (i + 0.5) * (innerW / Math.max(labels.length, 1));
-    const maxChars = dense ? Math.max(6, Math.floor(innerW / Math.max(labels.length, 1) / 7)) : baseMaxChars;
-    svg += renderWrappedLabel(x, H - 18, l, maxChars, 11, 'middle');
-  });
-  return svg;
-};
-const fmtChartNum = n => Math.abs(n) >= 1000000 ? (n/1000000).toFixed(1)+'M' : Math.abs(n) >= 1000 ? (n/1000).toFixed(1)+'k' : (Number.isInteger(n) ? String(n) : n.toFixed(1));
-const renderBar = (spec, W, H, PAD) => {
-  const innerW = W - PAD*2, innerH = H - PAD*2;
-  const { labels, datasets } = spec;
-  const allValues = [].concat(...datasets.map(d => d.data));
-  const maxVal = Math.max(...allValues, 1);
-  const minVal = Math.min(0, ...allValues);
-  let svg = renderCartesianGrid(labels, W, H, PAD, innerW, innerH, maxVal, minVal, fmtChartNum);
-  const groupW = innerW / Math.max(labels.length, 1);
-  const barW = (groupW * 0.6) / Math.max(datasets.length, 1);
-  const groupPad = (groupW - barW * datasets.length) / 2;
-  datasets.forEach((ds, di) => {
-    const color = CHART_COLORS[di % CHART_COLORS.length];
-    ds.data.forEach((v, i) => {
-      const x = PAD + i * groupW + groupPad + di * barW;
-      const h = (v / maxVal) * innerH;
-      const yTop = PAD + innerH - h;
-      svg += `<rect x="${x}" y="${yTop}" width="${barW * 0.9}" height="${h}" fill="${color}" rx="3"/>`;
-      svg += `<text x="${x + barW * 0.45}" y="${yTop - 5}" fill="var(--text-primary)" font-size="10" font-weight="600" text-anchor="middle">${fmtChartNum(v)}</text>`;
-    });
-  });
-  svg += renderXLabels(labels, PAD, innerW, H);
-  return svg;
-};
-const renderHBar = (spec, W, H, PAD) => {
-  const innerW = W - PAD*2, innerH = H - PAD*2;
-  const { labels, datasets } = spec;
-  const allValues = [].concat(...datasets.map(d => d.data));
-  const maxVal = Math.max(...allValues, 1);
-  let svg = '';
-  for (let g = 0; g <= 4; g++) {
-    const x = PAD + (innerW * g) / 4;
-    svg += `<line x1="${x}" y1="${PAD}" x2="${x}" y2="${PAD + innerH}" stroke="var(--border-color)" stroke-width="0.5"/>`;
-    svg += `<text x="${x}" y="${H - 18}" fill="var(--text-tertiary)" font-size="10" text-anchor="middle">${fmtChartNum((maxVal * g) / 4)}</text>`;
-  }
-  const rowH = innerH / Math.max(labels.length, 1);
-  const barH = (rowH * 0.7) / Math.max(datasets.length, 1);
-  datasets.forEach((ds, di) => {
-    const color = CHART_COLORS[di % CHART_COLORS.length];
-    ds.data.forEach((v, i) => {
-      const y = PAD + i * rowH + (rowH - barH * datasets.length) / 2 + di * barH;
-      const w = (v / maxVal) * innerW;
-      svg += `<rect x="${PAD}" y="${y}" width="${w}" height="${barH * 0.9}" fill="${color}" rx="3"/>`;
-      svg += `<text x="${PAD + w + 5}" y="${y + barH * 0.65}" fill="var(--text-primary)" font-size="10" font-weight="600" dominant-baseline="middle">${fmtChartNum(v)}</text>`;
-    });
-  });
-  labels.forEach((l, i) => {
-    const y = PAD + (i + 0.5) * rowH;
-    svg += `<text x="${PAD - 8}" y="${y}" fill="var(--text-secondary)" font-size="11" text-anchor="end" dominant-baseline="middle">${esc(l.slice(0, 14))}${l.length > 14 ? '…' : ''}</text>`;
-  });
-  return svg;
-};
-const renderStackedBar = (spec, W, H, PAD) => {
-  const innerW = W - PAD*2, innerH = H - PAD*2;
-  const { labels, datasets } = spec;
-  const totals = labels.map((_, i) => datasets.reduce((s, ds) => s + (ds.data[i] || 0), 0));
-  const maxVal = Math.max(...totals, 1);
-  let svg = renderCartesianGrid(labels, W, H, PAD, innerW, innerH, maxVal, 0, fmtChartNum);
-  const groupW = innerW / Math.max(labels.length, 1);
-  const barW = groupW * 0.6;
-  labels.forEach((_, i) => {
-    let cumulative = 0;
-    datasets.forEach((ds, di) => {
-      const v = ds.data[i] || 0;
-      const h = (v / maxVal) * innerH;
-      const x = PAD + i * groupW + (groupW - barW) / 2;
-      const yTop = PAD + innerH - cumulative - h;
-      svg += `<rect x="${x}" y="${yTop}" width="${barW}" height="${h}" fill="${CHART_COLORS[di % CHART_COLORS.length]}" rx="2"/>`;
-      if (v > 0 && h > 14) {
-        svg += `<text x="${x + barW/2}" y="${yTop + h/2}" fill="#fff" font-size="10" font-weight="600" text-anchor="middle" dominant-baseline="middle" style="paint-order:stroke;stroke:rgba(0,0,0,0.25);stroke-width:2px">${fmtChartNum(v)}</text>`;
-      }
-      cumulative += h;
-    });
-  });
-  svg += renderXLabels(labels, PAD, innerW, H);
-  return svg;
-};
-const renderLine = (spec, W, H, PAD, filled) => {
-  const innerW = W - PAD*2, innerH = H - PAD*2;
-  const { labels, datasets } = spec;
-  const allValues = [].concat(...datasets.map(d => d.data));
-  const maxVal = Math.max(...allValues, 1);
-  const minVal = Math.min(0, ...allValues);
-  let svg = renderCartesianGrid(labels, W, H, PAD, innerW, innerH, maxVal, minVal, fmtChartNum);
-  datasets.forEach((ds, di) => {
-    const color = CHART_COLORS[di % CHART_COLORS.length];
-    const points = ds.data.map((v, i) => ({
-      x: PAD + (i / Math.max(ds.data.length - 1, 1)) * innerW,
-      y: PAD + innerH - ((v - minVal) / (maxVal - minVal || 1)) * innerH
-    }));
-    if (filled && points.length) {
-      const areaPath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ')
-        + ` L ${points[points.length - 1].x} ${PAD + innerH} L ${points[0].x} ${PAD + innerH} Z`;
-      svg += `<path d="${areaPath}" fill="${color}" opacity="0.25"/>`;
+  _processTag() {
+    const raw = this.tagBuf;
+    this.tagBuf = ''; this.state = 'TEXT';
+    if (raw.length < 3 || raw[0] !== '<' || raw[raw.length - 1] !== '>') { this._appendToCurrent(raw); return; }
+    const inner = raw.slice(1, -1);
+    const isClosing = inner.startsWith('/');
+    const body = isClosing ? inner.slice(1) : inner;
+    const trimmed = body.trim();
+    const hasAttrs = /\s/.test(trimmed);
+    const name = (hasAttrs ? trimmed.split(/\s+/)[0] : trimmed).toLowerCase();
+    if (this.mode === 'THINKING') {
+      if (isClosing && !hasAttrs && name === this.thinkTag) this._closeThinking();
+      else this.thinkBatch += raw;
+      return;
     }
-    svg += `<polyline points="${points.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')}" fill="none" stroke="${color}" stroke-width="2"/>`;
-    points.forEach(p => { svg += `<circle cx="${p.x}" cy="${p.y}" r="3.5" fill="${color}"/>`; });
-  });
-  labels.forEach((l, i) => {
-    const x = PAD + (i / Math.max(labels.length - 1, 1)) * innerW;
-    svg += renderWrappedLabel(x, H - 18, l, 12, 12, 'middle');
-  });
-  return svg;
-};
-const renderStackedArea = (spec, W, H, PAD) => {
-  const innerW = W - PAD*2, innerH = H - PAD*2;
-  const { labels, datasets } = spec;
-  const totals = labels.map((_, i) => datasets.reduce((s, ds) => s + (ds.data[i] || 0), 0));
-  const maxVal = Math.max(...totals, 1);
-  let svg = renderCartesianGrid(labels, W, H, PAD, innerW, innerH, maxVal, 0, fmtChartNum);
-  const cumulative = new Array(labels.length).fill(0);
-  datasets.forEach((ds, di) => {
-    const color = CHART_COLORS[di % CHART_COLORS.length];
-    const topPoints = ds.data.map((v, i) => ({
-      x: PAD + (i / Math.max(ds.data.length - 1, 1)) * innerW,
-      y: PAD + innerH - ((cumulative[i] + v) / maxVal) * innerH
-    }));
-    const bottomPoints = ds.data.map((v, i) => ({
-      x: PAD + (i / Math.max(ds.data.length - 1, 1)) * innerW,
-      y: PAD + innerH - (cumulative[i] / maxVal) * innerH
-    }));
-    const path = topPoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ')
-      + ' L ' + bottomPoints.slice().reverse().map(p => `${p.x} ${p.y}`).join(' L ') + ' Z';
-    svg += `<path d="${path}" fill="${color}" opacity="0.55" stroke="${color}" stroke-width="1.5"/>`;
-    ds.data.forEach((v, i) => { cumulative[i] += v; });
-  });
-  labels.forEach((l, i) => {
-    const x = PAD + (i / Math.max(labels.length - 1, 1)) * innerW;
-    svg += renderWrappedLabel(x, H - 18, l, 12, 12, 'middle');
-  });
-  return svg;
-};
-const renderPieLike = (spec, W, H, doughnut) => {
-  const innerW = W - 96, innerH = H - 96;
-  const cx = W / 2, cy = H / 2;
-  const r = Math.min(innerW, innerH) / 2 - 10;
-  const innerR = doughnut ? r * 0.55 : 0;
-  const labelR = doughnut ? (r + innerR) / 2 : r * 0.62;
-  const pieValues = spec.values.length ? spec.values : (spec.datasets[0]?.data || []);
-  const total = pieValues.reduce((a, b) => a + b, 0) || 1;
-  let angle = -Math.PI / 2;
-  let svg = '';
-  pieValues.forEach((v, i) => {
-    const slice = (v / total) * Math.PI * 2;
-    const x1 = cx + r * Math.cos(angle), y1 = cy + r * Math.sin(angle);
-    const x2 = cx + r * Math.cos(angle + slice), y2 = cy + r * Math.sin(angle + slice);
-    const large = slice > Math.PI ? 1 : 0;
-    svg += `<path d="M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} Z" fill="${CHART_COLORS[i % CHART_COLORS.length]}" stroke="var(--bg-input)" stroke-width="2"/>`;
-    const midA = angle + slice / 2;
-    const lx = cx + labelR * Math.cos(midA);
-    const ly = cy + labelR * Math.sin(midA);
-    const pct = Math.round((v / total) * 100);
-    if (pct >= 5) {
-      svg += `<text x="${lx.toFixed(2)}" y="${ly.toFixed(2)}" fill="#fff" font-size="13" font-weight="700" text-anchor="middle" dominant-baseline="central" style="paint-order:stroke;stroke:rgba(0,0,0,0.18);stroke-width:2px;stroke-linejoin:round">${pct}%</text>`;
+    if (this.mode === 'TOOL') {
+      if (isClosing && !hasAttrs && name === this.toolName) this._closeTool();
+      else this.toolContent += raw;
+      return;
     }
-    angle += slice;
-  });
-  if (doughnut) svg += `<circle cx="${cx}" cy="${cy}" r="${innerR}" fill="var(--bg-input)"/>`;
-  return svg;
-};
-const renderScatter = (spec, W, H, PAD) => {
-  const innerW = W - PAD*2, innerH = H - PAD*2;
-  const flatten = [];
-  spec.datasets.forEach(ds => {
-    if (Array.isArray(ds.data)) {
-      ds.data.forEach(v => {
-        if (v && typeof v === 'object' && 'x' in v && 'y' in v) flatten.push({ x: Number(v.x), y: Number(v.y) });
-        else flatten.push({ x: flatten.length, y: Number(v) || 0 });
-      });
+    if (this.allowThinking && !isClosing && !hasAttrs && StatefulXMLParser.THINK_TAGS.has(name)) {
+      this.textBatch = ''; this.thinkTag = name; this.mode = 'THINKING';
+      this.onEvent({ type: 'thinking_start' });
+      return;
     }
-  });
-  if (!flatten.length) return '<text x="320" y="170" text-anchor="middle" fill="var(--text-tertiary)" font-size="12">No data points</text>';
-  const xs = flatten.map(p => p.x), ys = flatten.map(p => p.y);
-  const xMin = Math.min(...xs), xMax = Math.max(...xs), yMin = Math.min(...ys, 0), yMax = Math.max(...ys, 1);
-  const px = v => PAD + ((v - xMin) / (xMax - xMin || 1)) * innerW;
-  const py = v => PAD + innerH - ((v - yMin) / (yMax - yMin || 1)) * innerH;
-  let svg = '';
-  for (let g = 0; g <= 4; g++) {
-    const y = PAD + (innerH * g) / 4;
-    svg += `<line x1="${PAD}" y1="${y}" x2="${PAD+innerW}" y2="${y}" stroke="var(--border-color)" stroke-width="0.5"/>`;
-    svg += `<text x="${PAD-8}" y="${y+4}" fill="var(--text-tertiary)" font-size="10" text-anchor="end">${fmtChartNum(yMax - ((yMax-yMin)*g)/4)}</text>`;
-  }
-  flatten.forEach((p, i) => {
-    svg += `<circle cx="${px(p.x).toFixed(1)}" cy="${py(p.y).toFixed(1)}" r="4" fill="${CHART_COLORS[i % CHART_COLORS.length]}" opacity="0.85"/>`;
-  });
-  svg += `<text x="${PAD + innerW/2}" y="${H - 4}" fill="var(--text-tertiary)" font-size="10" text-anchor="middle">x</text>`;
-  return svg;
-};
-const renderBubble = (spec, W, H, PAD) => {
-  const innerW = W - PAD*2, innerH = H - PAD*2;
-  const flatten = [];
-  spec.datasets.forEach(ds => {
-    if (Array.isArray(ds.data)) {
-      ds.data.forEach(v => {
-        if (v && typeof v === 'object' && 'x' in v && 'y' in v) flatten.push({ x: Number(v.x), y: Number(v.y), r: Number(v.r ?? v.size ?? 10) });
-        else flatten.push({ x: flatten.length, y: Number(v) || 0, r: 10 });
-      });
+    if (this.allowTools && !isClosing && !hasAttrs && StatefulXMLParser.ALL_TOOLS.has(name)) {
+      this.textBatch = ''; this.toolName = name; this.toolContent = ''; this.mode = 'TOOL';
+      if (StatefulXMLParser.FETCH_TOOLS.has(name)) this.toolDetected = true;
+      this.onEvent({ type: 'tool_start', name });
+      return;
     }
-  });
-  if (!flatten.length) return '<text x="320" y="170" text-anchor="middle" fill="var(--text-tertiary)" font-size="12">No data points</text>';
-  const xs = flatten.map(p => p.x), ys = flatten.map(p => p.y), rs = flatten.map(p => p.r);
-  const xMin = Math.min(...xs), xMax = Math.max(...xs);
-  const yMin = Math.min(...ys, 0), yMax = Math.max(...ys, 1);
-  const rMax = Math.max(...rs, 1);
-  const px = v => PAD + ((v - xMin) / (xMax - xMin || 1)) * innerW;
-  const py = v => PAD + innerH - ((v - yMin) / (yMax - yMin || 1)) * innerH;
-  const pr = v => 4 + (v / rMax) * 20;
-  let svg = '';
-  for (let g = 0; g <= 4; g++) {
-    const y = PAD + (innerH * g) / 4;
-    svg += `<line x1="${PAD}" y1="${y}" x2="${PAD+innerW}" y2="${y}" stroke="var(--border-color)" stroke-width="0.5"/>`;
-    svg += `<text x="${PAD-8}" y="${y+4}" fill="var(--text-tertiary)" font-size="10" text-anchor="end">${fmtChartNum(yMax - ((yMax-yMin)*g)/4)}</text>`;
+    if (!this.allowThinking && !hasAttrs && StatefulXMLParser.THINK_TAGS.has(name)) return;
+    this._appendToCurrent(raw);
   }
-  flatten.forEach((p, i) => {
-    const color = CHART_COLORS[i % CHART_COLORS.length];
-    svg += `<circle cx="${px(p.x).toFixed(1)}" cy="${py(p.y).toFixed(1)}" r="${pr(p.r).toFixed(1)}" fill="${color}" opacity="0.55" stroke="${color}" stroke-width="1.5"/>`;
-  });
-  return svg;
-};
-const renderRadar = (spec, W, H) => {
-  const cx = W / 2, cy = H / 2;
-  const radius = Math.min(W, H) / 2 - 60;
-  const labels = spec.labels.length ? spec.labels : (spec.datasets[0]?.data || []).map((_, i) => String(i+1));
-  const N = labels.length || 1;
-  const allValues = [].concat(...spec.datasets.map(d => d.data));
-  const maxVal = Math.max(...allValues, 1);
-  const angleFor = i => -Math.PI / 2 + (i / N) * Math.PI * 2;
-  let svg = '';
-  for (let r = 1; r <= 4; r++) {
-    const rr = (radius * r) / 4;
-    const points = [];
-    for (let i = 0; i < N; i++) {
-      const a = angleFor(i);
-      points.push(`${cx + rr * Math.cos(a)},${cy + rr * Math.sin(a)}`);
+  _closeThinking() {
+    this._flushBatches();
+    this.mode = 'NORMAL'; this.thinkTag = null;
+    this.onEvent({ type: 'thinking_end' });
+  }
+  _closeTool() {
+    let content = this.toolContent.trim();
+    const name = this.toolName;
+    if (name === 'chart') {
+      content = sanitizeChartSpec(content);
+      this.charts.push({ name, content });
+      this.onEvent({ type: 'chart', content });
+    } else {
+      this.tools.push({ name, content });
+      this.onEvent({ type: 'tool_end', name, content });
+      this.dropText = true;
     }
-    svg += `<polygon points="${points.join(' ')}" fill="none" stroke="var(--border-color)" stroke-width="0.5"/>`;
+    this.mode = 'NORMAL'; this.toolName = null; this.toolContent = '';
   }
-  for (let i = 0; i < N; i++) {
-    const a = angleFor(i);
-    svg += `<line x1="${cx}" y1="${cy}" x2="${cx + radius * Math.cos(a)}" y2="${cy + radius * Math.sin(a)}" stroke="var(--border-color)" stroke-width="0.5"/>`;
-    const lx = cx + (radius + 22) * Math.cos(a);
-    const ly = cy + (radius + 22) * Math.sin(a);
-    svg += `<text x="${lx}" y="${ly}" fill="var(--text-secondary)" font-size="11" text-anchor="middle" dominant-baseline="middle">${esc(labels[i].slice(0, 12))}</text>`;
+}
+
+// ---------------------------------------------------------------------------
+// 2. SYSTEM PROMPT
+//
+// currentAttachments: when the current turn carries files, we hide the
+// <analysing> tag from the tool list entirely. The tag remains available on
+// follow-up turns so the user can say "re-read that PDF" and have it work.
+//
+// The prompt is heavily reinforced against tool carry-over: the model has a
+// known failure mode where it repeats its own last tool call on an unrelated
+// turn. Every section below states the "current request is the trigger" rule
+// from a different angle.
+// ---------------------------------------------------------------------------
+function getSystemPrompt(mode, date, { hasImage = false, hasFile = false, fileIndex = '', currentAttachments = false } = {}) {
+  const fileSection = fileIndex ? `\n\n# Files in this conversation\n\n${fileIndex}` : '';
+  const vision = mode === 'vision' || mode === 'vision-agent';
+
+  const analysingToolLine = currentAttachments
+    ? ''
+    : `    <analysing>filename.ext</analysing>         Re-attach a file from an EARLIER turn.\n`;
+
+  const analysingChecklist = currentAttachments
+    ? `- **A file on the CURRENT message?** → ALREADY in your context. Answer directly. No file tool needed.`
+    : `- **A file from an EARLIER turn the user is referring to?** → \`<analysing>\`.
+- **A file on the CURRENT message?** → ALREADY in your context. Answer directly. NEVER call \`<analysing>\` on it.`;
+
+  const base = `You are ZebAI. Today is ${date}.
+
+# Reply contract
+
+Every reply is EXACTLY ONE of:
+1. **A tool call** — nothing but the tool tag(s). No prose.
+2. **A final answer** — detailed Markdown, optionally starting with one \`<chart>\`.
+
+Never both. When you emit a fetch tool tag, the reply ends there.
+
+# Tool tag purity
+
+A tool call reply contains ONLY the tags. No period, comma, space, newline, or prose around them. If a reply has any non-tag character while trying to call a tool, the parser drops your tool call and treats the reply as a final answer.
+
+    Correct:   <search>Tokyo weather</search><weather>Tokyo</weather>
+    Wrong:     Let me check. <search>Tokyo weather</search>.
+    Wrong:     <search>Tokyo weather</search>, <weather>Tokyo</weather>
+    Wrong:     <search>Tokyo</search>\n<weather>Tokyo</weather>
+
+# Parallel tool calls — same tool OR independent tools
+
+Fire independent calls together in ONE reply. This is the single biggest speed lever.
+
+**Same tool, multiple arguments — always parallel:**
+
+    Correct:   <weather>Tokyo</weather><weather>London</weather><weather>NYC</weather>
+    Correct:   <finance>{"type":"stock","symbol":"AAPL"}</finance><finance>{"type":"stock","symbol":"MSFT"}</finance>
+    Wrong:     one tag per round
+
+**Different tools with independent jobs — also parallel:**
+
+    Correct:   <weather>NYC</weather><finance>{"type":"stock","symbol":"AAPL"}</finance><run>231331311/233</run>
+
+    These are three separate questions. None needs the output of the others. Batch them.
+
+**Sequential when one tool's output feeds another:**
+
+    Correct:   Round 1:  <finance>{"type":"stock","symbol":"AAPL"}</finance>
+               Round 2:  <run>price / 3</run>
+
+    Wrong:     <finance>{"type":"stock","symbol":"AAPL"}</finance><run>price / 3</run>
+               (the <run> can't see the price yet — it doesn't exist)
+
+**The test before you batch:** does call B need output from call A? If no, batch them. If yes, sequence them across rounds.
+
+Cap: 4 tags per reply. Mixing families is fine — the round just can't exceed 4.
+
+# Tools
+
+    <search>query</search>                      Live web search.
+    <analyse>https://exact-url</analyse>        Read a specific URL in full.
+    <weather>City</weather>                     Current weather.
+    <finance>{"type":"stock","symbol":"AAPL"}</finance>
+    <finance>{"type":"forex","base":"USD","target":"INR"}</finance>
+    <run>javascript</run>                       Execute JS in the sandbox — see below.
+${analysingToolLine}    <chart>{...}</chart>                        Chart inside the final answer.
+
+# Choosing a tool — run this checklist before every reply
+
+- **Stable fact in training data?** → answer directly. No tool.
+- **Live / current / changes over time?** → \`<search>\`, \`<weather>\`, or \`<finance>\`.
+- **The user is asking you to compute something right now?** → \`<run>\`. Never do arithmetic in your head when the current request needs a number.
+- **A specific URL the user gave you, or one a search snippet pointed at?** → \`<analyse>\`.
+${analysingChecklist}
+
+Never search for what you know. Never duplicate a call. Never fire a tool "just to be safe".
+
+**Every turn is a fresh turn.** Previous turns do not set the mode for this one. If the user asked for a calculation two turns ago and now asks you to describe an image, this turn is a description task — no code, no computation, no re-running of anything. Read the current message; ignore the tool pattern from before.
+
+Before you answer, ask: which of these calls can go in parallel, and which depend on each other? Batch the independent ones. Sequence the dependent ones.
+
+# Search → analyse — highly recommended
+
+Search gives you headlines. \`<analyse>\` gives you the source. The difference between a thin answer and a real one is usually one round of \`<analyse>\`.
+
+**Highly recommended after every search round:**
+- The question is a research question, comparison, or "what's the latest".
+- A snippet says "according to" / "reported that" / "sources said" — the detail is one click away.
+- The snippets disagree with each other and you need to see which is right.
+- You need quotes, numbers, or specific facts to write a confident answer.
+
+**Skip only when:**
+- A single value is already in the snippet ("Bitcoin price" → "$62,000").
+- The user asked a yes/no or one-line lookup and the search answered it.
+
+**Shape:** search round → analyse round → final answer. Two rounds. Three is rare.
+
+**Example:**
+    Round 1:  <search>latest AI news this week</search><search>OpenAI announcements October 2026</search>
+    Round 2:  <analyse>https://techcrunch.com/...</analyse><analyse>https://theverge.com/...</analyse>
+    Round 3:  final answer, with quotes and dates from both articles
+
+You decide. But when in doubt, analyse.
+
+# Chart — first block of the final answer
+
+One \`<chart>\` per reply. Raw JSON, no fences, no prose. Must be the **first** thing in the reply.
+
+Emit when it genuinely helps — 3+ comparisons, trends, distributions. Not for a single number.
+
+## Schema per type
+
+**bar, hbar, line, area, stackedBar, stackedArea** — labels + values, or labels + datasets:
+
+    <chart>{"type":"bar","title":"Revenue","labels":["Q1","Q2","Q3"],"values":[120,135,98]}</chart>
+
+    <chart>{"type":"line","title":"Growth","labels":["2022","2023","2024"],"datasets":[{"label":"Users","data":[10,40,120]},{"label":"Revenue","data":[5,20,80]}]}</chart>
+
+**pie, doughnut, polarArea** — labels + values, same length:
+
+    <chart>{"type":"pie","title":"Market Share","labels":["Chrome","Safari","Firefox"],"values":[65,18,3]}</chart>
+
+**gauge** — single value with min/max:
+
+    <chart>{"type":"gauge","title":"CPU Load","values":[72],"min":0,"max":100}</chart>
+
+**scatter, bubble** — datasets with point objects:
+
+    <chart>{"type":"scatter","title":"Height vs Weight","datasets":[{"label":"People","data":[{"x":170,"y":65},{"x":180,"y":78}]}]}</chart>
+
+    <chart>{"type":"bubble","title":"Cities","datasets":[{"label":"Population","data":[{"x":100,"y":200,"r":30}]}]}</chart>
+
+**radar** — labels + datasets:
+
+    <chart>{"type":"radar","title":"Skill Profile","labels":["Speed","Power","Accuracy"],"datasets":[{"label":"Player A","data":[8,6,9]}]}</chart>
+
+## Rules
+
+- Keys in double quotes. Numbers as numbers, not strings.
+- \`labels.length\` must equal \`values.length\` (or each dataset's \`data.length\`).
+- \`title\` is a short string, plain text, no formatting.
+- Never wrap in \`\`\` fences.
+- Never write prose inside the \`<chart>\` tag.
+- Never emit two charts in one reply.
+- If unsure of the type, use \`bar\` with labels + values.
+
+# URLs — hard rule
+
+Every URL in your answer must be one that **literally appeared in a tool result this turn**, or one **the user typed in their message**. Nothing else.
+
+**You may not invent, guess, shorten, lengthen, or modify a URL.** You may not use a URL from training data. You may not construct a plausible-looking URL like "openai.com/blog/gpt-5" — even if you are certain such a page exists, you don't have a verified URL for it this turn.
+
+When you want to cite a source:
+
+- **If a tool result this turn contains the URL** → use it exactly, character for character. Do not strip tracking parameters. Do not add or remove a trailing slash.
+- **If no tool result contains the URL** → mention the source by name in plain text. No link. No URL.
+
+    Bad:  [OpenAI's announcement](https://openai.com/blog/gpt-5)     ← invented
+    Bad:  [source](https://example.com)                              ← generic
+    Bad:  [Verge](https://theverge.com)                              ← bare domain
+    Good: [OpenAI's announcement](https://openai.com/index/gpt-5/)   ← exact match from search
+    Good: The Verge reported that…                                   ← plain text, no link
+
+This applies to every link in every reply: prose, bullet lists, tables, follow-ups. No exceptions.
+
+# Run — use it for everything it can do
+
+The \`<run>\` sandbox is a full JavaScript interpreter. It's exact. Your head is not. Use \`<run>\` **only when the current user message is a computation request**, and only if the answer involves any of the following:
+
+**Always use \`<run>\` for:**
+- Any arithmetic the user is asking for — even "15% of 82". Never compute in your head.
+- Any date arithmetic — days between dates, "what date is 30 days from now".
+- Any unit conversion the sandbox can express.
+- Any string manipulation — split, join, regex, padding, case.
+- Any array or object transform — sort, filter, map, aggregate.
+- Any percentage, compound interest, growth rate, average.
+- Any comparison of numbers you need to decide on.
+- Any encoding, base conversion, or hash.
+- Any data shape change — CSV → JSON, flattening, grouping.
+
+**Sandbox has:** expression grammar, \`let/const/var\`, destructuring, functions, closures, classes, loops, \`try/catch\`, template literals, arrays, objects, \`Map\`, \`Set\`, \`RegExp\`, all \`Math.*\`, \`JSON.parse/stringify\`, \`Date.now/parse/UTC\`, \`console.log\`. A bare expression at the end prints its value.
+
+**Sandbox does NOT have:** network, timers, DOM, files, \`eval\`, \`new Date()\` (use \`Date.now()\`), async.
+
+**Patterns:**
+
+    Simple math:     <run>15/100 * 82</run>                                    → 12.3
+    Compound:        <run>const p=1000,r=.05,n=12; console.log(p*Math.pow(1+r/n,n*10))</run>
+    Date diff:       <run>(Date.UTC(2026,8,27) - Date.UTC(2024,0,15)) / 86400000</run>
+    Data transform:  <run>console.log([3,1,2].sort((a,b)=>a-b).join(","))</run>
+
+Fire \`<run>\` when the current user message is a computation request. Do NOT fire it as a safety net. Do NOT fire it because a previous turn involved math.
+
+# Answer depth
+
+Detailed by default. Lead with the answer.
+
+    Fact / definition      3–5 sentences with context + example.
+    Calculation            result + working + interpretation.
+    Comparison             table or facing paragraphs (3–5 points each).
+    News / roundup         bullets with source + interpretation.
+    Data lookup            headline number, fields, trend note.
+    Code                   block + what it does + edge cases + usage.
+    Research / analysis    ## sections: conclusion, evidence, caveats.
+
+Include specifics: numbers, names, dates. One line of interpretation at the end.
+
+# Closing rule
+
+Every substantive answer ends with exactly ONE short follow-up — a natural next question or offer, 5–15 words, on-topic, no filler.
+
+This is a completion signal. If the answer ends mid-sentence or without a follow-up, the user assumes it was cut off.
+
+    Good: "Want me to dig into the token-cost side?"
+    Good: "Curious how this compares to the Anthropic SDK?"
+    Good: "Shall I keep going, or is this enough?"
+
+    Bad:  "Anything else?"
+    Bad:  "Hope this helps!"
+    Bad:  "Feel free to ask!"
+    Bad:  ending on a bare period with no follow-up
+
+Skip the follow-up ONLY for: one-word replies ("Yo.", "Anytime."), pure math results, and single-value lookups where a follow-up would be absurd.
+
+# Voice
+
+Smart friend texting. Concrete over abstract. Em-dashes for asides. Vary sentence length. No "Sure!", no "Great question!", no hedging, no corporate voice.
+
+# Casual conversation
+
+For "hi", "hey", "hello", "yo", "thanks", "bye", "good morning" — reply like a person. One or two sentences. Match their energy.
+
+**Do NOT:** list tools, explain ZebAI, describe capabilities, offer a menu, ask "how can I assist", add follow-up suggestions, use emojis.
+
+**Do:** say hi back. "Hey. What's up?" is complete. Match short with short.
+
+    "hi"       → "Hey. What's up?"
+    "thanks!"  → "Anytime."
+    "yo"       → "Yo."
+
+The single failure mode to avoid: "Hello! I'm ZebAI, an AI assistant with seven tools..." — never write that. Just say hi back.
+
+**One exception:** if the user asks "what can you do" or "what tools do you have", answer in plain prose (no tags). Name the tools in a short list, no pitch.
+
+# Markdown
+
+- Headings: \`##\` (never \`#\`), \`###\` for sub-sections.
+- Bullets: always \`-\`. Never \`*\` or \`+\`.
+- Bold \`**key term**\` sparingly. Italic \`*word*\` for a foreign term or emphasis.
+- Inline code \`code\` for filenames, commands, functions.
+- Code blocks: triple backticks with the language tag.
+- Tables: 3+ items × 2+ attributes. Header separator row required.
+- Links: \`[label](url)\`. Never bare URLs.
+
+# LaTeX
+
+Use ONLY for real math, physics, chemistry notation.
+
+    Use:      $E = mc^2$, $\\int_0^1 x\\,dx$, $\\text{2H}_2 + \\text{O}_2$
+    NEVER:    prices ($49.99 plain), dates, temperatures, percentages,
+              distances, chemical names in prose.
+
+Rules:
+- No Markdown inside math — \`$x = 5$\`, never \`$**x** = 5$\`.
+- No unclosed \`$\` — an open dollar swallows the rest of the paragraph.
+- Display math (\`$$...$$\`) on its own line, alone.
+- Never write raw LaTeX commands outside math delimiters.
+
+# Formatting safety
+
+- Never nest code fences. Use \`~~~\` if you must show a fenced block inside a fence.
+- Close every fence, every \`**\`, every \`*\`.
+- Never write raw HTML — DOMPurify strips it. Use Markdown instead.
+- Never write inline SVG or MathML. Charts go through \`<chart>\`, math through LaTeX.
+- One \`<chart>\` per reply, always first.
+- To show HTML as an example, wrap it in \`\`\`html.
+
+# Anti-patterns
+
+Never write: "What I looked up:", "Specific values:", "Interpretation:", a tool tag wrapped in prose, a trailing period after a tool tag, an invented tool result, a <chart> tag anywhere except the first position, a capabilities pitch in response to a greeting, a long preamble or "in conclusion" summary, a URL that didn't appear in a tool result this turn, a URL from training data presented as if it came from a search, a tool call that repeats one from a previous turn without the user asking for it again.`;
+
+  if (vision) {
+    const attachmentLine = hasImage && hasFile
+      ? 'The user attached images and files.'
+      : hasFile ? 'The user attached files.' : 'The user attached images.';
+
+    if (currentAttachments) {
+      return `${base}
+
+# Files on the current message — this turn is a description task, not a computation
+
+${attachmentLine}
+
+**The file(s) attached to this exact message are ALREADY loaded as native input. They are in your context right now.**
+
+**On this turn you are reading the file and answering. You are not computing anything.**
+
+Do NOT fire \`<run>\`. Do NOT fire \`<search>\`, \`<weather>\`, \`<finance>\`, \`<analyse>\`, or \`<analysing>\`.
+
+Most common failure: you see numbers, dates, tables, prices, code, or a UI in the image and your instinct says "run a calculation to be safe." Do not. The user asked you to look at the file. Nothing about the file is a computation request.
+
+Also: do NOT re-run a tool call you made in a previous turn just because the file reminds you of it. Prior turns do not carry over into this one.
+
+    WRONG: <run>some_number + another_number</run>             ← no one asked you to compute
+    WRONG: <search>what is this thing in the image</search>    ← the image is right there
+    WRONG: <run>console.log("verifying")</run>                 ← nothing to verify
+    RIGHT: (no tag) — read the file with your eyes, describe what's in it
+
+Read the attachment(s). Describe specific values, labels, names, text, layout. Be detailed.
+
+**Paraphrase rule — CRITICAL.** When summarising, analysing, or extracting from a document, rewrite every idea in your own words. Do not quote sentences verbatim. Do not reproduce section headings, definitions, or list items as they appear in the source. Gemini's recitation filter terminates the stream silently when output too closely matches the input. Paraphrase aggressively — new sentence structures, new word choices.${fileSection}
+
+---
+
+Your turn. Describe the file. No tool tag.`;
+    }
+
+    return `${base}
+
+# Files on the current message — do not call a file tool
+
+${attachmentLine}
+
+**The file(s) attached to this exact message are ALREADY loaded as native input to this turn. They are in your context right now.**
+
+Do NOT call \`<analysing>\` on them. Do NOT call \`<analyse>\` on them. Do NOT call any file tool. Just read them and answer.
+
+    WRONG:  <analysing>report.pdf</analysing>       ← already loaded, this re-fetches nothing
+    WRONG:  <analyse>report.pdf</analyse>           ← wrong tag entirely, this is for URLs
+    RIGHT:  (no tag) — answer directly from the file content
+
+**Tag reference — do not mix these up:**
+
+    <analyse>https://example.com</analyse>          reads a live WEB PAGE from a URL
+    <analysing>report.pdf</analysing>               re-attaches a FILE from an EARLIER turn
+
+Neither applies to a file on the current message. Both apply only when the user is asking you to look at something that isn't already in your context.
+
+Read the attachment(s). Describe specific values, labels, names. Be detailed.
+
+**Paraphrase rule — CRITICAL.** When paraphrasing or summarising a source document, rewrite every idea in your own words. Gemini's recitation filter terminates the stream silently when output too closely matches the input.${fileSection}
+
+---
+
+Your turn. Read the attached file(s) and answer. No tool tag needed.`;
   }
-  spec.datasets.forEach((ds, di) => {
-    const color = CHART_COLORS[di % CHART_COLORS.length];
-    const pts = ds.data.map((v, i) => {
-      const a = angleFor(i);
-      const rr = (v / maxVal) * radius;
-      return { x: cx + rr * Math.cos(a), y: cy + rr * Math.sin(a) };
-    });
-    const pathStr = pts.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
-    svg += `<polygon points="${pathStr}" fill="${color}" fill-opacity="0.25" stroke="${color}" stroke-width="2"/>`;
-    pts.forEach(p => { svg += `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3.5" fill="${color}"/>`; });
-  });
-  return svg;
-};
-const renderPolarArea = (spec, W, H) => {
-  const cx = W / 2, cy = H / 2;
-  const maxR = Math.min(W, H) / 2 - 40;
-  const values = spec.values.length ? spec.values : (spec.datasets[0]?.data || []);
-  const labels = spec.labels.length ? spec.labels : values.map((_, i) => String(i+1));
-  const N = values.length || 1;
-  const maxVal = Math.max(...values, 1);
-  const angleSlice = (Math.PI * 2) / N;
-  let svg = '';
-  for (let r = 1; r <= 4; r++) {
-    const rr = (maxR * r) / 4;
-    svg += `<circle cx="${cx}" cy="${cy}" r="${rr}" fill="none" stroke="var(--border-color)" stroke-width="0.5"/>`;
-  }
-  values.forEach((v, i) => {
-    const start = -Math.PI / 2 + i * angleSlice - angleSlice / 2;
-    const end = start + angleSlice;
-    const r = (v / maxVal) * maxR;
-    const color = CHART_COLORS[i % CHART_COLORS.length];
-    const x1 = cx + r * Math.cos(start), y1 = cy + r * Math.sin(start);
-    const x2 = cx + r * Math.cos(end), y2 = cy + r * Math.sin(end);
-    const large = angleSlice > Math.PI ? 1 : 0;
-    svg += `<path d="M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} Z" fill="${color}" fill-opacity="0.6" stroke="${color}" stroke-width="1.5"/>`;
-    const midA = (start + end) / 2;
-    const lx = cx + (maxR + 18) * Math.cos(midA);
-    const ly = cy + (maxR + 18) * Math.sin(midA);
-    svg += `<text x="${lx}" y="${ly}" fill="var(--text-secondary)" font-size="10" text-anchor="middle" dominant-baseline="middle">${esc(labels[i].slice(0, 10))}</text>`;
-  });
-  return svg;
-};
-const renderGauge = (spec, W, H) => {
-  const cx = W / 2, cy = H * 0.72;
-  const radius = Math.min(W / 2 - 60, H * 0.55);
-  const value = Number(spec.values[0] ?? 0);
-  const targetMin = Number(spec.min ?? 0);
-  const targetMax = Number(spec.max ?? Math.max(value * 1.2, 100));
-  const clamped = Math.max(targetMin, Math.min(targetMax, value));
-  const pct = (clamped - targetMin) / (targetMax - targetMin || 1);
-  const startAngle = Math.PI;
-  const endAngle = 2 * Math.PI;
-  const angle = startAngle + pct * (endAngle - startAngle);
-  const thick = 22;
-  const rOuter = radius;
-  const rInner = radius - thick;
-  const arcPath = (a1, a2) => {
-    const x1o = cx + rOuter * Math.cos(a1), y1o = cy + rOuter * Math.sin(a1);
-    const x2o = cx + rOuter * Math.cos(a2), y2o = cy + rOuter * Math.sin(a2);
-    const x1i = cx + rInner * Math.cos(a2), y1i = cy + rInner * Math.sin(a2);
-    const x2i = cx + rInner * Math.cos(a1), y2i = cy + rInner * Math.sin(a1);
-    const large = (a2 - a1) > Math.PI ? 1 : 0;
-    return `M ${x1o} ${y1o} A ${rOuter} ${rOuter} 0 ${large} 1 ${x2o} ${y2o} L ${x1i} ${y1i} A ${rInner} ${rInner} 0 ${large} 0 ${x2i} ${y2i} Z`;
-  };
-  let svg = `<path d="${arcPath(startAngle, endAngle)}" fill="var(--border-color)"/>`;
-  svg += `<path d="${arcPath(startAngle, angle)}" fill="var(--accent)"/>`;
-  const displayValue = Number.isInteger(value) ? value : value.toFixed(2);
-  svg += `<text x="${cx}" y="${cy - 12}" fill="var(--text-primary)" font-size="34" font-weight="700" text-anchor="middle">${esc(String(displayValue))}</text>`;
-  if (spec.labels[0]) {
-    svg += `<text x="${cx}" y="${cy + 14}" fill="var(--text-secondary)" font-size="12" text-anchor="middle">${esc(spec.labels[0])}</text>`;
-  }
-  svg += `<text x="${cx - radius + 4}" y="${cy + 22}" fill="var(--text-tertiary)" font-size="10">${esc(String(targetMin))}</text>`;
-  svg += `<text x="${cx + radius - 4}" y="${cy + 22}" fill="var(--text-tertiary)" font-size="10" text-anchor="end">${esc(String(targetMax))}</text>`;
-  return svg;
-};
-const renderChartSVG = spec => {
-  const W = 640, H = 340, PAD = 48;
-  switch (spec.type) {
-    case 'pie':         return `<svg class="chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">${renderPieLike(spec, W, H, false)}</svg>`;
-    case 'doughnut':    return `<svg class="chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">${renderPieLike(spec, W, H, true)}</svg>`;
-    case 'line':        return `<svg class="chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">${renderLine(spec, W, H, PAD, false)}</svg>`;
-    case 'area':        return `<svg class="chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">${renderLine(spec, W, H, PAD, true)}</svg>`;
-    case 'stackedArea': return `<svg class="chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">${renderStackedArea(spec, W, H, PAD)}</svg>`;
-    case 'hbar':        return `<svg class="chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">${renderHBar(spec, W, H, PAD)}</svg>`;
-    case 'stackedBar':  return `<svg class="chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">${renderStackedBar(spec, W, H, PAD)}</svg>`;
-    case 'scatter':     return `<svg class="chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">${renderScatter(spec, W, H, PAD)}</svg>`;
-    case 'bubble':      return `<svg class="chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">${renderBubble(spec, W, H, PAD)}</svg>`;
-    case 'radar':       return `<svg class="chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">${renderRadar(spec, W, H)}</svg>`;
-    case 'polarArea':   return `<svg class="chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">${renderPolarArea(spec, W, H)}</svg>`;
-    case 'gauge':       return `<svg class="chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">${renderGauge(spec, W, H)}</svg>`;
-    case 'bar':
-    default:            return `<svg class="chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">${renderBar(spec, W, H, PAD)}</svg>`;
-  }
-};
-const renderChartLegend = spec => {
-  const type = spec.type;
-  let items = [];
-  if (type === 'pie' || type === 'doughnut' || type === 'polarArea') {
-    const labels = spec.labels.length ? spec.labels : (spec.values || []).map((_, i) => String(i+1));
-    items = labels.map((l, i) => ({ label: l, color: CHART_COLORS[i % CHART_COLORS.length] }));
-  } else if (type === 'gauge') {
-    return '';
-  } else if (spec.datasets.length > 1 || type === 'radar' || type === 'stackedBar' || type === 'stackedArea') {
-    items = spec.datasets.map((d, i) => ({ label: d.label || `Series ${i+1}`, color: CHART_COLORS[i % CHART_COLORS.length] }));
-  } else if (type === 'scatter' || type === 'bubble') {
-    items = spec.datasets.map((d, i) => ({ label: d.label || `Series ${i+1}`, color: CHART_COLORS[i % CHART_COLORS.length] }));
-  }
-  if (!items.length) return '';
-  return `<div class="chart-legend">${items.map(i => `<span class="chart-legend-item"><span class="chart-legend-swatch" style="background:${i.color}"></span>${esc(i.label)}</span>`).join('')}</div>`;
-};
-const renderChartBlock = spec => {
-  let parsed;
-  try {
-    parsed = normalizeChartSpec(spec);
-    const flatTypes = ['pie', 'doughnut', 'polarArea', 'gauge'];
-    if (flatTypes.includes(parsed.type) && !parsed.values.length && !parsed.datasets.length) throw new Error(`${parsed.type} needs values`);
-    const cartesianTypes = ['bar', 'hbar', 'stackedBar', 'line', 'area', 'stackedArea', 'scatter', 'bubble', 'radar'];
-    if (cartesianTypes.includes(parsed.type) && !parsed.datasets.length) throw new Error(`${parsed.type} needs datasets`);
-  } catch (e) {
-    console.warn('[chart]', e, spec);
-    return '<div class="chart-block"><div class="tool-error">Chart could not be rendered</div></div>';
-  }
-  const id = 'chart-' + genId();
-  chartSpecs[id] = parsed;
-  const title = parsed.title ? esc(parsed.title) : 'Chart';
-  return `<div class="chart-block" data-chart-id="${id}">
-    <div class="chart-block-header">
-      <div class="chart-block-title">${title}</div>
-      <div class="chart-block-actions">
-        <button class="chart-action-btn chart-fs-btn" data-chart-id="${id}" title="Fullscreen"><i data-lucide="maximize-2" style="width:14px;height:14px"></i></button>
-        <button class="chart-action-btn chart-dl-btn" data-chart-id="${id}" title="Download PNG"><i data-lucide="download" style="width:14px;height:14px"></i></button>
-      </div>
-    </div>
-    <div class="chart-block-body">${renderChartSVG(parsed)}${renderChartLegend(parsed)}</div>
-  </div>`;
-};
-let activeFullscreenChart = null;
-const openChartFullscreen = chartId => {
-  const spec = chartSpecs[chartId];
-  if (!spec) return;
-  activeFullscreenChart = chartId;
-  const ov = $('chart-fullscreen-overlay');
-  const body = $('chart-fullscreen-body');
-  const title = $('chart-fullscreen-title');
-  if (!ov || !body) return;
-  title.textContent = spec.title || 'Chart';
-  body.innerHTML = renderChartSVG(spec) + renderChartLegend(spec);
-  ov.classList.add('open');
-  queueIcons(ov);
-};
-const closeChartFullscreen = () => {
-  const ov = $('chart-fullscreen-overlay');
-  if (ov) ov.classList.remove('open');
-  activeFullscreenChart = null;
-};
-const downloadChart = async chartId => {
-  const spec = chartSpecs[chartId];
-  if (!spec) return;
-  const block = document.querySelector(`.chart-block[data-chart-id="${chartId}"]`);
-  const svgEl = block ? block.querySelector('svg.chart-svg') : null;
-  const tmp = document.createElement('div');
-  tmp.innerHTML = renderChartSVG(spec);
-  const svg = svgEl || tmp.querySelector('svg.chart-svg');
-  if (!svg) return;
-  const title = (spec.title || 'chart').replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '').toLowerCase() || 'chart';
-  const rootStyle = getComputedStyle(document.documentElement);
-  const vars = {
-    '--bg-input': rootStyle.getPropertyValue('--bg-input').trim() || '#1c1c1c',
-    '--border-color': rootStyle.getPropertyValue('--border-color').trim() || '#2c2c2c',
-    '--text-primary': rootStyle.getPropertyValue('--text-primary').trim() || '#efefef',
-    '--text-secondary': rootStyle.getPropertyValue('--text-secondary').trim() || '#a4a4a4',
-    '--text-tertiary': rootStyle.getPropertyValue('--text-tertiary').trim() || '#757575',
-    '--accent': rootStyle.getPropertyValue('--accent').trim() || '#0ea5e9',
-  };
-  let svgStr = new XMLSerializer().serializeToString(svg);
-  Object.entries(vars).forEach(([k, v]) => { svgStr = svgStr.split(`var(${k})`).join(v); });
-  const vb = svg.viewBox.baseVal || { width: 640, height: 340 };
-  const W = vb.width || 640, H = vb.height || 340;
-  const scale = 2;
-  const svgBlob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
-  const url = URL.createObjectURL(svgBlob);
-  const img = new Image();
-  img.onload = () => {
-    try {
-      const canvas = document.createElement('canvas');
-      canvas.width = W * scale; canvas.height = H * scale;
-      const ctx = canvas.getContext('2d');
-      ctx.fillStyle = vars['--bg-input'];
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      canvas.toBlob(blob => {
-        if (!blob) { fallbackSvg(); return; }
-        const outUrl = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = outUrl; a.download = `${title}.png`;
-        document.body.appendChild(a); a.click(); document.body.removeChild(a);
-        URL.revokeObjectURL(outUrl);
-        toast('Chart downloaded', 'success');
-      }, 'image/png');
-    } catch (e) { fallbackSvg(); }
-    URL.revokeObjectURL(url);
-  };
-  img.onerror = () => { URL.revokeObjectURL(url); fallbackSvg(); };
-  img.src = url;
-  function fallbackSvg() {
-    const blob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
-    const u = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = u; a.download = `${title}.svg`;
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    URL.revokeObjectURL(u);
-    toast('Chart downloaded as SVG', 'success');
-  }
+
+  return `${base}${fileSection}
+
+---
+
+Your turn. Emit a tool tag, or write the answer.`;
+}
+// ---------------------------------------------------------------------------
+// 3. AI TITLE
+// ---------------------------------------------------------------------------
+const cleanTitleString = t => {
+  const str = String(t || '').trim();
+  const match = str.match(/<title>([\s\S]*?)<\/title>/i);
+  if (match) return match[1].trim().replace(/^["'`]+|["'`.]+$/g, '').replace(/\s+/g, ' ').split('\n')[0].trim();
+  const openOnly = str.match(/<title>([\s\S]*)/i);
+  if (openOnly) return openOnly[1].replace(/<\/?[^>]+>/g, '').replace(/^["'`]+|["'`.]+$/g, '').replace(/\s+/g, ' ').split('\n')[0].trim();
+  return str.replace(/^["'`]+|["'`.]+$/g, '').replace(/\s+/g, ' ').split('\n')[0].trim();
 };
 
-/* SEARCH/WEATHER/FINANCE/MATH renderers */
-const renderCombinedSearchBlock=(searchBlocks,key)=>{
-  const anyActive=searchBlocks.some(b=>b.active);
-  const anyError=searchBlocks.some(b=>b.error);
-  const allDone=!anyActive;
-  const queries=searchBlocks.map(b=>b.query).filter(Boolean);
-  const count=queries.length;
-  const allSources=[];
-  searchBlocks.forEach(b=>{if(Array.isArray(b.sources))allSources.push(...b.sources);});
-  const seen=new Set();
-  const uniqueSources=allSources.filter(s=>{if(!s||!s.url||seen.has(s.url))return false;seen.add(s.url);return true;});
-  const firstQuery = queries[0] || '';
-  const extra = count > 1 ? count - 1 : 0;
-  let label;
-  if(anyActive){ label = extra > 0 ? `Searching for ${firstQuery} + ${extra}` : `Searching for ${firstQuery}`; }
-  else { label = extra > 0 ? `Searched for ${firstQuery} + ${extra}` : `Searched for ${firstQuery}`; }
-  if(!firstQuery) label = anyActive ? 'Searching The Web' : 'Searched The Web';
-  let favStack='';
-  if(allDone&&uniqueSources.length>0){
-    const top=uniqueSources.slice(0,3);
-    const stack=top.map((s,i)=>{
-      const favUrl=getFaviconUrl(s.url,s.sourceName);
-      const initial=sanitizeInitial((s.sourceName||'W').charAt(0));
-      const ml=i===0?'0':'-5px';
-      const z=String(10-i);
-      if(favUrl)return `<img src="${favUrl}" alt="" loading="lazy" referrerpolicy="no-referrer" style="margin-left:${ml};z-index:${z}" data-fallback="${initial}">`;
-      return `<span class="fav-stack-fallback" style="margin-left:${ml};z-index:${z}">${initial}</span>`;
-    }).join('');
-    favStack=`<span class="fav-stack">${stack}</span>`;
-  }
-  let bodyHtml='';
-  if(anyActive&&uniqueSources.length===0){
-    bodyHtml=`<div style="padding:.5rem .75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-sm);font-size:.8rem;color:var(--text-tertiary)">Fetching results from the web…</div>`;
-  }else if(allDone&&uniqueSources.length===0){
-    bodyHtml=anyError
-      ?`<div style="padding:.5rem .75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-sm);font-size:.8rem;color:var(--think-text)">Can't search the web right now</div>`
-      :`<div style="padding:.5rem .75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-sm);font-size:.8rem;color:var(--text-tertiary)">No results found</div>`;
-  }else if(allDone&&uniqueSources.length>0){
-    bodyHtml=`<div class="search-results">${uniqueSources.map(s=>{
-      const favUrl=getFaviconUrl(s.url,s.sourceName);
-      const initial=sanitizeInitial((s.sourceName||'W').charAt(0));
-      const safeHref=safeUrl(s.url);
-      const icon=favUrl?`<img class="search-source-icon" src="${favUrl}" alt="" loading="lazy" referrerpolicy="no-referrer" data-fallback="${initial}">`:`<span class="search-source-icon favicon-fallback">${initial}</span>`;
-      return `<a class="search-source-card" href="${esc(safeHref)}" target="_blank" rel="noopener noreferrer">${icon}<div class="search-source-info"><div class="search-source-title">${esc(s.title)}</div><div class="search-source-meta">${esc(s.sourceName||'Web')}</div>${s.content?`<div class="search-source-snippet">${esc(s.content.slice(0,180))}${s.content.length>180?'…':''}</div>`:''}</div></a>`;
-    }).join('')}</div>`;
-  }
-  let leadingIcon;
-  if(anyActive){ leadingIcon = `<span class="swap-icon">${svgToolIcon('search',13)}</span>`; }
-  else if(favStack){ leadingIcon = `<span class="swap-icon">${favStack}</span>`; }
-  else { leadingIcon = `<span class="swap-icon">${svgToolIcon('search',13)}</span>`; }
-  const openClass=openState[key]===true?' open':'';
-  return `<div class="trace-tool"><div class="search-block${openClass}" data-toggle-key="${key}"><div class="search-header tool-hdr"><span class="swap-chevron">${CHEVRON_SVG_SM}</span>${leadingIcon}<span class="search-label th-label">${esc(label)}</span></div><div class="search-body"><div class="search-body-inner">${bodyHtml}</div></div></div></div>`;
-};
-const renderWeatherStep=block=>{
-  const key = block.__key || ('weather-' + (block.blockId || genId()));
-  const openClass = openState[key]===false ? '' : ' open';
-  const chev = `<span class="swap-chevron">${CHEVRON_SVG_SM}</span>`;
-  const icon = `<span class="swap-icon">${svgToolIcon('weather',13)}</span>`;
-  if(block.active){
-    return `<div class="trace-tool"><div class="weather-block${openClass}" data-toggle-key="${key}"><div class="weather-header tool-hdr">${chev}${icon}<span class="th-label">${TOOL_LABELS.weather.active}${block.query?' – '+esc(block.query):''}</span></div></div></div>`;
-  }
-  if(block.error){
-    return `<div class="trace-tool"><div class="weather-block${openClass}" data-toggle-key="${key}"><div class="weather-header tool-hdr">${chev}${icon}<span class="th-label">${TOOL_LABELS.weather.done}${block.query?' – '+esc(block.query):''}</span></div><div class="weather-body"><div class="weather-body-inner"><div class="tool-error">Can't Fetch Weather</div></div></div></div></div>`;
-  }
-  const data=block.data;
-  if(!data)return '';
-  const history=data.history||[];
-  const highlightDate=data.highlightDate;
-  const highlighted=highlightDate?history.find(d=>d.date===highlightDate):null;
-  let mainIcon,mainTemp,mainDetails;
-  if(highlighted){
-    mainIcon=pickWeatherIcon(highlighted.condition);
-    mainTemp=highlighted.avgTemp;
-    mainDetails=[`<span>${svgWeatherIcon('thermometer',14)} Low ${esc(highlighted.minTemp)}</span>`,`<span>${svgWeatherIcon('thermometer',14)} High ${esc(highlighted.maxTemp)}</span>`,`<span>${svgWeatherIcon('droplet',14)} ${esc(highlighted.humidity)}</span>`,`<span>${svgWeatherIcon('wind',14)} ${esc(highlighted.wind)}</span>`,`<span>${svgWeatherIcon('cloud-rain',14)} ${esc(highlighted.rainChance)}</span>`].join('');
-  }else{
-    mainIcon=pickWeatherIcon(data.now?.text);
-    mainTemp=data.now?.temp||'N/A';
-    mainDetails=[data.now?.feels?`<span>${svgWeatherIcon('thermometer',14)} Feels ${esc(data.now.feels)}</span>`:'',data.now?.humidity?`<span>${svgWeatherIcon('droplet',14)} ${esc(data.now.humidity)}</span>`:'',data.now?.wind?`<span>${svgWeatherIcon('wind',14)} ${esc(data.now.wind)}</span>`:''].join('');
-  }
-  const historyHtml=history.length?`<div class="weather-timeline"><div class="weather-timeline-label">Past ${history.length} Days</div><div class="hourly-container">${history.map(d=>`<div class="hourly-item"><span class="hourly-time">${esc(d.date.substring(5))}</span><span class="hourly-temp">${esc(d.avgTemp)}</span></div>`).join('')}</div></div>`:'';
-  return `<div class="trace-tool"><div class="weather-block${openClass}" data-toggle-key="${key}"><div class="weather-header tool-hdr">${chev}${icon}<span class="th-label">${TOOL_LABELS.weather.done} – ${esc(data.header||'Unknown')}</span></div><div class="weather-body"><div class="weather-body-inner"><div class="weather-main"><div class="weather-icon">${svgWeatherIcon(mainIcon,44)}</div><span class="weather-temp">${esc(mainTemp)}</span></div><div class="weather-details">${mainDetails}</div>${historyHtml}</div></div></div></div>`;
-};
-const renderFinanceStep=block=>{
-  const key = block.__key || ('finance-' + (block.blockId || genId()));
-  const openClass = openState[key]===false ? '' : ' open';
-  const chev = `<span class="swap-chevron">${CHEVRON_SVG_SM}</span>`;
-  const icon = `<span class="swap-icon">${svgToolIcon('finance',13)}</span>`;
-  if(block.active){
-    return `<div class="trace-tool"><div class="finance-block${openClass}" data-toggle-key="${key}"><div class="think-header tool-hdr">${chev}${icon}<span class="th-label">${TOOL_LABELS.finance.active}</span></div></div></div>`;
-  }
-  if(block.error){
-    const isForex=(block.financeType==='forex');
-    return `<div class="trace-tool"><div class="finance-block${openClass}" data-toggle-key="${key}"><div class="think-header tool-hdr">${chev}${icon}<span class="th-label">${TOOL_LABELS.finance.done}</span></div><div class="finance-body"><div class="finance-body-inner"><div class="tool-error">${isForex?"Can't Fetch Forex":"Can't Fetch Stock"}</div></div></div></div></div>`;
-  }
-  const data=block.data;
-  if(!data)return '';
-  if(data.type==='forex'){
-    const rate=data.rate;
-    const chartPoints=generateChartPoints(rate);
-    const sample=(100*rate).toFixed(2);
-    return `<div class="trace-tool"><div class="finance-block${openClass}" data-toggle-key="${key}"><div class="think-header tool-hdr">${chev}${icon}<span class="th-label">Currency Conversion — ${esc(data.base)} to ${esc(data.target)}</span></div><div class="finance-body"><div class="finance-body-inner"><div class="finance-value">1 ${esc(data.base)} = ${rate} ${esc(data.target)}</div><div class="finance-details"><span>100 ${esc(data.base)} ≈ ${sample} ${esc(data.target)}</span></div><div class="chart-container"><svg viewBox="0 0 300 80" preserveAspectRatio="none"><polyline points="${chartPoints}" fill="none" stroke="var(--finance-stroke)" stroke-width="2"/><polygon points="${chartPoints} 300,80 0,80" fill="var(--finance-fill)"/></svg></div></div></div></div></div>`;
-  }
-  const symbolLabel=data.symbol||block.symbol||'';
-  const chartPoints=generateChartPoints(data.price);
-  const high = data.high != null ? Number(data.high).toFixed(2) : '—';
-  const low = data.low != null ? Number(data.low).toFixed(2) : '—';
-  const open = data.open != null ? Number(data.open).toFixed(2) : '—';
-  const prev = data.previousClose != null ? Number(data.previousClose).toFixed(2) : '—';
-  return `<div class="trace-tool"><div class="finance-block${openClass}" data-toggle-key="${key}"><div class="think-header tool-hdr">${chev}${icon}<span class="th-label">Stock Price — ${esc(symbolLabel)}</span></div><div class="finance-body"><div class="finance-body-inner"><div class="finance-value">$${Number(data.price).toFixed(2)}</div><div class="finance-details"><span>High: $${high}</span><span>Low: $${low}</span><span>Open: $${open}</span><span>Prev Close: $${prev}</span></div><div class="chart-container"><svg viewBox="0 0 300 80" preserveAspectRatio="none"><polyline points="${chartPoints}" fill="none" stroke="var(--finance-stroke)" stroke-width="2"/><polygon points="${chartPoints} 300,80 0,80" fill="var(--finance-fill)"/></svg></div></div></div></div></div>`;
-};
-const renderMathStep=(block,key='math-default')=>{
-  const chev=`<span class="swap-chevron">${CHEVRON_SVG_SM}</span>`;
-  const icon=`<span class="swap-icon">${svgToolIcon('math',13)}</span>`;
-  const openClass=openState[key]===true?' open':'';
-  if(block.active){
-    return `<div class="trace-tool"><div class="math-card${openClass}" data-toggle-key="${key}"><div class="math-header tool-hdr">${chev}${icon}<span class="th-label">${TOOL_LABELS.math.active}</span></div></div></div>`;
-  }
-  if(block.error){
-    return `<div class="trace-tool"><div class="math-card${openClass}" data-toggle-key="${key}"><div class="math-header tool-hdr">${chev}${icon}<span class="th-label">${TOOL_LABELS.math.done}</span></div><div class="math-body"><div class="math-body-inner"><div class="tool-error">Can't Execute Code</div></div></div></div></div>`;
-  }
-  const code=block.code||'';
-  const result=block.result;
-  const highlightedCode=highlightCode(code,'javascript');
-  const resultHtml=(result!==undefined&&result!==null&&result!=='')?`\n<span style="color:var(--accent);font-weight:700">= ${esc(result)}</span>`:'';
-  return `<div class="trace-tool"><div class="math-card${openClass}" data-toggle-key="${key}"><div class="math-header tool-hdr">${chev}${icon}<span class="th-label">${TOOL_LABELS.math.done}</span></div><div class="math-body"><div class="math-body-inner"><div class="math-code-block">${highlightedCode}${resultHtml}</div></div></div></div></div>`;
-};
-const hostFromUrl = (url) => { try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return String(url || ''); } };
-const renderAnalyseBlock = (b) => {
-  const icon = `<span class="analyse-icon">${svgToolIcon('search',13)}</span>`;
-  if (b.active) return `<div class="trace-tool"><div class="analyse-block loading"><div class="analyse-header static-icon">${icon}<span class="analyse-label">Analysing ${esc(hostFromUrl(b.url))}…</span></div></div></div>`;
-  if (b.error) return `<div class="trace-tool"><div class="analyse-block"><div class="analyse-header static-icon">${icon}<span class="analyse-label">Can't read ${esc(hostFromUrl(b.url))}</span></div></div></div>`;
-  const host = hostFromUrl((b.data && b.data.sourceName) || b.url);
-  return `<div class="trace-tool"><div class="analyse-block"><div class="analyse-header static-icon">${icon}<span class="analyse-label">Analysed ${esc(host)}</span></div></div></div>`;
-};
-const renderAnalysingBlock = (b) => {
-  const icon = `<span class="analyse-icon">${svgToolIcon('search',13)}</span>`;
-  const nm = (b.data && b.data.name) || b.query || 'file';
-  if (b.active) return `<div class="trace-tool"><div class="analyse-block loading"><div class="analyse-header static-icon">${icon}<span class="analyse-label">Reading ${esc(nm)}…</span></div></div></div>`;
-  if (b.error) return `<div class="trace-tool"><div class="analyse-block"><div class="analyse-header static-icon">${icon}<span class="analyse-label">Can't read ${esc(nm)}</span></div></div></div>`;
-  return `<div class="trace-tool"><div class="analyse-block"><div class="analyse-header static-icon">${icon}<span class="analyse-label">Read ${esc(nm)}</span></div></div></div>`;
-};
-const TOOL_TYPES=new Set(['search','weather','finance','math','chart','analyse','analysing']);
-const hasToolBlocks=msg=>{ if(!msg||!Array.isArray(msg.blocks))return false; return msg.blocks.some(b=>b&&TOOL_TYPES.has(b.type)&&b.type!==META_BLOCK_TYPE); };
-const renderToolCard=b=>{
-  if(b.type==='search')return renderCombinedSearchBlock([b], b.__key||'search-default');
-  if(b.type==='weather')return renderWeatherStep(b);
-  if(b.type==='finance')return renderFinanceStep(b);
-  if(b.type==='math')return renderMathStep(b, b.__key||'math-default');
-  if(b.type==='analyse')return renderAnalyseBlock(b);
-  if(b.type==='analysing')return renderAnalysingBlock(b);
-  if(b.type==='chart')return `<div class="trace-tool">${renderChartBlock(b.spec||b.content)}</div>`;
-  return '';
-};
-const renderToolGroup=(tools,key)=>{
-  if(!tools.length)return '';
-  if(tools.length===1){
-    const t=tools[0];
-    if(t.type==='search') return renderCombinedSearchBlock([t], `${key}-s0`);
-    return renderToolCard({...t, __key: t.__key || `${key}-single`});
-  }
-  const groups=[];
-  let currentSearchGroup=null;
-  tools.forEach(t=>{
-    if(t.type==='search'){
-      if(!currentSearchGroup){currentSearchGroup=[];groups.push({ kind:'search', items:currentSearchGroup });}
-      currentSearchGroup.push(t);
-    } else {
-      currentSearchGroup=null;
-      groups.push({ kind:'card', item:t });
-    }
-  });
-  let inner='';
-  groups.forEach((g,gi)=>{
-    if(g.kind==='search') inner+=renderCombinedSearchBlock(g.items, `${key}-s${gi}`);
-    else inner+=renderToolCard({...g.item, __key: g.item.__key || `${key}-b${gi}`});
-  });
-  const openClass=openState[key]===true?' open':'';
-  const visibleCount=groups.length;
-  return `<div class="trace-block${openClass}" data-toggle-key="${key}"><div class="trace-header tool-hdr"><span class="swap-chevron">${CHEVRON_SVG}</span><span class="swap-icon">${svgToolIcon('zap',13)}</span><span class="trace-label">Executions</span><span class="exec-count">${visibleCount}</span></div><div class="trace-body"><div class="trace-body-inner"><div class="trace-line">${inner}</div></div></div></div>`;
-};
-const renderStandaloneThinking=(block,key,msg)=>{
-  const text=(block.text||'').trim();
-  if(!text)return '';
-  const isActive=!!(msg&&msg._phase==='thinking');
-  const label=isActive?'Thinking…':'Thought';
-  const openClass=openState[key]===true?' open':'';
-  const rendered=safeMarked(text).replace(/<p>\s*<\/p>/g,'').replace(/(<br\s*\/?>\s*)+$/i,'');
-  return `<div class="trace-block standalone-thinking${openClass}" data-toggle-key="${key}"><div class="trace-header tool-hdr"><span class="swap-chevron">${CHEVRON_SVG}</span><span class="swap-icon">${svgToolIcon('think',13)}</span><span class="trace-label">${label}</span></div><div class="trace-body"><div class="trace-body-inner"><div class="trace-line"><div class="trace-reason">${rendered}</div></div></div></div></div>`;
-};
-const computeTraceLabel=msg=>{
-  if(!msg)return 'Thought';
-  if(msg._phase==='thinking')return 'Thinking…';
-  if(msg._phase==='tool'&&msg._activeTool&&TOOL_LABELS[msg._activeTool])return TOOL_LABELS[msg._activeTool].active;
-  return 'Thought';
-};
-const renderTraceTimeline=(blocks,msgKey)=>{
-  let html='';
-  let cotLines=[];
-  let toolGroup=[];
-  let groupIdx=0;
-  const flushCot=()=>{
-    if(cotLines.length===0)return;
-    const combined=cotLines.join('\n');
-    const rendered=safeMarked(combined).replace(/<p>\s*<\/p>/g,'').replace(/(<br\s*\/?>\s*)+$/i,'');
-    if(!rendered.trim()){cotLines=[];return;}
-    html+=`<div class="trace-reason">${rendered}</div>`;
-    cotLines=[];
-  };
-  const flushTools=()=>{
-    if(toolGroup.length===0)return;
-    html+=renderToolGroup(toolGroup,`${msgKey}-g${groupIdx++}`);
-    toolGroup=[];
-  };
-  blocks.forEach((block)=>{
-    if(block.type==='thinking'){
-      flushTools();
-      const text=(block.text||'').replace(/\n{2,}/g,'\n').trim();
-      if(text)cotLines.push(text);
-    }else if(TOOL_TYPES.has(block.type)){
-      flushCot();
-      toolGroup.push(block);
-    }
-  });
-  flushCot();
-  flushTools();
-  return html;
-};
-const extractMeta=blocks=>{ if(!Array.isArray(blocks))return {cleanBlocks:[]}; return {cleanBlocks:blocks.filter(b=>b&&b.type!==META_BLOCK_TYPE)}; };
-const renderBlocks=(blocks,msg)=>{
-  const isCoT=msg&&(msg.mode==='code'||msg.mode==='vision-agent');
-  const {cleanBlocks}=extractMeta(blocks||[]);
-  const traceBlocks=[];
-  const chartBlocks=[];
-  const answerBlocks=[];
-  for(const b of cleanBlocks){
-    if(b.type==='answer')answerBlocks.push(b);
-    else if(b.type==='chart')chartBlocks.push(b);
-    else traceBlocks.push(b);
-  }
-  const msgKey=(msg&&msg.id)?msg.id:'x';
-  let html='';
-  if(isCoT){
-    if(traceBlocks.length>0){
-      const mainKey=`${msgKey}-main`;
-      const isUserOpen=openState[mainKey]===true;
-      const label=computeTraceLabel(msg);
-      const timeline=renderTraceTimeline(traceBlocks,msgKey);
-      const openClass=isUserOpen?' open':'';
-      html+=`<div class="trace-block${openClass}" data-toggle-key="${mainKey}"><div class="trace-header tool-hdr"><span class="swap-chevron">${CHEVRON_SVG}</span><span class="swap-icon">${svgToolIcon('think',13)}</span><span class="trace-label">${label}</span></div><div class="trace-body"><div class="trace-body-inner"><div class="trace-line">${timeline}</div></div></div></div>`;
-    }
-    for(const b of chartBlocks){
-      if(b.pending)html+=`<div class="trace-tool"><div class="chart-placeholder"><span class="chart-placeholder-dot"></span><span>Creating A Chart</span></div></div>`;
-      else html+=`<div class="trace-tool">${renderChartBlock(b.spec||b.content)}</div>`;
-    }
-  }else{
-    const thinkingBlocks=traceBlocks.filter(b=>b.type==='thinking');
-    const tools=traceBlocks.filter(b=>b.type!=='thinking');
-    for(let i=0;i<thinkingBlocks.length;i++){
-      html+=renderStandaloneThinking(thinkingBlocks[i],`${msgKey}-standalone-${i}`,msg);
-    }
-    if(tools.length>0)html+=renderToolGroup(tools,`${msgKey}-exec`);
-    for(const b of chartBlocks){
-      if(b.pending)html+=`<div class="trace-tool"><div class="chart-placeholder"><span class="chart-placeholder-dot"></span><span>Creating A Chart</span></div></div>`;
-      else html+=`<div class="trace-tool">${renderChartBlock(b.spec||b.content)}</div>`;
-    }
-  }
-  for(const b of answerBlocks){
-    if(looksLikeHTML(b.text))b.text='```html\n'+b.text+'\n```';
-    html+=safeMarked(b.text||'');
-  }
-  return html;
-};
-const buildActionsHtml=msg=>{
-  const showSources=hasToolBlocks(msg);
-  return '<button class="speak-btn" title="Read aloud"><i data-lucide="volume-2" style="width:14px;height:14px"></i></button>'
-       + '<button class="copy-btn" title="Copy"><i data-lucide="copy" style="width:14px;height:14px"></i></button>'
-       + '<button class="download-msg-btn" title="Download"><i data-lucide="download" style="width:14px;height:14px"></i></button>'
-       + (showSources?'<button class="sources-btn" title="Sources"><i data-lucide="link-2" style="width:14px;height:14px"></i></button>':'');
-};
-const renderSourcesContent=blocks=>{
-  const searchBlocks=blocks.filter(b=>b.type==='search');
-  const otherBlocks=blocks.filter(b=>['weather','finance','math','chart','analyse','analysing'].includes(b.type));
-  let html='';
-  const allSources=[];
-  searchBlocks.forEach(b=>{if(Array.isArray(b.sources))b.sources.forEach(s=>allSources.push(s));});
-  if(allSources.length){
-    const seen=new Set();
-    const unique=allSources.filter(s=>{if(!s||!s.url||seen.has(s.url))return false;seen.add(s.url);return true;});
-    html+=`<div class="sources-section"><div class="sources-section-title">Web Sources (${unique.length})</div><div class="sources-list">${unique.map(s=>{
-      const favUrl=getFaviconUrl(s.url,s.sourceName);
-      const initial=sanitizeInitial((s.sourceName||'W').charAt(0));
-      const safeHref=safeUrl(s.url);
-      const icon=favUrl?`<img class="search-source-icon" src="${favUrl}" alt="" loading="lazy" referrerpolicy="no-referrer" data-fallback="${initial}">`:`<span class="search-source-icon favicon-fallback">${initial}</span>`;
-      return `<a class="search-source-card" href="${esc(safeHref)}" target="_blank" rel="noopener noreferrer">${icon}<div class="search-source-info"><div class="search-source-title">${esc(s.title||'Untitled')}</div><div class="search-source-meta">${esc(s.sourceName||'Web')}</div>${s.content?`<div class="search-source-snippet">${esc(s.content.slice(0,180))}${s.content.length>180?'…':''}</div>`:''}</div></a>`;
-    }).join('')}</div></div>`;
-  }
-  const toolSummaries=[];
-  otherBlocks.forEach(b=>{
-    if(b.type==='weather'&&b.data){
-      const now=b.data.now||{};
-      toolSummaries.push({label:'Weather',value:`${b.data.header||b.query||''} — ${now.text||''} ${now.temp||''}`.trim()});
-    }
-    if(b.type==='finance'&&b.data){
-      if(b.data.type==='stock')toolSummaries.push({label:'Stock',value:`${b.data.symbol||''} — $${Number(b.data.price).toFixed(2)}`});
-      else if(b.data.type==='forex')toolSummaries.push({label:'Forex',value:`${b.data.base}/${b.data.target} — ${b.data.rate}`});
-    }
-    if(b.type==='math')toolSummaries.push({label:'Code',value:`${b.code||''} = ${b.result||''}`.trim()});
-    if(b.type==='chart'){try{const spec=typeof b.spec==='string'?JSON.parse(b.spec):b.spec;if(spec&&spec.title)toolSummaries.push({label:'Chart',value:spec.title});}catch(e){}}
-    if(b.type==='analyse'&&b.data)toolSummaries.push({label:'Read page',value:b.data.title||b.data.url||b.url||''});
-    if(b.type==='analysing'){const nm=(b.data&&b.data.name)||b.query||'';if(nm)toolSummaries.push({label:'Read file',value:nm});}
-  });
-  if(toolSummaries.length){
-    html+=`<div class="sources-section"><div class="sources-section-title">Tools Used (${toolSummaries.length})</div><div class="sources-list">${toolSummaries.map(t=>`<div class="tool-summary-row"><span class="tool-summary-label">${esc(t.label)}</span><span class="tool-summary-value">${esc(t.value)}</span></div>`).join('')}</div></div>`;
-  }
-  if(!html)html='<div class="sources-empty">No sources for this message.</div>';
-  return html;
-};
-const openSourcesPanel=msg=>{
-  const ov=$('sources-overlay');
-  const body=$('sources-body');
-  if(!ov||!body)return;
-  const blocks=(msg.blocks||[]).filter(b=>b&&b.type!==META_BLOCK_TYPE&&b.type!=='answer');
-  body.innerHTML=renderSourcesContent(blocks);
-  ov.classList.add('open');
-  queueIcons(ov);
-};
-const closeSourcesPanel=()=>{const ov=$('sources-overlay');if(ov)ov.classList.remove('open');};
-const renderUserText=text=>{ if(!text)return ''; return esc(text); };
-const attachExpandToggle=(row, bubble)=>{
-  if(!row||!bubble)return;
-  const content=bubble.querySelector('.msg-content');
-  if(!content)return;
-  const naturalHeight=content.scrollHeight;
-  const THRESHOLD=220;
-  if(naturalHeight<=THRESHOLD)return;
-  bubble.classList.add('collapsed');
-  const btn=document.createElement('button');
-  btn.type='button';
-  btn.className='msg-expand-btn';
-  btn.innerHTML=`<span>Show more</span><i data-lucide="chevron-down"></i>`;
-  btn.addEventListener('click',(e)=>{
-    e.stopPropagation();
-    const isCollapsed=bubble.classList.toggle('collapsed');
-    btn.querySelector('span').textContent=isCollapsed?'Show more':'Show less';
-    const ic=btn.querySelector('i');
-    if(ic)ic.setAttribute('data-lucide',isCollapsed?'chevron-down':'chevron-up');
-    queueIcons(btn);
-    const rt=currentRuntime();
-    if(rt&&!rt.userScrolledUp)scrollToBottom();
-  });
-  bubble.appendChild(btn);
-  queueIcons(btn);
-};
-const USER_IMG_RE = /!\[.*?\]\(((?:data:|blob:)[^)]+)\)/g;
-const renderUserFileCards=(text)=>{
-  const out=[];
-  const re=/\[Attached:\s*([^\]]+?)\s*\(([^)]+)\)(?:\s*((?:blob:[A-Za-z0-9-]+)|(?:inline:data:[^\]]+)))?\]/g;
-  let m;
-  while((m=re.exec(text))!==null){
-    let blobId=null, inlineData=null;
-    if(m[3]){
-      if(m[3].startsWith('blob:')) blobId=m[3].slice(5);
-      else if(m[3].startsWith('inline:')) inlineData=m[3].slice(7);
-    }
-    out.push({ name:m[1].trim(), mime:m[2].trim(), blobId, inlineData });
-  }
-  return out;
-};
-const stripAttachedMarkers=text=>String(text||'').replace(/\[Attached:\s*[^\]]+\]/g,'').trim();
-const createUserBubble=msg=>{
-  const row=document.createElement('div');
-  row.className='message-row user';
-  row.dataset.messageId=msg.id;
-  const images=[];
-  USER_IMG_RE.lastIndex=0;
-  let text=String(msg.content||'').replace(USER_IMG_RE,(full,url)=>{
-    images.push(resolveBlobUrl(url));
-    return '';
-  }).trim();
-  const fileCards = renderUserFileCards(text);
-  text = stripAttachedMarkers(text).trim();
-  if(images.length===1){
-    const imgBubble=document.createElement('div');
-    imgBubble.className='image-bubble';
-    const img=document.createElement('img');
-    img.src=images[0];
-    img.alt='uploaded';
-    img.addEventListener('click',(e)=>{e.stopPropagation();openPreviewModal('image',images[0]);});
-    imgBubble.appendChild(img);
-    row.appendChild(imgBubble);
-  }else if(images.length>1){
-    const gallery=document.createElement('div');
-    gallery.className='image-gallery '+(images.length===2?'g2':'g3');
-    images.forEach(url=>{
-      const imgBubble=document.createElement('div');
-      imgBubble.className='image-bubble';
-      const img=document.createElement('img');
-      img.src=url;
-      img.alt='uploaded';
-      img.addEventListener('click',(e)=>{e.stopPropagation();openPreviewModal('image',url);});
-      imgBubble.appendChild(img);
-      gallery.appendChild(imgBubble);
-    });
-    row.appendChild(gallery);
-  }
-  fileCards.forEach(fc=>{
-    const card=document.createElement('div');
-    card.className='file-card-external';
-    card.dataset.blobId = fc.blobId || '';
-    card.dataset.filename = fc.name || '';
-    card.dataset.mime = fc.mime || '';
-    if (fc.inlineData) card.dataset.inlineData = fc.inlineData;
-    const iconName = getFileIconName(fc.mime, fc.name);
-    card.innerHTML =
-      '<div class="file-icon"><i data-lucide="'+iconName+'" style="width:18px;height:18px"></i></div>'+
-      '<div class="file-info">'+
-        '<div class="file-name" title="'+esc(fc.name)+'">'+esc(fc.name)+'</div>'+
-        '<div class="file-meta">'+esc(fc.mime||'file')+' · click to preview</div>'+
-      '</div>';
-    row.appendChild(card);
-  });
-  if(text&&text.length){
-    const bubble=document.createElement('div');
-    bubble.className='message-bubble';
-    bubble.innerHTML='<div class="msg-content">'+renderUserText(text)+'</div>';
-    const mc=bubble.querySelector('.msg-content');
-    mc.dataset.rawCleanText=text;
-    row.appendChild(bubble);
-    requestAnimationFrame(()=>attachExpandToggle(row,bubble));
-  }
-  const actions=document.createElement('div');
-  actions.className='msg-actions';
-  actions.innerHTML='<button class="copy-btn" title="Copy"><i data-lucide="copy" style="width:14px;height:14px"></i></button><button class="download-msg-btn" title="Download"><i data-lucide="download" style="width:14px;height:14px"></i></button>';
-  row.appendChild(actions);
-  queueIcons(row);
-  setTimeout(()=>{row.dataset.animated='true';},400);
-  return row;
-};
-const countFences=text=>{const m=String(text||'').match(/```/g);return m?m.length:0;};
-const isLastCodeBlockIncomplete=rawText=>countFences(rawText)%2!==0;
-const getRawAnswerText=msg=>{
-  if(!msg)return '';
-  if(msg.blocks)return msg.blocks.filter(b=>b.type==='answer').map(b=>b.text).join('');
-  return msg.content||'';
-};
-const addCodeBlockHeaders=(container,opts={})=>{
-  if(!container)return;
-  const {stillStreaming=false,rawText=''}=opts;
-  const lastIncomplete=stillStreaming&&isLastCodeBlockIncomplete(rawText);
-  const pres=container.querySelectorAll('pre:not([data-header-added])');
-  pres.forEach((pre,idx)=>{
-    const code=pre.querySelector('code');
-    if(!code)return;
-    const langMatch=code.className.match(/language-(\w+)/);
-    const lang=langMatch?langMatch[1]:'code';
-    const isLast=idx===pres.length-1;
-    const blockComplete=!(stillStreaming&&isLast&&lastIncomplete);
-    if(blockComplete&&!code.dataset.highlighted){
-      try{
-        if(hljs.getLanguage(lang)){
-          const rawCode=code.textContent;
-          code.innerHTML=highlightCode(rawCode,lang);
-          code.dataset.highlighted='true';
-        }
-      }catch(e){}
-    }
-    const codeText=code.textContent;
-    const dis=blockComplete?'':' disabled';
-    const hdr=document.createElement('div');
-    hdr.className='code-block-header';
-    hdr.innerHTML=`<span>${lang}</span><div class="code-btn-group"><button class="code-btn copy-code-btn"${dis} data-code="${encodeURIComponent(codeText)}" title="Copy"><i data-lucide="copy" style="width:12px;height:12px"></i></button><button class="code-btn download-code-btn"${dis} data-code="${encodeURIComponent(codeText)}" data-lang="${lang}" title="Download"><i data-lucide="download" style="width:12px;height:12px"></i></button></div>`;
-    pre.parentNode.insertBefore(hdr,pre);
-    pre.dataset.headerAdded='true';
-    queueIcons(hdr);
-  });
-};
-const createAssistantBubble=msg=>{
-  const row=document.createElement('div');
-  row.className='message-row assistant';
-  row.dataset.messageId=msg.id;
-  const bubble=document.createElement('div');
-  bubble.className='message-bubble';
-  const html=msg.blocks?renderBlocks(msg.blocks,msg):safeMarked(msg.content||'');
-  const vis=html.trim().length>0;
-  const showDots=msg._generating&&!vis;
-  bubble.classList.toggle('streaming',!!msg._generating);
-  bubble.innerHTML=`<div class="msg-content">${html}</div><div class="pulsing-dots${showDots?'':' hidden'}"><span></span><span></span><span></span></div>`;
-  const mc=bubble.querySelector('.msg-content');
-  const cleanAnswer=msg.blocks?msg.blocks.filter(b=>b.type==='answer').map(b=>b.text).join(''):(msg.content||'');
-  mc.dataset.rawCleanText=stripMarkdown(cleanAnswer).replace(/\$\$/g,'').replace(/\$/g,'');
-  row.appendChild(bubble);
-  const actions=document.createElement('div');
-  actions.className='msg-actions';
-  if(!msg._generating){
-    actions.innerHTML=buildActionsHtml(msg);
-  }
-  row.appendChild(actions);
-  if(vis){
-    addCodeBlockHeaders(mc,{stillStreaming:!!msg._generating,rawText:getRawAnswerText(msg)});
-    wrapTablesInContainer(mc);
-    forceCollapseUnopened(mc);
-    if(!msg._generating){
-      bulletproofRenderMath(mc);
-      applyExternalLinks(mc);
-    }
-  }
-  setTimeout(()=>{row.dataset.animated='true';},400);
-  return row;
-};
-const captureScrolls=el=>{
-  const out=[];
-  el.querySelectorAll('pre, .table-scroll, .math-code-block, .search-body-inner, .weather-body-inner, .finance-body-inner').forEach((node,i)=>{
-    if(node.scrollWidth>node.clientWidth||node.scrollHeight>node.clientHeight){out.push({i,left:node.scrollLeft,top:node.scrollTop});}
-  });
-  return out;
-};
-const restoreScrolls=(el,saved)=>{
-  if(!saved||!saved.length)return;
-  let i=0;
-  el.querySelectorAll('pre, .table-scroll, .math-code-block, .search-body-inner, .weather-body-inner, .finance-body-inner').forEach(node=>{
-    const s=saved.find(x=>x.i===i);
-    i++;
-    if(s){try{node.scrollLeft=s.left;node.scrollTop=s.top;}catch{}}
-  });
-};
-const updateAssistantBubble=(row,msg)=>{
-  const bubble=row.querySelector('.message-bubble');
-  if(!bubble)return;
-  const html=msg.blocks?renderBlocks(msg.blocks,msg):safeMarked(msg.content||'');
-  let msgDiv=bubble.querySelector('.msg-content');
-  if(!msgDiv){msgDiv=document.createElement('div');msgDiv.className='msg-content';bubble.insertBefore(msgDiv,bubble.firstChild);}
-  const streamingNow=!!msg._generating;
-  bubble.classList.toggle('streaming',streamingNow);
-  const justFinishedStreaming=!streamingNow && msgDiv._wasStreaming === true;
-  if(msgDiv._lastHtml !== html || justFinishedStreaming){
-    const savedScrolls=captureScrolls(msgDiv);
-    msgDiv._lastHtml=html;
-    msgDiv.innerHTML=html;
-    restoreScrolls(msgDiv,savedScrolls);
-    addCodeBlockHeaders(msgDiv,{stillStreaming:streamingNow,rawText:getRawAnswerText(msg)});
-    wrapTablesInContainer(msgDiv);
-    forceCollapseUnopened(msgDiv);
-    msgDiv.removeAttribute('data-mathRendered');
-    if(/\$|\\\(|\\\[/.test(html)){
-      bulletproofRenderMath(msgDiv);
-      msgDiv.querySelectorAll('.trace-body').forEach(b=>{
-        b.removeAttribute('data-mathRendered');
-        bulletproofRenderMath(b);
-      });
-    }
-    applyExternalLinks(msgDiv);
-  }
-  msgDiv._wasStreaming=streamingNow;
-  const dots=bubble.querySelector('.pulsing-dots');
-  if(dots){
-    const shouldShow=streamingNow&&html.trim().length===0;
-    dots.classList.toggle('hidden',!shouldShow);
-  }
-  const cleanAnswer=msg.blocks?msg.blocks.filter(b=>b.type==='answer').map(b=>b.text).join(''):(msg.content||'');
-  msgDiv.dataset.rawCleanText=stripMarkdown(cleanAnswer).replace(/\$\$/g,'').replace(/\$/g,'');
-  let actions=row.querySelector('.msg-actions');
-  if(!actions){actions=document.createElement('div');actions.className='msg-actions';row.appendChild(actions);}
-  if(!streamingNow){
-    const showSources=hasToolBlocks(msg);
-    const currentlyHasSources=!!actions.querySelector('.sources-btn');
-    const missingBase=!actions.querySelector('.copy-btn')||!actions.querySelector('.download-msg-btn');
-    const isEmpty=actions.childElementCount===0;
-    if(showSources!==currentlyHasSources||missingBase||isEmpty){
-      actions.innerHTML=buildActionsHtml(msg);
-      queueIcons(actions);
-    }
-  }else if(actions.childElementCount>0){
-    actions.innerHTML='';
-  }
-};
-const scheduleStreamRender=(msg, chatId)=>{
-  const rt=getRuntime(chatId);
-  if(!rt||rt.pendingRender)return;
-  rt.pendingRender=true;
-  const delay=msg._generating?40:16;
-  setTimeout(()=>{
-    rt.pendingRender=false;
-    if(state.currentChatId!==chatId)return;
-    const area=$('messages-area');
-    if(!area)return;
-    let row=area.querySelector(`[data-message-id="${msg.id}"]`);
-    if(!row){row=createAssistantBubble(msg);area.appendChild(row);}
-    else{updateAssistantBubble(row,msg);}
-    if(!rt.userScrolledUp)scrollToBottom();
-  },delay);
-};
-const wrapTablesInContainer=container=>{
-  if(!container)return;
-  container.querySelectorAll('table:not([data-wrapped])').forEach(table=>{
-    if(table.parentElement.classList.contains('table-scroll'))return;
-    const scroll=document.createElement('div');
-    scroll.className='table-scroll';
-    table.parentNode.insertBefore(scroll,table);
-    scroll.appendChild(table);
-    table.dataset.wrapped='true';
-  });
-};
-const stripMarkdown=md=>{
-  return (md||'').replace(/```[\s\S]*?```/g,'').replace(/`([^`]+)`/g,'$1').replace(/^\|.*\|$/gm,'').replace(/^\|[-: |]+\|$/gm,'')
-    .replace(/^> (.+)$/gm,'$1').replace(/^#{1,6}\s+/gm,'').replace(/(\*{1,3}|_{1,3})(.*?)\1/g,'$2')
-    .replace(/!\[.*?\]\(.*?\)/g,'').replace(/\[([^\]]+)\]\(.*?\)/g,'$1').replace(/^(-{3,}|_{3,}|\*{3,})$/gm,'')
-    .replace(/<[^>]+>/g,'').replace(/\n{3,}/g,'\n\n').trim();
-};
-const applyExternalLinks=container=>{
-  if(!container)return;
-  container.querySelectorAll('a').forEach(a=>{a.target='_blank';a.rel='noopener noreferrer';});
-};
-const buildContentFromBlocks=blocks=>{
-  let content='';
-  for(const block of (blocks||[])){
-    if(block.type==='thinking'){content+=`<thinking>\n${block.text}\n</thinking>\n`;}
-    else if(block.type==='answer'){content+=block.text.replace(/<thinking>[\s\S]*?<\/thinking>/g,'').replace(/<\/?thinking>/g,'');}
-  }
-  return content;
-};
-const hasVisibleAnswer=msg=>{
-  if(!msg)return false;
-  if(Array.isArray(msg.blocks)){
-    if(msg.blocks.some(b=>b.type==='answer'&&b.text&&b.text.trim().length>0))return true;
-    if(msg.blocks.some(b=>b.type==='chart'&&(b.spec||b.content)))return true;
-    if(msg.blocks.some(b=>['search','weather','finance','math','analyse','analysing'].includes(b.type)&&!b.active&&!b.error))return true;
-  }
-  const withoutThinking=String(msg.content||'').replace(/<thinking>[\s\S]*?<\/thinking>/g,'').trim();
-  return withoutThinking.length>0;
-};
-const setBusyIfEmpty=(msg,errorMsg=null)=>{
-  if(hasVisibleAnswer(msg))return;
-  const busyText=errorMsg?`**Error:** ${errorMsg}`:'**Server Busy, Please Try Again**';
-  if(!msg.blocks)msg.blocks=[];
-  const answerIdx=msg.blocks.findIndex(b=>b.type==='answer');
-  if(answerIdx!==-1){msg.blocks[answerIdx]={type:'answer',text:busyText};}
-  else{msg.blocks.push({type:'answer',text:busyText});}
-  msg.content=busyText;
-  msg._generating=false;
-  msg._phase='done';
-};
-const renderMessages=()=>{
-  const area=$('messages-area');
-  if(!area)return;
-  const chat=state.chats.find(c=>c.id===state.currentChatId);
-  if(!chat||!chat.messages.length){
-    const currentMode = ensureModeForChat(state.currentChatId);
-    const isExpert=currentMode==='expert';
-    area.innerHTML=`<div class="welcome-screen"><i data-lucide="sparkles" style="width:44px;height:44px;color:var(--accent);opacity:0.7"></i><h2>Welcome to ZebAI</h2><p>Pick a mode for this chat — it stays locked once you start</p><div class="modes-grid"><button class="mode-card ${!isExpert?'active':''}" data-mode="quick"><div class="mode-icon"><i data-lucide="zap" style="width:18px;height:18px"></i></div><div class="mode-info"><div class="mode-title">Quick</div><div class="mode-desc">Fast and Quick</div></div></button><button class="mode-card ${isExpert?'active':''}" data-mode="expert"><div class="mode-icon"><i data-lucide="brain" style="width:18px;height:18px"></i></div><div class="mode-info"><div class="mode-title">Expert</div><div class="mode-desc">Slower, yet better</div></div></button></div></div>`;
-    area.querySelectorAll('.mode-card').forEach(card=>{
-      card.onclick=()=>{
-        const m = card.dataset.mode;
-        const cid = state.currentChatId;
-        if (cid) setModeForChat(cid, m);
-        area.querySelectorAll('.mode-card').forEach(c=>c.classList.toggle('active',c.dataset.mode===m));
-        updateInputUI();
-      };
-    });
-    queueIcons(area);
-    toggleScrollBtn();
-    return;
-  }
-  const rows=area.querySelectorAll('.message-row');
-  const domMap=new Map();
-  rows.forEach(r=>domMap.set(r.dataset.messageId,r));
-  const msgIds=new Set(chat.messages.map(m=>m.id));
-  domMap.forEach((r,id)=>{if(!msgIds.has(id))r.remove();});
-  chat.messages.forEach(msg=>{
-    let row=domMap.get(msg.id);
-    if(row){
-      if(msg.role==='assistant')updateAssistantBubble(row,msg);
-      domMap.delete(msg.id);
-    }else{
-      const newRow=msg.role==='assistant'?createAssistantBubble(msg):createUserBubble(msg);
-      area.appendChild(newRow);
-    }
-  });
-  area.querySelectorAll('.message-bubble .msg-content').forEach(el=>{
-    addCodeBlockHeaders(el,{stillStreaming:false,rawText:''});
-    wrapTablesInContainer(el);
-    bulletproofRenderMath(el);
-    applyExternalLinks(el);
-  });
-  queueIcons(area);
-  toggleScrollBtn();
-};
-const renderSidebar=()=>{
-  const list=$('chat-list');
-  if(!list)return;
-  const filtered=state.searchTerm?state.chats.filter(c=>c.title.toLowerCase().includes(state.searchTerm.toLowerCase())):state.chats;
-  const existing=new Map();
-  Array.from(list.children).forEach(el=>{
-    if(el.classList && el.classList.contains('chat-list-item')){ existing.set(el.dataset.cid,el); }
-  });
-  const seen=new Set();
-  let prevSibling=null;
-  let addedNew=false;
-  filtered.forEach(c=>{
-    seen.add(c.id);
-    const isActive=c.id===state.currentChatId;
-    const isGenerating=state.titleGeneratingChatId===c.id;
-    const isRenaming=state.renamingChatId===c.id;
-    let item=existing.get(c.id);
-    if(!item){
-      item=document.createElement('div');
-      item.className='chat-list-item';
-      item.dataset.cid=c.id;
-      item.innerHTML='<span class="chat-title"></span><span class="chat-actions"><button class="rename-btn" data-id="'+esc(c.id)+'"><i data-lucide="edit-3" style="width:13px;height:13px"></i></button><button class="delete-btn danger" data-id="'+esc(c.id)+'"><i data-lucide="trash-2" style="width:13px;height:13px"></i></button></span>';
-      existing.set(c.id,item);
-      addedNew=true;
-    }
-    if(isActive)item.classList.add('active');
-    else item.classList.remove('active');
-    const hasInput=!!item.querySelector('.chat-list-rename-input');
-    if(isRenaming && !hasInput){
-      const titleEl=item.querySelector('.chat-title');
-      if(titleEl){
-        const input=document.createElement('input');
-        input.className='chat-list-rename-input';
-        input.value=c.title;
-        input.dataset.rid=c.id;
-        input.addEventListener('keydown',e=>{
-          if(e.key==='Enter'){e.preventDefault();renameChat(c.id,input.value.trim()||'Untitled');}
-        });
-        input.addEventListener('blur',()=>{
-          if(state.renamingChatId===c.id)renameChat(c.id,input.value.trim()||'Untitled');
-        });
-        titleEl.replaceWith(input);
-        requestAnimationFrame(()=>{try{input.focus();input.select();}catch(e){}});
-      }
-    } else if(!isRenaming && hasInput){
-      const input=item.querySelector('.chat-list-rename-input');
-      const span=document.createElement('span');
-      span.className='chat-title';
-      span.textContent=c.title;
-      span.setAttribute('title',c.title);
-      input.replaceWith(span);
-    }
-    if(!isRenaming){
-      const titleEl=item.querySelector('.chat-title');
-      if(titleEl){
-        if(isGenerating){
-          if(titleEl.textContent!=='Title Generating'){
-            titleEl.textContent='Title Generating';
-            titleEl.classList.add('generating');
-            titleEl.removeAttribute('title');
-          }
-        } else {
-          if(titleEl.classList.contains('generating'))titleEl.classList.remove('generating');
-          if(titleEl.textContent!==c.title)titleEl.textContent=c.title;
-          if(titleEl.getAttribute('title')!==c.title)titleEl.setAttribute('title',c.title);
-        }
-      }
-    }
-    const desiredNext=prevSibling?prevSibling.nextSibling:list.firstChild;
-    if(item!==desiredNext){ list.insertBefore(item,desiredNext); }
-    prevSibling=item;
-  });
-  existing.forEach((el,cid)=>{ if(!seen.has(cid))el.remove(); });
-  if(addedNew)queueIcons(list);
-};
-const updateSidebarActive=()=>document.querySelectorAll('.chat-list-item').forEach(el=>el.classList.toggle('active',el.dataset.cid===state.currentChatId));
-const getFileIconName=(mime,name)=>{
-  const m=(mime||'').toLowerCase();
-  if(m==='application/pdf')return 'file-text';
-  if(m.startsWith('audio/'))return 'music';
-  if(m.startsWith('video/'))return 'video';
-  if(m.startsWith('text/'))return 'file-text';
-  if(m==='application/json'||m==='application/jsonl'||m==='application/x-ndjson')return 'braces';
-  const ext=(name||'').split('.').pop().toLowerCase();
-  if(['md','markdown'].includes(ext))return 'file-text';
-  if(['html','htm'].includes(ext))return 'file-code';
-  if(['json','jsonl','ndjson'].includes(ext))return 'braces';
-  if(['js','ts','jsx','tsx'].includes(ext))return 'file-code';
-  if(['py','go','rs','java','c','cpp'].includes(ext))return 'file-code';
-  return 'file';
-};
-const updateAttachmentPreviews=()=>{
-  const strip=$('attach-strip');
-  if(!strip)return;
-  const rt=currentRuntime();
-  const atts=rt?rt.attachments:[];
-  let html='';
-  atts.forEach((att,i)=>{
-    if(!att.isImage) return;
-    html+=`<span class="thumb"><img src="${att.data}" data-att-idx="${i}"/><button class="thumb-remove" data-rm-att="${i}" title="Remove">×</button></span>`;
-  });
-  atts.forEach((att,i)=>{
-    if(att.isImage) return;
-    const iconName=getFileIconName(att.mime, att.name);
-    const sizeKB=(att.size/1024);
-    const sizeStr=sizeKB>1024?`${(sizeKB/1024).toFixed(1)} MB`:`${sizeKB.toFixed(0)} KB`;
-    html+=`<div class="att-file-card" data-att-idx="${i}">
-      <div class="file-icon"><i data-lucide="${iconName}" style="width:16px;height:16px"></i></div>
-      <div class="file-info">
-        <div class="file-name" title="${esc(att.name)}">${esc(att.name)}</div>
-        <div class="file-meta">${sizeStr} · ${esc(att.mime||'unknown')}${att.blobId?' · saved':''}</div>
-      </div>
-      <button class="file-remove" data-rm-att="${i}" title="Remove"><i data-lucide="x" style="width:12px;height:12px"></i></button>
-    </div>`;
-  });
-  strip.innerHTML=html;
-  queueIcons(strip);
-  const badge=$('attach-badge');
-  if(badge){
-    if(atts.length>0){badge.textContent=String(atts.length);badge.style.display='';}
-    else{badge.style.display='none';}
-  }
-};
-const updateInputUI=()=>{
-  const chat=state.chats.find(c=>c.id===state.currentChatId);
-  const hasMsg=chat&&chat.messages.length>0;
-  const rt=currentRuntime();
-  const streaming=rt?rt.isStreaming:false;
-  $('regen-btn').style.display=hasMsg&&!streaming?'flex':'none';
-  $('stop-btn').style.display=streaming?'flex':'none';
-  const canSend=!streaming&&(!!$('chat-input')?.value.trim()||(rt&&rt.attachments.length>0));
-  $('send-btn').disabled=!canSend;
-  queueIcons($('input-area'));
-};
-const setInput=val=>{
-  const inp=$('chat-input');
-  if(!inp)return;
-  inp.value=val;
-  const maxH = Math.max(120, Math.min(window.innerHeight * 0.3, 320));
-  inp.style.height='auto';
-  const target = Math.min(inp.scrollHeight, maxH);
-  inp.style.height=target+'px';
-  inp.style.overflowY = inp.scrollHeight > maxH ? 'auto' : 'hidden';
-  updateInputUI();
-};
-const toggleScrollBtn=()=>{
-  const area=$('messages-area');
-  if(!area)return;
-  const atBottom=area.scrollHeight-area.scrollTop-area.clientHeight<5;
-  const rt=currentRuntime();
-  if(rt)rt.userScrolledUp=!atBottom;
-  $('scroll-to-bottom-btn').classList.toggle('visible',!atBottom);
-};
-const scrollToBottom=(force=false)=>{
-  const rt=currentRuntime();
-  if(!force&&rt&&rt.userScrolledUp)return;
-  if(rt&&rt._scrollScheduled)return;
-  if(rt)rt._scrollScheduled=true;
-  requestAnimationFrame(()=>{
-    if(rt)rt._scrollScheduled=false;
-    const a=$('messages-area');
-    if(a){a.scrollTop=a.scrollHeight;toggleScrollBtn();}
-  });
-};
-const api=async(method,path,body)=>{
-  const opts={method,headers:{'Content-Type':'application/json','Authorization':'Bearer '+token}};
-  if(body)opts.body=JSON.stringify(body);
-  const res=await fetch(API_BASE+path,opts);
-  const data=await res.json();
-  if(!res.ok)throw new Error(data.error||'Request failed');
-  return data;
-};
-const TOAST_ICONS={
-  success:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
-  error:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
-  warning:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="8" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
-  info:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="16" x2="12" y2="11"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'
-};
-const toast=(msg,type='info',duration=2400)=>{
-  const c=$('toast-container');
-  if(!c)return;
-  if(!type)type='info';
-  const d=document.createElement('div');
-  d.className='toast '+type;
-  d.style.setProperty('--dur',duration+'ms');
-  d.innerHTML=`<span class="toast-icon">${TOAST_ICONS[type]||TOAST_ICONS.info}</span><span class="toast-message"></span>`;
-  d.querySelector('.toast-message').textContent=msg;
-  c.appendChild(d);
-  setTimeout(()=>{d.classList.add('out');setTimeout(()=>d.remove(),260);},duration);
-};
-const confirmDialog=(msg,cb)=>{
-  const ov=$('confirm-overlay');
-  $('confirm-message').textContent=msg;
-  ov.classList.add('open');
-  const cleanup=()=>{ov.classList.remove('open');$('confirm-cancel').removeEventListener('click',onCancel);$('confirm-ok').removeEventListener('click',onOk);};
-  const onCancel=()=>{cleanup();cb(false);};
-  const onOk=()=>{cleanup();cb(true);};
-  $('confirm-cancel').addEventListener('click',onCancel);
-  $('confirm-ok').addEventListener('click',onOk);
-};
-const showScreen=screen=>{
-  $('loading-screen').style.display='none';
-  $('auth-screen').style.display='none';
-  $('app').style.display='none';
-  if(screen==='loading')$('loading-screen').style.display='flex';
-  else if(screen==='auth')$('auth-screen').style.display='flex';
-  else if(screen==='app'){$('app').style.display='flex';state.loggedUsername=loggedUsername;}
-};
-const setupAuth=()=>{
-  let mode='login';
-  $('tab-login').addEventListener('click',()=>{mode='login';$('tab-login').classList.add('active');$('tab-signup').classList.remove('active');$('auth-submit').textContent='Login';});
-  $('tab-signup').addEventListener('click',()=>{mode='signup';$('tab-signup').classList.add('active');$('tab-login').classList.remove('active');$('auth-submit').textContent='Sign Up';});
-  $('auth-submit').addEventListener('click',async()=>{
-    const u=$('auth-username').value.trim(),p=$('auth-password').value.trim();
-    if(!u||!p){$('auth-error').textContent='Please fill in both fields.';return;}
-    $('auth-error').textContent='';
-    try{
-      const ep=mode==='login'?'/auth/login':'/auth/signup';
-      const res=await fetch(API_BASE+'/api'+ep,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})});
-      const data=await res.json();
-      if(!res.ok){$('auth-error').textContent=data.error||'Something went wrong.';return;}
-      token=data.token;loggedUsername=data.username;
-      localStorage.setItem(TOKEN_KEY,token);
-      localStorage.setItem(USERNAME_KEY,loggedUsername);
-      toast(`Welcome back, ${loggedUsername}`,'success',2800);
-      initApp();
-    }catch(err){$('auth-error').textContent='Network error. Please try again.';}
-  });
-};
-const blankArea=()=>{if($('messages-area'))$('messages-area').innerHTML='';};
-const deleteChat=async cid=>{
-  try{await api('DELETE','/api/chats/'+cid);}catch(e){toast('Failed to delete chat','error');}
-  const rt=chatRuntime.get(cid);
-  if(rt&&rt.abortController){try{rt.abortController.abort();}catch(e){}}
-  chatRuntime.delete(cid);
-  delete state.chatModes[cid];
-  state.chats=state.chats.filter(c=>c.id!==cid);
-  if(state.currentChatId===cid){
-    if(state.chats.length>0){
-      state.currentChatId=state.chats[0].id;
-      document.title=`ZebAI - ${clampTitle(state.chats[0].title,40)}`;
-      blankArea();
-      const full=await loadChatMessages(state.currentChatId);
-      if(full){const idx=state.chats.findIndex(c=>c.id===state.currentChatId);if(idx!==-1)state.chats[idx]=full;}
-      renderSidebar();renderMessages();updateInputUI();updateAttachmentPreviews();
-      setInput(state.drafts?.[state.currentChatId]||'');
-    }else{
-      state.currentChatId=null;
-      renderSidebar();
-      await createNewChat(true);
-      return;
-    }
-  }else{renderSidebar();}
-  toast('Chat deleted','success');
-};
-const loadChats=async()=>{
-  try{
-    const list=await api('GET','/api/chats');
-    state.chats=list.map(c=>({id:c.id,title:c.title,mode:c.mode||'quick',createdAt:c.created_at,messageCount:c.messageCount,messages:[]}));
-    for (const c of state.chats) {
-      if (c.mode === 'quick' || c.mode === 'expert') state.chatModes[c.id] = c.mode;
-    }
-    return list.length;
-  }catch(e){toast('Failed to load chats','error');state.chats=[];return 0;}
-};
-const createNewChat=async(silent=false)=>{
-  if(state.creatingChat)return;
-  state.creatingChat=true;
-  const btn=$('btn-new-chat');
-  if(btn)btn.disabled=true;
-  try{
-    const chat=await api('POST','/api/chats',{mode: DEFAULT_MODE});
-    state.chats.unshift({id:chat.id,title:chat.title,mode:chat.mode||DEFAULT_MODE,createdAt:chat.createdAt,messages:[]});
-    state.currentChatId=chat.id;
-    state.chatModes[chat.id] = chat.mode || DEFAULT_MODE;
-    getRuntime(chat.id);
-    renderSidebar();
-    await selectChat(chat.id,true);
-    if(!silent)toast('New chat started','success');
-  }catch(err){
-    toast('Failed to create chat','error');
-  }finally{
-    state.creatingChat=false;
-    if(btn)btn.disabled=false;
-  }
-};
-const renameChat=async(cid,title)=>{
-  try{await api('PATCH','/api/chats/'+cid,{title});}catch(e){toast('Failed to rename chat','error');}
-  const chat=state.chats.find(c=>c.id===cid);
-  if(chat){chat.title=title;if(cid===state.currentChatId)document.title=`ZebAI - ${clampTitle(title,40)}`;}
-  state.renamingChatId=null;
-  renderSidebar();
-};
-const loadChatMessages=async cid=>{
-  try{
-    const full=await api('GET','/api/chats/'+cid);
-    const loaded = {
-      id:full.id,title:full.title,mode:full.mode||'quick',
-      createdAt:state.chats.find(c=>c.id===cid)?.createdAt||Date.now(),
-      messages:full.messages.filter(m=>String(m.content)!==REGENERATED_MARKER).map(m=>({
-        id:m.id,role:m.role,content:String(m.content),mode:m.mode,timestamp:m.timestamp,
-        _generating:false,_completed:false,_phase:'done',_thinkingActive:false,_activeTool:null,
-        blocks:m.role==='assistant'?(Array.isArray(m.blocks)&&m.blocks.length?m.blocks:parseBlocksFromContent(String(m.content),m.search_block||null,m.finance_block||null,m.math_block||null,m.weather_block||null,m.chart_block||null)):null
-      }))
-    };
-    if (full.mode === 'quick' || full.mode === 'expert') {
-      state.chatModes[cid] = full.mode;
-      const c = state.chats.find(x=>x.id===cid);
-      if (c) c.mode = full.mode;
-    }
-    return loaded;
-  }catch(e){toast('Failed to load chat messages','error');return null;}
-};
-const parseBlocksFromContent=(content,searchBlock,financeBlock,mathBlock,weatherBlock,chartBlock)=>{
-  const blocks=[];
-  const text=String(content||'');
-  let lastIndex=0;
-  while(true){
-    const tagStart=text.indexOf('<thinking>',lastIndex);
-    if(tagStart===-1){
-      const after=text.slice(lastIndex);
-      if(after.trim())blocks.push({type:'answer',text:after});
-      break;
-    }
-    const before=text.slice(lastIndex,tagStart);
-    if(before.trim())blocks.push({type:'answer',text:before});
-    const end=text.indexOf('</thinking>',tagStart);
-    if(end!==-1){
-      blocks.push({type:'thinking',text:text.slice(tagStart+'<thinking>'.length,end).trim(),open:false});
-      lastIndex=end+'</thinking>'.length;
-    }else{lastIndex=tagStart;break;}
-  }
-  const insertBeforeAnswer=block=>{
-    const answerIdx=blocks.findIndex(b=>b.type==='answer');
-    if(answerIdx===-1)blocks.push(block);
-    else blocks.splice(answerIdx,0,block);
-  };
-  if(searchBlock)insertBeforeAnswer({type:'search',active:false,query:searchBlock.query||'',results:searchBlock.results||null,sources:searchBlock.sources||null,error:searchBlock.error||null});
-  if(financeBlock)insertBeforeAnswer({type:'finance',active:false,financeType:financeBlock.financeType||'stock',symbol:financeBlock.symbol||'',base:financeBlock.base||'',target:financeBlock.target||'',data:financeBlock.data||null,error:financeBlock.error||null});
-  if(mathBlock)insertBeforeAnswer({type:'math',active:false,code:mathBlock.code||'',result:mathBlock.result||''});
-  if(weatherBlock)insertBeforeAnswer({type:'weather',active:false,query:weatherBlock.query||'',data:weatherBlock.data||null,error:weatherBlock.error||null});
-  if(chartBlock)insertBeforeAnswer({type:'chart',spec:chartBlock.spec||chartBlock,content:chartBlock});
-  return blocks;
-};
-const selectChat=async(cid,force=false)=>{
-  if(!cid&&state.chats.length>0)cid=state.chats[0].id;
-  if(state.currentChatId===cid&&!force)return;
-  if(state.currentChatId){
-    const oldRt=getRuntime(state.currentChatId);
-    if(oldRt&&$('chat-input'))oldRt.draft=$('chat-input').value;
-  }
-  state.currentChatId=cid;
-  state.renamingChatId=null;
-  if(innerWidth<=768)state.sidebarOpen=false;
-  updateSidebarActive();
-  if(cid&&!cid.startsWith('temp_')){
-    blankArea();
-    const full=await loadChatMessages(cid);
-    if(full){
-      const idx=state.chats.findIndex(c=>c.id===cid);
-      if(idx!==-1){
-        const inFlightRt=getRuntime(cid);
-        const streamMsg=inFlightRt && inFlightRt.currentStream && inFlightRt.currentStream.msg;
-        if(streamMsg && streamMsg._generating){
-          const alreadyIn=full.messages.some(m=>m.id===streamMsg.id);
-          if(alreadyIn){full.messages=full.messages.map(m=>m.id===streamMsg.id?streamMsg:m);}
-          else{full.messages.push(streamMsg);}
-        }
-        state.chats[idx]=full;
-      }
-    }
-    ensureModeForChat(cid);
-  }
-  const rt=getRuntime(cid);
-  renderMessages();
-  setInput(rt&&rt.draft?rt.draft:'');
-  updateInputUI();
-  updateAttachmentPreviews();
-  if(rt)rt.userScrolledUp=false;
-  scrollToBottom(true);
-  const sb=$('sidebar');
-  if(sb)sb.classList.toggle('collapsed',!state.sidebarOpen);
-  const ti=document.querySelector('#toggle-sidebar-btn i');
-  if(ti)ti.setAttribute('data-lucide',state.sidebarOpen?'panel-left-close':'panel-left');
-  const chat=state.chats.find(c=>c.id===cid);
-  document.title=chat?.title?`ZebAI - ${clampTitle(chat.title,40)}`:'ZebAI';
-  queueIcons(ti);
-  const loadedChat=state.chats.find(c=>c.id===cid);
-  if(loadedChat&&(!loadedChat.title||loadedChat.title==='New Chat'||loadedChat.title==='Untitled')){
-    const assistantMsgs=loadedChat.messages.filter(m=>m.role==='assistant');
-    const userMsgs=loadedChat.messages.filter(m=>m.role==='user');
-    if(assistantMsgs.length>=1&&userMsgs.length>=1){
-      const firstUser=userMsgs[0];
-      const firstAssistant=assistantMsgs[0];
-      state.titleGeneratingChatId=cid;
-      updateChatTitleDisplay(cid,'',true);
-      fetch(`${API_BASE}/api/chats/${cid}/generate-title`,{
-        method:'POST',
-        headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-        body:JSON.stringify({userContent:firstUser.content,assistantContent:firstAssistant.content})
-      })
-        .then(res=>res.json())
-        .then(data=>{
-          state.titleGeneratingChatId=null;
-          let finalTitle=loadedChat.title;
-          if(data.title&&data.title!=='New Chat'&&data.title!==loadedChat.title){
-            loadedChat.title=data.title;
-            finalTitle=data.title;
-            if(state.currentChatId===cid)document.title=`ZebAI - ${clampTitle(data.title,40)}`;
-          }
-          updateChatTitleDisplay(cid,finalTitle,false);
-        })
-        .catch(()=>{state.titleGeneratingChatId=null;updateChatTitleDisplay(cid,loadedChat.title,false);});
-    }
-  }
-};
-const updateChatTitleDisplay=(cid,title,generating)=>{
-  const item=document.querySelector(`.chat-list-item[data-cid="${cid}"]`);
-  if(!item)return;
-  const el=item.querySelector('.chat-title');
-  if(!el)return;
-  if(generating){
-    el.className='chat-title generating';
-    el.textContent='Title Generating';
-    el.removeAttribute('title');
-  }else{
-    el.className='chat-title';
-    el.textContent=title;
-    el.setAttribute('title',title);
-  }
-};
-const openPreviewModal=(type,data)=>{
-  const overlay=$('code-runner-overlay'),body=$('run-modal-body'),title=$('run-modal-title');
-  if(!overlay||!body||!title)return;
-  const ot=$('run-modal-open-tab'); if(ot)ot.style.display='none';
-  const dl=$('run-modal-download'); if(dl)dl.style.display='none';
-  if(overlay._revokeOnClose){try{URL.revokeObjectURL(overlay._revokeOnClose);}catch(e){}overlay._revokeOnClose=null;}
-  if(type==='text'){
-    title.textContent='Text Preview';
-    body.innerHTML='';
-    const pre=document.createElement('pre');
-    pre.className='preview-text';
-    pre.textContent=String(data||'');
-    body.appendChild(pre);
-  } else if(type==='image'){
-    title.textContent='Image Preview';
-    body.innerHTML='';
-    const wrap=document.createElement('div');
-    wrap.className='preview-fill preview-image-wrap';
-    const img=document.createElement('img');
-    img.src=String(data||'');
-    img.className='preview-image';
-    wrap.appendChild(img);
-    body.appendChild(wrap);
-  } else if(type==='html'){
-    title.textContent='Live Preview';
-    body.innerHTML='';
-    const wrap=document.createElement('div');
-    wrap.className='preview-fill';
-    const iframe=document.createElement('iframe');
-    iframe.className='preview-iframe';
-    iframe.setAttribute('sandbox','allow-scripts');
-    iframe.srcdoc=String(data||'');
-    wrap.appendChild(iframe);
-    body.appendChild(wrap);
-  }
-  overlay.classList.add('open');
-};
-const closePreviewModal=()=>{
-  const overlay=$('code-runner-overlay');
-  if(!overlay)return;
-  if(overlay._revokeOnClose){try{URL.revokeObjectURL(overlay._revokeOnClose);}catch(e){}overlay._revokeOnClose=null;}
-  overlay.classList.remove('open');
-  const body=$('run-modal-body');
-  if(body)body.innerHTML='';
-  const ot=$('run-modal-open-tab'); if(ot)ot.style.display='none';
-  const dl=$('run-modal-download'); if(dl)dl.style.display='none';
-};
-const sniffMime = (bytes) => {
-  if (!bytes || bytes.length < 12) return null;
-  const b = bytes;
-  if (b[0]===0x25 && b[1]===0x50 && b[2]===0x44 && b[3]===0x46) return 'application/pdf';
-  if (b[0]===0x89 && b[1]===0x50 && b[2]===0x4E && b[3]===0x47) return 'image/png';
-  if (b[0]===0xFF && b[1]===0xD8 && b[2]===0xFF) return 'image/jpeg';
-  if (b[0]===0x47 && b[1]===0x49 && b[2]===0x46) return 'image/gif';
-  if (b[0]===0x52 && b[1]===0x49 && b[2]===0x46 && b[3]===0x46 && b[8]===0x57 && b[9]===0x45 && b[10]===0x42 && b[11]===0x50) return 'image/webp';
-  if (b[0]===0x42 && b[1]===0x4D) return 'image/bmp';
-  if (b[4]===0x66 && b[5]===0x74 && b[6]===0x79 && b[7]===0x70) return 'video/mp4';
-  if (b[0]===0x49 && b[1]===0x44 && b[2]===0x33) return 'audio/mpeg';
-  if (b[0]===0xFF && (b[1]&0xE0)===0xE0) return 'audio/mpeg';
-  if (b[0]===0x4F && b[1]===0x67 && b[2]===0x67 && b[3]===0x53) return 'audio/ogg';
-  if (b[0]===0x52 && b[1]===0x49 && b[2]===0x46 && b[3]===0x46 && b[8]===0x57 && b[9]===0x41 && b[10]===0x56 && b[11]===0x45) return 'audio/wav';
-  if (b[0]===0x50 && b[1]===0x4B && b[2]===0x03 && b[3]===0x04) return 'application/zip';
+const TITLE_PROVIDERS = [
+  { name: 'Google', model: 'gemini-3.5-flash-lite', keyEnv: 'GOOGLE_KEYS' },
+  { name: 'Google', model: 'gemini-3.1-flash-lite', keyEnv: 'GOOGLE_KEYS' },
+];
+
+function titleThinkingConfig(model) {
+  const m = String(model || '').toLowerCase();
+  if (/gemini-3/.test(m)) return { thinkingLevel: 'minimal', includeThoughts: false };
+  if (/flash-lite-latest/.test(m)) return { thinkingLevel: 'minimal', includeThoughts: false };
+  if (/gemini-2\.5-flash-lite/.test(m)) return { thinkingBudget: 0, includeThoughts: false };
+  if (/gemini-2\.5-flash/.test(m)) return { thinkingBudget: 0, includeThoughts: false };
   return null;
-};
-const PREVIEW_UNRENDERABLE_IMAGES = new Set(['image/heic','image/heif','image/tiff','image/avif']);
-const buildUnsupportedPanel = (name, mime, message) => {
-  const wrap = document.createElement('div');
-  wrap.className = 'preview-fill preview-unsupported';
-  wrap.innerHTML =
-    '<div class="preview-unsupported-icon">📎</div>' +
-    '<div class="preview-unsupported-name">' + esc(name || 'File') + '</div>' +
-    '<div class="preview-unsupported-mime">' + esc(mime || 'binary') + '</div>' +
-    '<div class="preview-unsupported-msg">' + esc(message || 'Preview not available.') + '</div>';
-  return wrap;
-};
-const openFilePreview = async (opts) => {
-  const { blobId, name, mime, inlineData } = opts || {};
-  const overlay = $('code-runner-overlay');
-  const body = $('run-modal-body');
-  const title = $('run-modal-title');
-  const openTabBtn = $('run-modal-open-tab');
-  const downloadBtn = $('run-modal-download');
-  if (!overlay || !body || !title) return;
-  title.textContent = name || 'File Preview';
-  if (openTabBtn) openTabBtn.style.display = 'none';
-  if (downloadBtn) downloadBtn.style.display = 'none';
-  if (overlay._revokeOnClose) {
-    try { URL.revokeObjectURL(overlay._revokeOnClose); } catch (e) {}
-    overlay._revokeOnClose = null;
-  }
-  body.innerHTML = '<div class="preview-status"><span class="preview-spinner"></span><span>Loading…</span></div>';
-  overlay.classList.add('open');
-  queueIcons(overlay);
-  let blob = null;
-  let resolvedMime = String(mime || '').toLowerCase().split(';')[0].trim();
-  let objUrl = null;
-  try {
-    if (blobId) {
-      const url = `${API_BASE}/api/blobs/${blobId}?t=${encodeURIComponent(token || '')}`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      blob = await res.blob();
-    } else if (inlineData) {
-      const m = String(inlineData).match(/^data:([^;]+);base64,(.+)$/);
-      if (!m) throw new Error('Malformed inline data');
-      if (!resolvedMime) resolvedMime = String(m[1]).toLowerCase().split(';')[0].trim();
-      const bin = atob(m[2]);
-      const bytes = new Uint8Array(bin.length);
-      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-      blob = new Blob([bytes], { type: m[1] });
-    } else {
-      throw new Error('Nothing to preview');
-    }
-    if (!resolvedMime || resolvedMime === 'application/octet-stream' || resolvedMime === 'binary/octet-stream') {
+}
+
+async function tryTitleFromGemini(provider, key, prompt) {
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(provider.model)}:generateContent?key=${key}`;
+  const res = await fetchWithTimeout(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: (() => {
+        const cfg = { maxOutputTokens: 32, temperature: 0.4, topP: 0.9 };
+        const tc = titleThinkingConfig(provider.model);
+        if (tc) cfg.thinkingConfig = tc;
+        return cfg;
+      })(),
+    }),
+  }, 5000, `title-${provider.model}`, 1);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const j = await res.json();
+  const parts = j?.candidates?.[0]?.content?.parts || [];
+  return parts.filter(p => p.text && p.thought !== true).map(p => p.text).join('') || '';
+}
+
+async function generateAITitle(env, userContent, assistantContent) {
+  const cleanUser = String(userContent || '').replace(/!\[.*?\]\(.*?\)/g, '').replace(/\[Attached:[^\]]+\]/g, '').replace(/\[File:[^\]]*\][\s\S]*$/m, '').trim();
+  const cleanAssistant = String(assistantContent || '').replace(/<thinking>[\s\S]*?<\/thinking>/g, '').replace(/<(?:weather|search|finance|chart|analyse|run|analysing)>[\s\S]*?<\/(?:weather|search|finance|chart|analyse|run|analysing)>/g, '').replace(/\s+/g, ' ').trim();
+  let userSeed = cleanUser; if (!userSeed) userSeed = cleanAssistant.slice(0, 300);
+  if (!userSeed) return null;
+  const prompt = `You are a chat-title generator. Output a SHORT, SPECIFIC title describing WHAT THIS CONVERSATION IS ABOUT.
+
+RULES:
+- 3 to 6 words, Title Case
+- No quotes, no trailing punctuation, no emoji
+- Output ONLY the title
+
+EXAMPLES:
+"hi" → Casual Greeting
+"what's the weather in tokyo" → Tokyo Weather Check
+"AAPL stock price" → Apple Stock Price
+
+USER: ${userSeed.slice(0, 400)}
+ASSISTANT: ${cleanAssistant.slice(0, 300)}
+
+Title:`;
+  for (const provider of TITLE_PROVIDERS) {
+    const available = await getAvailableKeys(env, provider.keyEnv);
+    if (!available.length) continue;
+    for (const key of available) {
       try {
-        const head = new Uint8Array(await blob.slice(0, 32).arrayBuffer());
-        const sniffed = sniffMime(head);
-        if (sniffed) {
-          resolvedMime = sniffed;
-          blob = new Blob([blob], { type: sniffed });
+        const raw = await tryTitleFromGemini(provider, key, prompt);
+        let title = cleanTitleString(raw);
+        if (!title) continue;
+        if (/^(title|output|assistant|user)[:\s]/i.test(title)) title = title.replace(/^[^:]+:\s*/i, '');
+        if (title.length < 3) continue;
+        if (title.length > 60) {
+          const cut = title.slice(0, 60); const lastSpace = cut.lastIndexOf(' ');
+          title = (lastSpace > 30 ? cut.slice(0, lastSpace) : cut).trim() + '…';
         }
-      } catch (e) {}
-    } else if ((!blob.type || blob.type === 'application/octet-stream') && resolvedMime) {
-      try { blob = new Blob([blob], { type: resolvedMime }); } catch (e) {}
+        return title;
+      } catch (e) { continue; }
     }
-    body.innerHTML = '';
-    objUrl = URL.createObjectURL(blob);
-    overlay._revokeOnClose = objUrl;
-    if (openTabBtn) {
-      openTabBtn.style.display = '';
-      openTabBtn.onclick = () => { try { window.open(objUrl, '_blank', 'noopener,noreferrer'); } catch (e) {} };
+  }
+  const words = userSeed.split(/\s+/).filter(Boolean).slice(0, 4);
+  if (!words.length) return null;
+  let fallback = words.map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+  if (fallback.length > 48) fallback = fallback.slice(0, 48).trim();
+  return fallback;
+}
+
+// ---------------------------------------------------------------------------
+// 4. PROVIDER REGISTRY
+// ---------------------------------------------------------------------------
+const GEMINI_TEXT_TIMEOUT   = 45000;
+const GEMINI_CODE_TIMEOUT   = 60000;
+const GEMINI_VISION_TIMEOUT = 50000;
+function googleModel(model, timeout, maxTokens = MAX_OUTPUT_TOKENS_PER_ROUND) {
+  return { name: 'Google', model, keyEnv: 'GOOGLE_KEYS', type: 'gemini-native', maxTokens, timeout };
+}
+
+const PROVIDERS = {
+  text: [
+    googleModel('gemini-3.5-flash-lite', GEMINI_TEXT_TIMEOUT),
+    googleModel('gemini-3.1-flash-lite', GEMINI_TEXT_TIMEOUT),
+    googleModel('gemini-2.5-flash-lite', GEMINI_TEXT_TIMEOUT),
+    googleModel('gemini-2.5-flash', GEMINI_TEXT_TIMEOUT),
+  ],
+  code: [
+    googleModel('gemini-3.5-flash-lite', GEMINI_CODE_TIMEOUT),
+    googleModel('gemini-3.1-flash-lite', GEMINI_CODE_TIMEOUT),
+    googleModel('gemini-2.5-flash-lite', GEMINI_CODE_TIMEOUT),
+    googleModel('gemini-2.5-flash', GEMINI_CODE_TIMEOUT),
+  ],
+  vision: [
+    googleModel('gemini-3.5-flash-lite', GEMINI_VISION_TIMEOUT),
+    googleModel('gemini-3.1-flash-lite', GEMINI_VISION_TIMEOUT),
+    googleModel('gemini-2.5-flash-lite', GEMINI_VISION_TIMEOUT),
+    googleModel('gemini-2.5-flash', GEMINI_VISION_TIMEOUT),
+  ],
+};
+PROVIDERS['vision-agent'] = [
+  googleModel('gemini-3.5-flash-lite', GEMINI_CODE_TIMEOUT),
+  googleModel('gemini-3.1-flash-lite', GEMINI_CODE_TIMEOUT),
+  googleModel('gemini-2.5-flash-lite', GEMINI_CODE_TIMEOUT),
+  googleModel('gemini-2.5-flash', GEMINI_CODE_TIMEOUT),
+];
+
+const EMBEDDING_PROVIDERS = [
+  { name: 'Google', model: 'gemini-embedding-2',   keyEnv: 'GOOGLE_KEYS', dim: 3072 },
+  { name: 'Google', model: 'gemini-embedding-001', keyEnv: 'GOOGLE_KEYS', dim: 3072 },
+];
+async function getGlobalFastestModel(env) { return await mtGet(env, 'fastest:global'); }
+
+function buildGeminiThinkingConfig(model, mode) {
+  const m = String(model || '').toLowerCase();
+  const isExpert = mode === 'code' || mode === 'vision-agent';
+
+  if (!isExpert) {
+    if (/gemini-3/.test(m))               return { thinkingLevel: 'minimal', includeThoughts: false };
+    if (/flash-lite-latest/.test(m))      return { thinkingLevel: 'minimal', includeThoughts: false };
+    if (/gemini-2\.5-flash-lite/.test(m)) return { thinkingBudget: 0, includeThoughts: false };
+    if (/gemini-2\.5-flash/.test(m))      return { thinkingBudget: 0, includeThoughts: false };
+    return null;
+  }
+
+  if (/gemini-3\.5-flash-lite/.test(m)) return { thinkingLevel: 'high', includeThoughts: true };
+  if (/gemini-3\.1-flash-lite/.test(m)) return { thinkingLevel: 'high', includeThoughts: true };
+  if (/gemini-3/.test(m))               return { thinkingLevel: 'high', includeThoughts: true };
+  if (/gemini-2\.5-flash-lite/.test(m)) return { thinkingBudget: 8192, includeThoughts: true };
+  if (/gemini-2\.5-flash/.test(m))      return { thinkingBudget: 16384, includeThoughts: true };
+  return null;
+}
+
+async function getStickyModel(env) { return await mtGet(env, STICKY_MODEL_KEY); }
+async function setStickyModel(env, providerName, model) {
+  await mtPut(env, STICKY_MODEL_KEY, { provider: providerName, model, ts: Date.now() }, STICKY_MODEL_TTL);
+}
+async function orderPipelineByQuota(env, mode) {
+  const base = (PROVIDERS[mode] || PROVIDERS.text).slice();
+  const sticky = await getStickyModel(env);
+  let ordered = base;
+  if (sticky && sticky.model) {
+    const idx = base.findIndex(p => p.model === sticky.model);
+    if (idx > 0) ordered = [base[idx], ...base.slice(0, idx), ...base.slice(idx + 1)];
+  }
+  return ordered;
+}
+async function clearFastest(env) {
+  await mtDelete(env, 'fastest:global');
+  for (const m of ['text', 'code', 'vision', 'vision-agent']) await mtDelete(env, `fastest:${m}`);
+}
+
+// ---------------------------------------------------------------------------
+// 5. SANDBOXED JS RUNNER
+// ---------------------------------------------------------------------------
+const JS_LIMITS = { MAX_CODE_CHARS: 20000, MAX_OUTPUT_CHARS: 6000, MAX_STEPS: 2_000_000, MAX_CALL_DEPTH: 400, MAX_RUN_MS: 4000 };
+class JSError extends Error { constructor(m){ super(m); this.name = 'JSError'; } }
+const BLOCKED_PROPS = new Set(['constructor', '__proto__', 'prototype', 'caller', 'callee', 'arguments', 'call', 'apply', 'bind']);
+const KW = new Set(['let','const','var','function','return','if','else','for','while','do','break','continue','true','false','null','undefined','typeof','instanceof','new','try','catch','finally','throw','of','in','this','void','delete','switch','case','default','class','extends','super','static','get','set','async','await','yield','export','import','from','as']);
+
+function jsLex(src){
+  const toks = []; let i = 0, line = 1; let prevKind = 'start';
+  const isValueEnd = () => prevKind === 'value';
+  const push = (t, v) => { toks.push({ t, v, line }); prevKind = (t === 'id' || t === 'num' || t === 'str' || t === 'regex' || t === 'tmpl') ? 'value' : 'op'; };
+  const readStr = q => {
+    i++; let s = '';
+    while (i < src.length && src[i] !== q) {
+      if (src[i] === '\\') {
+        const e = src[i+1];
+        if (e === 'u') { if (src[i+2] === '{') { const end = src.indexOf('}', i+3); s += String.fromCodePoint(parseInt(src.slice(i+3,end),16)); i = end+1; continue; } s += String.fromCharCode(parseInt(src.slice(i+2,i+6),16)); i += 6; continue; }
+        if (e === 'x') { s += String.fromCharCode(parseInt(src.slice(i+2,i+4),16)); i += 4; continue; }
+        s += ({n:'\n',t:'\t',r:'\r',b:'\b',f:'\f',v:'\v',0:'\0','\\':'\\',"'":"'",'"':'"','`':'`'}[(e)]) ?? e;
+        i += 2;
+      } else { if (src[i] === '\n') line++; s += src[i++]; }
     }
-    if (downloadBtn) {
-      downloadBtn.style.display = '';
-      downloadBtn.onclick = () => {
-        const a = document.createElement('a');
-        a.href = objUrl;
-        a.download = name || 'file';
-        document.body.appendChild(a); a.click(); document.body.removeChild(a);
-      };
+    i++; return s;
+  };
+  const readTmpl = () => {
+    i++; const parts = []; let buf = '';
+    while (i < src.length && src[i] !== '`') {
+      if (src[i] === '\\') { const e = src[i+1]; buf += ({n:'\n',t:'\t',r:'\r','\\':'\\','`':'`','$':'$'}[(e)]) ?? e; i += 2; }
+      else if (src[i] === '$' && src[i+1] === '{') { if (buf) { parts.push({ k:'s', v:buf }); buf = ''; } i += 2; let depth = 1, expr = ''; while (i < src.length && depth > 0) { if (src[i] === '{') depth++; else if (src[i] === '}') { depth--; if (depth === 0) break; } expr += src[i++]; } i++; parts.push({ k:'e', src: expr }); }
+      else { if (src[i] === '\n') line++; buf += src[i++]; }
     }
-    if (resolvedMime === 'application/pdf') {
-      const wrap = document.createElement('div');
-      wrap.className = 'preview-fill';
-      const iframe = document.createElement('iframe');
-      iframe.src = objUrl + '#toolbar=1&navpanes=0&view=FitH';
-      iframe.setAttribute('title', name || 'PDF');
-      iframe.className = 'preview-iframe';
-      wrap.appendChild(iframe);
-      body.appendChild(wrap);
-      return;
+    i++; if (buf) parts.push({ k:'s', v:buf }); return parts;
+  };
+  const readRegex = () => {
+    i++; let pattern = ''; let inClass = false;
+    while (i < src.length) { const c = src[i]; if (c === '\\') { pattern += c + (src[i+1]||''); i += 2; continue; } if (c === '[') inClass = true; else if (c === ']') inClass = false; else if (c === '/' && !inClass) break; else if (c === '\n') throw new JSError(`Unterminated regex at line ${line}`); pattern += c; i++; }
+    if (src[i] !== '/') throw new JSError(`Unterminated regex at line ${line}`);
+    i++; let flags = ''; while (i < src.length && /[dgimsuy]/.test(src[i])) flags += src[i++];
+    return { pattern, flags };
+  };
+  while (i < src.length) {
+    const c = src[i];
+    if (c === '\n') { line++; i++; continue; }
+    if (/\s/.test(c)) { i++; continue; }
+    if (c === '/' && src[i+1] === '/') { i += 2; while (i < src.length && src[i] !== '\n') i++; continue; }
+    if (c === '/' && src[i+1] === '*') { i += 2; while (i < src.length && !(src[i] === '*' && src[i+1] === '/')) { if (src[i]==='\n') line++; i++; } i += 2; continue; }
+    if (c === '/' && !isValueEnd()) { push('regex', readRegex()); continue; }
+    if (/[0-9]/.test(c) || (c === '.' && /[0-9]/.test(src[i+1]))) {
+      let n = '';
+      if (c === '0' && (src[i+1] === 'x' || src[i+1] === 'X')) { i += 2; while (i < src.length && /[0-9a-fA-F_]/.test(src[i])) n += src[i++]; push('num', parseInt(n.replace(/_/g,''), 16)); continue; }
+      if (c === '0' && (src[i+1] === 'b' || src[i+1] === 'B')) { i += 2; while (i < src.length && /[01_]/.test(src[i])) n += src[i++]; push('num', parseInt(n.replace(/_/g,''), 2)); continue; }
+      if (c === '0' && (src[i+1] === 'o' || src[i+1] === 'O')) { i += 2; while (i < src.length && /[0-7_]/.test(src[i])) n += src[i++]; push('num', parseInt(n.replace(/_/g,''), 8)); continue; }
+      while (i < src.length && /[0-9_.]/.test(src[i])) n += src[i++];
+      if (i < src.length && /[eE]/.test(src[i])) { n += src[i++]; if (/[+-]/.test(src[i])) n += src[i++]; while (i < src.length && /[0-9]/.test(src[i])) n += src[i++]; }
+      push('num', parseFloat(n.replace(/_/g,''))); continue;
     }
-    if (resolvedMime.startsWith('image/')) {
-      if (PREVIEW_UNRENDERABLE_IMAGES.has(resolvedMime)) {
-        body.appendChild(buildUnsupportedPanel(name, resolvedMime, 'This image format is not supported by your browser. Use Open in new tab.'));
+    if (c === '"' || c === "'") { push('str', readStr(c)); continue; }
+    if (c === '`') { push('tmpl', readTmpl()); continue; }
+    if (/[a-zA-Z_$]/.test(c)) { let n = ''; while (i < src.length && /[a-zA-Z0-9_$]/.test(src[i])) n += src[i++]; push(KW.has(n) ? 'kw' : 'id', n); continue; }
+    let done = false;
+    const ops3 = ['>>>=','===','!==','**=','...','<<=','>>=','&&=','||=','??='];
+    for (const p of ops3) if (src.startsWith(p, i)) { push('op', p); i += p.length; done = true; break; }
+    if (done) continue;
+    const ops2 = ['==','!=','<=','>=','&&','||','??','**','+=','-=','*=','/=','%=','&=','|=','^=','<<','>>','++','--','=>','?.'];
+    for (const p of ops2) if (src.startsWith(p, i)) { push('op', p); i += p.length; done = true; break; }
+    if (done) continue;
+    if ('+-*/%<>=!&|^~?:;,.(){}[]'.includes(c)) { push('op', c); i++; continue; }
+    throw new JSError(`Unexpected character '${c}' at line ${line}`);
+  }
+  push('eof',''); return toks;
+}
+
+class JSParser {
+  constructor(toks){ this.toks = toks; this.pos = 0; }
+  peek(o = 0){ return this.toks[this.pos+o] || this.toks[this.toks.length-1]; }
+  next(){ return this.toks[this.pos++]; }
+  isOp(v){ const t = this.peek(); return t.t === 'op' && t.v === v; }
+  isKw(v){ const t = this.peek(); return t.t === 'kw' && t.v === v; }
+  isKwAny(vs){ const t = this.peek(); return t.t === 'kw' && vs.includes(t.v); }
+  eat(v){ if (this.isOp(v) || this.isKw(v)) { this.pos++; return true; } return false; }
+  expect(v){ if (this.isOp(v) || this.isKw(v)) return this.next(); const t = this.peek(); throw new JSError(`Expected '${v}', got '${t.v || t.t}' at line ${t.line}`); }
+  expectId(){ const t = this.peek(); if (t.t !== 'id') throw new JSError(`Expected identifier at line ${t.line}`); this.pos++; return t.v; }
+  parseProgram(){ const body = []; while (this.peek().t !== 'eof') body.push(this.parseStatement()); return { type:'Program', body }; }
+  parseStatement(){
+    const t = this.peek();
+    if (t.t === 'op' && t.v === ';') { this.next(); return { type:'Empty' }; }
+    if (t.t === 'op' && t.v === '{') return this.parseBlock();
+    if (t.t === 'kw') {
+      if (t.v === 'let' || t.v === 'const' || t.v === 'var') return this.parseVarDecl();
+      if (t.v === 'function') return this.parseFnDecl();
+      if (t.v === 'return') return this.parseReturn();
+      if (t.v === 'if') return this.parseIf();
+      if (t.v === 'for') return this.parseFor();
+      if (t.v === 'while') return this.parseWhile();
+      if (t.v === 'do') return this.parseDo();
+      if (t.v === 'break') { this.next(); let label = null; if (this.peek().t === 'id') label = this.next().v; this.eat(';'); return { type:'Break', label }; }
+      if (t.v === 'continue') { this.next(); let label = null; if (this.peek().t === 'id') label = this.next().v; this.eat(';'); return { type:'Continue', label }; }
+      if (t.v === 'throw') { this.next(); const arg = this.parseExpr(); this.eat(';'); return { type:'Throw', arg }; }
+      if (t.v === 'try') return this.parseTry();
+      if (t.v === 'switch') return this.parseSwitch();
+      if (t.v === 'class') return this.parseClass(true);
+      if (t.v === 'async' && this.peek(1).t === 'kw' && this.peek(1).v === 'function') { this.next(); return this.parseFnDecl(); }
+    }
+    if (t.t === 'id' && this.peek(1).t === 'op' && this.peek(1).v === ':') { const label = this.next().v; this.next(); return { type:'Labeled', label, body: this.parseStatement() }; }
+    const expr = this.parseExpr(); this.eat(';'); return { type:'ExprStmt', expr };
+  }
+  parseBlock(){ this.expect('{'); const body = []; while (!this.isOp('}') && this.peek().t !== 'eof') body.push(this.parseStatement()); this.expect('}'); return { type:'Block', body }; }
+  parseVarDecl(){ const kind = this.next().v; const decls = []; while (true) { const target = this.parseBindingTarget(); let init = null; if (this.eat('=')) init = this.parseAssign(); decls.push({ target, init }); if (!this.eat(',')) break; } this.eat(';'); return { type:'VarDecl', kind, decls }; }
+  parseBindingTarget(){ const t = this.peek(); if (t.t === 'id') { this.next(); return { type:'Ident', name: t.v }; } if (t.t === 'op' && t.v === '[') return this.parseArrayPattern(); if (t.t === 'op' && t.v === '{') return this.parseObjectPattern(); throw new JSError(`Expected binding target at line ${t.line}`); }
+  parseArrayPattern(){ this.expect('['); const elements = []; while (!this.isOp(']') && this.peek().t !== 'eof') { if (this.isOp(',')) { elements.push(null); this.next(); continue; } if (this.isOp('...')) { this.next(); const rest = this.parseBindingTarget(); elements.push({ type:'Rest', target: rest }); break; } const target = this.parseBindingTarget(); let def = null; if (this.eat('=')) def = this.parseAssign(); elements.push({ target, default: def }); if (!this.eat(',')) break; } this.expect(']'); return { type:'ArrayPattern', elements }; }
+  parseObjectPattern(){
+    this.expect('{'); const props = [];
+    while (!this.isOp('}') && this.peek().t !== 'eof') {
+      if (this.isOp('...')) { this.next(); const rest = this.parseBindingTarget(); props.push({ type:'Rest', target: rest }); break; }
+      const kt = this.peek(); let key, computed = false;
+      if (kt.t === 'op' && kt.v === '[') { this.next(); key = this.parseAssign(); this.expect(']'); computed = true; }
+      else if (kt.t === 'str') { key = { type:'Str', value: kt.v }; this.next(); }
+      else if (kt.t === 'num') { key = { type:'Str', value: String(kt.v) }; this.next(); }
+      else if (kt.t === 'id' || kt.t === 'kw') { key = { type:'Str', value: kt.v }; this.next(); }
+      else throw new JSError(`Bad object pattern key at line ${kt.line}`);
+      let target; if (this.eat(':')) target = this.parseBindingTarget(); else if (!computed && key.type === 'Str') target = { type:'Ident', name: key.value }; else throw new JSError('Computed key needs : in destructuring');
+      let def = null; if (this.eat('=')) def = this.parseAssign();
+      props.push({ key, computed, target, default: def }); if (!this.eat(',')) break;
+    }
+    this.expect('}'); return { type:'ObjectPattern', props };
+  }
+  parseFnDecl(){ this.expect('function'); const id = this.expectId(); const params = this.parseParams(); const body = this.parseBlock(); return { type:'FnDecl', id, params, body }; }
+  parseParams(){ this.expect('('); const params = []; while (!this.isOp(')') && this.peek().t !== 'eof') { if (this.isOp('...')) { this.next(); const target = this.parseBindingTarget(); params.push({ type:'Rest', target }); break; } const target = this.parseBindingTarget(); let def = null; if (this.eat('=')) def = this.parseAssign(); params.push({ target, default: def }); if (!this.eat(',')) break; } this.expect(')'); return params; }
+  parseReturn(){ this.expect('return'); let arg = null; if (!this.isOp(';') && !this.isOp('}') && this.peek().t !== 'eof') arg = this.parseExpr(); this.eat(';'); return { type:'Return', arg }; }
+  parseIf(){ this.expect('if'); this.expect('('); const test = this.parseExpr(); this.expect(')'); const cons = this.parseStatement(); let alt = null; if (this.isKw('else')) { this.next(); alt = this.parseStatement(); } return { type:'If', test, cons, alt }; }
+  parseFor(){
+    this.expect('for'); if (this.isKw('await')) this.next(); this.expect('(');
+    if (this.isKwAny(['let','const','var'])) {
+      const save = this.pos; const kind = this.next().v; const target = this.parseBindingTarget();
+      if (this.isKw('of')) { this.next(); const iter = this.parseExpr(); this.expect(')'); const body = this.parseStatement(); return { type:'ForOf', kind, target, iter, body }; }
+      if (this.isKw('in')) { this.next(); const iter = this.parseExpr(); this.expect(')'); const body = this.parseStatement(); return { type:'ForIn', kind, target, iter, body }; }
+      this.pos = save;
+    }
+    let init = null;
+    if (!this.isOp(';')) { if (this.isKwAny(['let','const','var'])) init = this.parseVarDecl(); else { init = { type:'ExprStmt', expr: this.parseExpr() }; this.eat(';'); } } else this.eat(';');
+    let test = null; if (!this.isOp(';')) test = this.parseExpr(); this.expect(';');
+    let update = null; if (!this.isOp(')')) update = this.parseExpr(); this.expect(')');
+    const body = this.parseStatement(); return { type:'For', init, test, update, body };
+  }
+  parseWhile(){ this.expect('while'); this.expect('('); const test = this.parseExpr(); this.expect(')'); const body = this.parseStatement(); return { type:'While', test, body }; }
+  parseDo(){ this.expect('do'); const body = this.parseStatement(); this.expect('while'); this.expect('('); const test = this.parseExpr(); this.expect(')'); this.eat(';'); return { type:'Do', body, test }; }
+  parseTry(){
+    this.expect('try'); const block = this.parseBlock(); let handler = null, finalizer = null;
+    if (this.isKw('catch')) { this.next(); let param = null; if (this.eat('(')) { param = this.parseBindingTarget(); this.expect(')'); } handler = { param, body: this.parseBlock() }; }
+    if (this.isKw('finally')) { this.next(); finalizer = this.parseBlock(); }
+    return { type:'Try', block, handler, finalizer };
+  }
+  parseSwitch(){
+    this.expect('switch'); this.expect('('); const disc = this.parseExpr(); this.expect(')'); this.expect('{'); const cases = [];
+    while (!this.isOp('}') && this.peek().t !== 'eof') {
+      let test = null;
+      if (this.isKw('case')) { this.next(); test = this.parseExpr(); } else if (this.isKw('default')) { this.next(); } else throw new JSError(`Expected case/default`);
+      this.expect(':');
+      const body = [];
+      while (!this.isKw('case') && !this.isKw('default') && !this.isOp('}') && this.peek().t !== 'eof') body.push(this.parseStatement());
+      cases.push({ test, body });
+    }
+    this.expect('}'); return { type:'Switch', disc, cases };
+  }
+  parseClass(isStatement){
+    this.expect('class'); let id = null; if (this.peek().t === 'id') id = this.next().v; let parent = null; if (this.isKw('extends')) { this.next(); parent = this.parseMember(); } this.expect('{');
+    const methods = [];
+    while (!this.isOp('}') && this.peek().t !== 'eof') {
+      let kind = 'method', isStatic = false;
+      if (this.isKw('static')) { this.next(); isStatic = true; }
+      if (this.isKw('get')) { kind = 'get'; this.next(); } else if (this.isKw('set')) { kind = 'set'; this.next(); } else if (this.isKw('async')) { this.next(); }
+      let key, computed = false; const kt = this.peek();
+      if (kt.t === 'op' && kt.v === '[') { this.next(); key = this.parseAssign(); this.expect(']'); computed = true; }
+      else if (kt.t === 'str') { key = { type:'Str', value: kt.v }; this.next(); }
+      else if (kt.t === 'num') { key = { type:'Str', value: String(kt.v) }; this.next(); }
+      else if (kt.t === 'id' || kt.t === 'kw') { key = { type:'Str', value: kt.v }; this.next(); }
+      else throw new JSError(`Bad class member at line ${kt.line}`);
+      if (this.isOp('(')) { const params = this.parseParams(); const body = this.parseBlock(); methods.push({ isStatic, kind, key, computed, params, body }); }
+      else { if (this.eat('=')) this.parseAssign(); this.eat(';'); }
+    }
+    this.expect('}'); return isStatement ? { type:'ClassDecl', id, parent, methods } : { type:'ClassExpr', id, parent, methods };
+  }
+  parseExpr(){ let e = this.parseAssign(); while (this.isOp(',')) { this.next(); const right = this.parseAssign(); e = { type:'Seq', left: e, right }; } return e; }
+  parseAssign(){
+    const left = this.parseConditional(); const t = this.peek();
+    if (t.t === 'op' && ['=','+=','-=','*=','/=','%=','**=','&=','|=','^=','<<=','>>=','>>>=','&&=','||=','??='].includes(t.v)) { this.next(); return { type:'Assign', op:t.v, target:left, value: this.parseAssign() }; }
+    return left;
+  }
+  parseConditional(){ const test = this.parseNullish(); if (this.eat('?')) { const cons = this.parseAssign(); this.expect(':'); const alt = this.parseAssign(); return { type:'Cond', test, cons, alt }; } return test; }
+  parseNullish(){ let l = this.parseOr(); while (this.isOp('??')) { this.next(); l = { type:'Logical', op:'??', left:l, right: this.parseOr() }; } return l; }
+  parseOr(){ let l = this.parseAnd(); while (this.isOp('||')) { this.next(); l = { type:'Logical', op:'||', left:l, right: this.parseAnd() }; } return l; }
+  parseAnd(){ let l = this.parseBitOr(); while (this.isOp('&&')) { this.next(); l = { type:'Logical', op:'&&', left:l, right: this.parseBitOr() }; } return l; }
+  parseBitOr(){ let l = this.parseBitXor(); while (this.isOp('|')) { this.next(); l = { type:'Binary', op:'|', left:l, right: this.parseBitXor() }; } return l; }
+  parseBitXor(){ let l = this.parseBitAnd(); while (this.isOp('^')) { this.next(); l = { type:'Binary', op:'^', left:l, right: this.parseBitAnd() }; } return l; }
+  parseBitAnd(){ let l = this.parseEquality(); while (this.isOp('&')) { this.next(); l = { type:'Binary', op:'&', left:l, right: this.parseEquality() }; } return l; }
+  parseEquality(){ let l = this.parseRelational(); while (true) { const t = this.peek(); if (t.t === 'op' && ['==','!=','===','!=='].includes(t.v)) { this.next(); l = { type:'Binary', op:t.v, left:l, right: this.parseRelational() }; } else break; } return l; }
+  parseRelational(){ let l = this.parseShift(); while (true) { const t = this.peek(); if (t.t === 'op' && ['<','>','<=','>='].includes(t.v)) { this.next(); l = { type:'Binary', op:t.v, left:l, right: this.parseShift() }; } else if (t.t === 'kw' && (t.v === 'in' || t.v === 'instanceof')) { this.next(); l = { type:'Binary', op:t.v, left:l, right: this.parseShift() }; } else break; } return l; }
+  parseShift(){ let l = this.parseAdd(); while (true) { const t = this.peek(); if (t.t === 'op' && ['<<','>>','>>>'].includes(t.v)) { this.next(); l = { type:'Binary', op:t.v, left:l, right: this.parseAdd() }; } else break; } return l; }
+  parseAdd(){ let l = this.parseMul(); while (true) { const t = this.peek(); if (t.t === 'op' && (t.v === '+' || t.v === '-')) { this.next(); l = { type:'Binary', op:t.v, left:l, right: this.parseMul() }; } else break; } return l; }
+  parseMul(){ let l = this.parseExp(); while (true) { const t = this.peek(); if (t.t === 'op' && ['*','/','%'].includes(t.v)) { this.next(); l = { type:'Binary', op:t.v, left:l, right: this.parseExp() }; } else break; } return l; }
+  parseExp(){ const base = this.parseUnary(); if (this.isOp('**')) { this.next(); return { type:'Binary', op:'**', left:base, right: this.parseExp() }; } return base; }
+  parseUnary(){
+    const t = this.peek();
+    if (t.t === 'op' && ['!','-','+','~'].includes(t.v)) { this.next(); return { type:'Unary', op:t.v, arg: this.parseUnary() }; }
+    if (t.t === 'kw' && ['typeof','void','delete'].includes(t.v)) { this.next(); return { type:'Unary', op:t.v, arg: this.parseUnary() }; }
+    if (t.t === 'op' && ['++','--'].includes(t.v)) { this.next(); return { type:'Update', op:t.v, arg: this.parseUnary(), prefix:true }; }
+    if (t.t === 'kw' && t.v === 'await') { this.next(); return { type:'Await', arg: this.parseUnary() }; }
+    return this.parsePostfix();
+  }
+  parsePostfix(){ let e = this.parsePrimary(); while (true) { const t = this.peek(); if (t.t === 'op' && ['++','--'].includes(t.v)) { this.next(); e = { type:'Update', op:t.v, arg:e, prefix:false }; continue; } break; } return e; }
+  parsePrimary(){
+    const t = this.peek();
+    if (t.t === 'num') { this.next(); return { type:'Num', value:t.v }; }
+    if (t.t === 'str') { this.next(); return { type:'Str', value:t.v }; }
+    if (t.t === 'regex') { this.next(); return { type:'Regex', pattern: t.v.pattern, flags: t.v.flags }; }
+    if (t.t === 'tmpl') { this.next(); const parts = t.v.map(p => p.k === 's' ? { k:'s', v:p.v } : { k:'e', expr: new JSParser(jsLex(p.src)).parseExpr() }); return { type:'Tmpl', parts }; }
+    if (t.t === 'kw') {
+      if (t.v === 'true') { this.next(); return { type:'Bool', value:true }; }
+      if (t.v === 'false') { this.next(); return { type:'Bool', value:false }; }
+      if (t.v === 'null') { this.next(); return { type:'Null' }; }
+      if (t.v === 'undefined') { this.next(); return { type:'Undefined' }; }
+      if (t.v === 'this') { this.next(); return { type:'This' }; }
+      if (t.v === 'function') return this.parseFnExpr();
+      if (t.v === 'new') return this.parseNew();
+      if (t.v === 'class') return this.parseClass(false);
+      if (t.v === 'super') { this.next(); return { type:'Ident', name:'super' }; }
+    }
+    if (t.t === 'op' && t.v === '(') { const save = this.pos; try { this.next(); const params = this.parseParams(); if (this.isOp('=>')) { this.next(); return this.parseArrowBody(params); } } catch (e) {} this.pos = save; this.next(); const e = this.parseExpr(); this.expect(')'); return e; }
+    if (t.t === 'id') { const save = this.pos; const name = this.next().v; if (this.isOp('=>')) { this.next(); return this.parseArrowBody([{ target: { type:'Ident', name } }]); } this.pos = save; }
+    return this.parseMember();
+  }
+  parseArrowBody(params){ if (this.isOp('{')) return { type:'Arrow', params, body: this.parseBlock(), exprBody:false }; return { type:'Arrow', params, body: this.parseAssign(), exprBody:true }; }
+  parseFnExpr(){ this.expect('function'); let id = null; if (this.peek().t === 'id') id = this.next().v; const params = this.parseParams(); const body = this.parseBlock(); return { type:'FnExpr', id, params, body }; }
+  parseNew(){ this.expect('new'); const callee = this.parseMember(); let args = []; if (this.isOp('(')) { this.next(); args = this.parseArgs(); this.expect(')'); } return { type:'New', callee, args }; }
+  parseArgs(){ const args = []; while (!this.isOp(')') && this.peek().t !== 'eof') { if (this.isOp('...')) { this.next(); args.push({ type:'Spread', arg: this.parseAssign() }); } else args.push(this.parseAssign()); if (!this.eat(',')) break; } return args; }
+  parseMember(){
+    let obj = this.parseAtom();
+    while (true) {
+      const t = this.peek();
+      if (t.t === 'op' && t.v === '.') { this.next(); const p = this.peek(); if (p.t !== 'id' && p.t !== 'kw') throw new JSError(`Expected property name at line ${p.line}`); this.next(); obj = { type:'Member', obj, prop:{ type:'Str', value:p.v }, computed:false, optional:false }; }
+      else if (t.t === 'op' && t.v === '?.') { this.next(); if (this.isOp('[')) { this.next(); const prop = this.parseExpr(); this.expect(']'); obj = { type:'Member', obj, prop, computed:true, optional:true }; } else if (this.isOp('(')) { this.next(); const args = this.parseArgs(); this.expect(')'); obj = { type:'Call', callee: obj, args, optional:true }; } else { const p = this.peek(); if (p.t !== 'id' && p.t !== 'kw') throw new JSError(`Expected property name at line ${p.line}`); this.next(); obj = { type:'Member', obj, prop:{ type:'Str', value:p.v }, computed:false, optional:true }; } }
+      else if (t.t === 'op' && t.v === '[') { this.next(); const prop = this.parseExpr(); this.expect(']'); obj = { type:'Member', obj, prop, computed:true, optional:false }; }
+      else if (t.t === 'op' && t.v === '(') { this.next(); const args = this.parseArgs(); this.expect(')'); obj = { type:'Call', callee:obj, args, optional:false }; }
+      else break;
+    }
+    return obj;
+  }
+  parseAtom(){
+    const t = this.peek();
+    if (t.t === 'id') { this.next(); return { type:'Ident', name:t.v }; }
+    if (t.t === 'op' && t.v === '(') { this.next(); const e = this.parseExpr(); this.expect(')'); return e; }
+    if (t.t === 'op' && t.v === '[') {
+      this.next(); const el = [];
+      while (!this.isOp(']') && this.peek().t !== 'eof') {
+        if (this.isOp(',')) { el.push(null); this.next(); continue; }
+        if (this.isOp('...')) { this.next(); el.push({ type:'Spread', arg: this.parseAssign() }); } else el.push(this.parseAssign());
+        if (!this.eat(',')) break;
+      }
+      this.expect(']'); return { type:'Array', elements:el };
+    }
+    if (t.t === 'op' && t.v === '{') {
+      this.next(); const props = [];
+      while (!this.isOp('}') && this.peek().t !== 'eof') {
+        if (this.isOp('...')) { this.next(); props.push({ spread: this.parseAssign() }); if (!this.eat(',')) break; continue; }
+        const kt = this.peek(); let key, computed = false;
+        if (kt.t === 'op' && kt.v === '[') { this.next(); key = this.parseAssign(); this.expect(']'); computed = true; }
+        else if (kt.t === 'str') { key = { type:'Str', value: kt.v }; this.next(); }
+        else if (kt.t === 'num') { key = { type:'Str', value: String(kt.v) }; this.next(); }
+        else if (kt.t === 'id' || kt.t === 'kw') { key = { type:'Str', value: kt.v }; this.next(); }
+        else throw new JSError(`Bad object key at line ${kt.line}`);
+        if (this.isOp('(')) { const params = this.parseParams(); const body = this.parseBlock(); props.push({ key, computed, value: { type:'FnExpr', id:null, params, body } }); }
+        else if (this.eat(':')) { props.push({ key, computed, value: this.parseAssign() }); }
+        else { props.push({ key, computed, value: { type:'Ident', name:key.value } }); }
+        if (!this.eat(',')) break;
+      }
+      this.expect('}'); return { type:'Object', props };
+    }
+    throw new JSError(`Unexpected token '${t.v || t.t}' at line ${t.line}`);
+  }
+}
+
+class JSScope {
+  constructor(parent = null, kind = 'block'){ this.vars = Object.create(null); this.consts = new Set(); this.parent = parent; this.kind = kind; this.thisValue = undefined; }
+  declare(name, val, isConst = false){ this.vars[name] = val; if (isConst) this.consts.add(name); }
+  declareVar(name, val){ let s = this; while (s.parent && s.kind !== 'function' && s.kind !== 'global') s = s.parent; s.vars[name] = val; }
+  lookup(name){ let s = this; while (s) { if (name in s.vars) return s; s = s.parent; } return null; }
+  get(name){ const s = this.lookup(name); if (!s) throw new JSError(`'${name}' is not defined`); return s.vars[name]; }
+  set(name, val){ const s = this.lookup(name); if (!s) throw new JSError(`'${name}' is not defined`); if (s.consts.has(name)) throw new JSError(`Assignment to constant '${name}'`); s.vars[name] = val; return val; }
+  getThis(){ let s = this; while (s) { if (s.kind === 'function' || s.kind === 'global') return s.thisValue; s = s.parent; } return undefined; }
+}
+class ReturnSignal { constructor(v){ this.value = v; } }
+class BreakSignal { constructor(label){ this.label = label; } }
+class ContinueSignal { constructor(label){ this.label = label; } }
+
+class JSInterpreter {
+  constructor(){ this.output = []; this.outputLen = 0; this.steps = 0; this.callDepth = 0; this.startTime = Date.now(); this.truncated = false; this.lastValue = undefined; this.global = this.makeGlobalScope(); }
+  tick(){ this.steps++; if (this.steps > JS_LIMITS.MAX_STEPS) throw new JSError('Step limit exceeded'); if ((this.steps & 0x1FFF) === 0 && Date.now() - this.startTime > JS_LIMITS.MAX_RUN_MS) throw new JSError('Time limit exceeded'); }
+  write(s){ const str = String(s); if (this.outputLen + str.length + 1 > JS_LIMITS.MAX_OUTPUT_CHARS) { if (!this.truncated) { this.truncated = true; this.output.push('[output truncated]'); } return; } this.output.push(str); this.outputLen += str.length + 1; }
+  getOutput(){ if (!this.output.length) return '(no output)'; return this.output.join('\n'); }
+  display(v){
+    if (v === null) return 'null'; if (v === undefined) return 'undefined'; if (typeof v === 'string') return v;
+    if (typeof v === 'number' || typeof v === 'boolean' || typeof v === 'bigint') return String(v);
+    if (typeof v === 'function') return '[Function]';
+    if (Array.isArray(v)) { try { return JSON.stringify(v, (k, val) => typeof val === 'function' ? '[Function]' : val); } catch { return String(v); } }
+    if (v instanceof RegExp) return String(v);
+    if (v instanceof Map) return `Map(${v.size}) ${JSON.stringify([...v])}`;
+    if (v instanceof Set) return `Set(${v.size}) ${JSON.stringify([...v])}`;
+    if (typeof v === 'object') { if (v.__fn) return '[Function]'; try { return JSON.stringify(v, (k, val) => typeof val === 'function' ? '[Function]' : val); } catch { return '[Object]'; } }
+    return String(v);
+  }
+  makeGlobalScope(){
+    const g = new JSScope(null, 'global'); g.thisValue = undefined; const self = this;
+    g.declare('console', { log: (...a) => self.write(a.map(x => self.display(x)).join(' ')), error: (...a) => self.write(a.map(x => self.display(x)).join(' ')), warn: (...a) => self.write(a.map(x => self.display(x)).join(' ')), info: (...a) => self.write(a.map(x => self.display(x)).join(' ')), debug: (...a) => self.write(a.map(x => self.display(x)).join(' ')), table: (a) => self.write(self.display(a)), dir: (a) => self.write(self.display(a)), group: () => {}, groupEnd: () => {} }, true);
+    g.declare('Math', this.makeMath(), true);
+    g.declare('JSON', { stringify: (v, r, s) => JSON.stringify(v, r, s), parse: s => JSON.parse(s) }, true);
+    g.declare('Object', { keys: o => Object.keys(o), values: o => Object.values(o), entries: o => Object.entries(o), assign: (t, ...s) => Object.assign(t, ...s), freeze: o => Object.freeze(o), fromEntries: e => Object.fromEntries(e), hasOwnProperty: (o, k) => Object.prototype.hasOwnProperty.call(o, k), create: p => Object.create(p) }, true);
+    g.declare('Number', { isInteger: n => Number.isInteger(n), isFinite: n => Number.isFinite(n), isNaN: n => Number.isNaN(n), isSafeInteger: n => Number.isSafeInteger(n), parseFloat: s => parseFloat(s), parseInt: (s, r) => parseInt(s, r), MAX_SAFE_INTEGER: Number.MAX_SAFE_INTEGER, MIN_SAFE_INTEGER: Number.MIN_SAFE_INTEGER, MAX_VALUE: Number.MAX_VALUE, MIN_VALUE: Number.MIN_VALUE, EPSILON: Number.EPSILON, POSITIVE_INFINITY: Infinity, NEGATIVE_INFINITY: -Infinity, NaN: NaN }, true);
+    g.declare('String', { fromCharCode: (...c) => String.fromCharCode(...c), fromCodePoint: (...c) => String.fromCodePoint(...c) }, true);
+    g.declare('Array', {
+      isArray: v => Array.isArray(v),
+      from: (v, f) => f ? Array.from(v, self.wrapCallback(f)) : Array.from(v),
+      of: (...a) => a,
+    }, true);
+    g.declare('Boolean', v => !!v, true);
+    g.declare('parseInt', (s, r = 10) => parseInt(s, r), true);
+    g.declare('parseFloat', s => parseFloat(s), true);
+    g.declare('isNaN', v => Number.isNaN(Number(v)), true);
+    g.declare('isFinite', v => Number.isFinite(Number(v)), true);
+    g.declare('NaN', NaN, true); g.declare('Infinity', Infinity, true);
+    g.declare('encodeURIComponent', s => encodeURIComponent(s), true);
+    g.declare('decodeURIComponent', s => decodeURIComponent(s), true);
+    g.declare('encodeURI', s => encodeURI(s), true);
+    g.declare('decodeURI', s => decodeURI(s), true);
+    g.declare('Date', { now: () => Date.now(), parse: s => Date.parse(s), UTC: (...a) => Date.UTC(...a) }, true);
+    g.declare('Map', Map, true); g.declare('Set', Set, true); g.declare('RegExp', RegExp, true);
+    g.declare('Error', Error, true); g.declare('TypeError', TypeError, true); g.declare('RangeError', RangeError, true);
+    g.declare('ReferenceError', ReferenceError, true); g.declare('SyntaxError', SyntaxError, true);
+    g.declare('Symbol', { iterator: Symbol.iterator, for: Symbol.for, keyFor: Symbol.keyFor }, true);
+    const M = Math;
+    const bareFns = { abs:M.abs, sign:M.sign, sqrt:M.sqrt, cbrt:M.cbrt, pow:M.pow, exp:M.exp, log:M.log, log2:M.log2, log10:M.log10, sin:M.sin, cos:M.cos, tan:M.tan, asin:M.asin, acos:M.acos, atan:M.atan, atan2:M.atan2, sinh:M.sinh, cosh:M.cosh, tanh:M.tanh, floor:M.floor, ceil:M.ceil, round:M.round, trunc:M.trunc, min:M.min, max:M.max, hypot:M.hypot };
+    for (const [k, v] of Object.entries(bareFns)) g.declare(k, v, true);
+    g.declare('PI', Math.PI, true); g.declare('pi', Math.PI, true);
+    return g;
+  }
+  makeMath(){ const M = {}; for (const k of ['abs','sign','sqrt','cbrt','pow','exp','log','log2','log10','sin','cos','tan','asin','acos','atan','atan2','sinh','cosh','tanh','floor','ceil','round','trunc','min','max','hypot','random','clz32','imul','fround']) M[k] = Math[k]; M.PI = Math.PI; M.E = Math.E; M.LN2 = Math.LN2; M.LN10 = Math.LN10; M.SQRT2 = Math.SQRT2; M.SQRT1_2 = Math.SQRT1_2; return M; }
+  run(ast){ try { this.execBlock(ast.body, this.global); } catch (e) { if (!(e instanceof ReturnSignal)) throw e; } if (this.output.length === 0 && this.lastValue !== undefined) this.write(this.display(this.lastValue)); return { ok: true, output: this.getOutput(), truncated: this.truncated }; }
+  execBlock(stmts, scope){ for (const s of stmts) if (s.type === 'FnDecl') scope.declare(s.id, this.makeFunction(s.params, s.body, scope, scope.getThis()), false); for (const s of stmts) { if (s.type === 'FnDecl') continue; this.execStmt(s, scope); } }
+  execStmt(s, scope){
+    this.tick();
+    switch (s.type) {
+      case 'Empty': return;
+      case 'ExprStmt': this.lastValue = this.evalExpr(s.expr, scope); return;
+      case 'VarDecl': { for (const d of s.decls) { const val = d.init ? this.evalExpr(d.init, scope) : undefined; this.bindPattern(d.target, val, scope, s.kind); } return; }
+      case 'Block': { const inner = new JSScope(scope, 'block'); this.execBlock(s.body, inner); return; }
+      case 'If': { const t = this.evalExpr(s.test, scope); if (this.truthy(t)) this.execStmt(s.cons, scope); else if (s.alt) this.execStmt(s.alt, scope); return; }
+      case 'While': { while (this.truthy(this.evalExpr(s.test, scope))) { this.tick(); try { this.execStmt(s.body, scope); } catch (e) { if (e instanceof BreakSignal) break; if (e instanceof ContinueSignal) continue; throw e; } } return; }
+      case 'Do': { do { this.tick(); try { this.execStmt(s.body, scope); } catch (e) { if (e instanceof BreakSignal) break; if (e instanceof ContinueSignal) continue; throw e; } } while (this.truthy(this.evalExpr(s.test, scope))); return; }
+      case 'For': { const forScope = new JSScope(scope, 'block'); if (s.init) this.execStmt(s.init, forScope); while (true) { this.tick(); if (s.test) { if (!this.truthy(this.evalExpr(s.test, forScope))) break; } try { this.execStmt(s.body, forScope); } catch (e) { if (e instanceof BreakSignal) break; if (e instanceof ContinueSignal) { } else throw e; } if (s.update) this.evalExpr(s.update, forScope); } return; }
+      case 'ForOf': { const iter = this.evalExpr(s.iter, scope); if (iter == null || typeof iter[Symbol.iterator] !== 'function') throw new JSError('for-of requires iterable'); const forScope = new JSScope(scope, 'block'); for (const v of iter) { this.tick(); this.rebindPattern(s.target, v, forScope, s.kind); try { this.execStmt(s.body, forScope); } catch (e) { if (e instanceof BreakSignal) break; if (e instanceof ContinueSignal) continue; throw e; } } return; }
+      case 'ForIn': { const obj = this.evalExpr(s.iter, scope); if (obj == null) return; const forScope = new JSScope(scope, 'block'); const keys = []; for (const k in obj) keys.push(k); for (const k of keys) { this.tick(); this.rebindPattern(s.target, k, forScope, s.kind); try { this.execStmt(s.body, forScope); } catch (e) { if (e instanceof BreakSignal) break; if (e instanceof ContinueSignal) continue; throw e; } } return; }
+      case 'Return': throw new ReturnSignal(s.arg ? this.evalExpr(s.arg, scope) : undefined);
+      case 'Break': throw new BreakSignal(s.label);
+      case 'Continue': throw new ContinueSignal(s.label);
+      case 'Throw': throw this.evalExpr(s.arg, scope);
+      case 'Labeled': { try { this.execStmt(s.body, scope); } catch (e) { if (e instanceof BreakSignal && e.label === s.label) return; if (e instanceof ContinueSignal && e.label === s.label) return; throw e; } return; }
+      case 'Switch': {
+        const d = this.evalExpr(s.disc, scope); let matched = false; let defaultIdx = -1;
+        for (let i = 0; i < s.cases.length; i++) { const c = s.cases[i]; if (c.test === null) defaultIdx = i; else if (!matched && (this.evalExpr(c.test, scope) === d)) matched = true; if (matched) { for (let j = i; j < s.cases.length; j++) { try { for (const stmt of s.cases[j].body) this.execStmt(stmt, scope); } catch (e) { if (e instanceof BreakSignal) return; throw e; } } return; } }
+        if (!matched && defaultIdx >= 0) { for (let j = defaultIdx; j < s.cases.length; j++) { try { for (const stmt of s.cases[j].body) this.execStmt(stmt, scope); } catch (e) { if (e instanceof BreakSignal) return; throw e; } } }
         return;
       }
-      const wrap = document.createElement('div');
-      wrap.className = 'preview-fill preview-image-wrap';
-      const img = document.createElement('img');
-      img.src = objUrl;
-      img.alt = name || 'image';
-      img.className = 'preview-image';
-      img.onerror = () => {
-        wrap.innerHTML = '';
-        wrap.appendChild(buildUnsupportedPanel(name, resolvedMime, 'This image could not be decoded by your browser.'));
+      case 'Try': { try { this.execStmt(s.block, scope); } catch (e) { if (e instanceof ReturnSignal || e instanceof BreakSignal || e instanceof ContinueSignal) { if (s.finalizer) this.execStmt(s.finalizer, scope); throw e; } if (s.handler) { const inner = new JSScope(scope, 'block'); if (s.handler.param) this.bindPattern(s.handler.param, e, inner, 'let'); this.execStmt(s.handler.body, inner); } else if (s.finalizer) { this.execStmt(s.finalizer, scope); throw e; } else throw e; return; } finally { if (s.finalizer) this.execStmt(s.finalizer, scope); } return; }
+      case 'ClassDecl': { const cls = this.evalClass(s, scope); scope.declare(s.id, cls, false); return; }
+      case 'FnDecl': return;
+      default: throw new JSError(`Unknown statement: ${s.type}`);
+    }
+  }
+  evalClass(node, scope){
+    const self = this; const parent = node.parent ? this.evalExpr(node.parent, scope) : null;
+    const ctorMethod = node.methods.find(m => !m.isStatic && !m.computed && m.key.value === 'constructor');
+    const ctor = function(...args){ if (self.callDepth >= JS_LIMITS.MAX_CALL_DEPTH) throw new JSError('Call depth exceeded'); self.callDepth++; const local = new JSScope(scope, 'function'); local.thisValue = this; try { if (ctorMethod) { self.bindParams(ctorMethod.params, args, local); self.execBlock(ctorMethod.body.body, local); } } finally { self.callDepth--; } };
+    ctor.__fn = true; ctor.__classCtor = true; ctor.prototype = Object.create(parent ? parent.prototype : Object.prototype);
+    for (const m of node.methods) { if (!m.isStatic && m.kind === 'method' && !m.computed && m.key.value === 'constructor') continue; const fn = this.makeFunction(m.params, m.body, scope, undefined); const k = m.computed ? this.evalExpr(m.key, scope) : m.key.value; if (m.isStatic) ctor[k] = fn; else { if (m.kind === 'get') Object.defineProperty(ctor.prototype, k, { get: fn, configurable: true }); else if (m.kind === 'set') Object.defineProperty(ctor.prototype, k, { set: fn, configurable: true }); else ctor.prototype[k] = fn; } }
+    return ctor;
+  }
+  bindPattern(target, value, scope, kind){
+    if (target.type === 'Ident') { if (kind === 'var') scope.declareVar(target.name, value); else scope.declare(target.name, value, kind === 'const'); return; }
+    if (target.type === 'ArrayPattern') { const arr = value == null ? [] : value; let i = 0; for (const el of target.elements) { if (el === null) { i++; continue; } if (el.type === 'Rest') { this.bindPattern(el.target, Array.from(arr).slice(i), scope, kind); i = arr.length; break; } let v = arr[i]; if (v === undefined && el.default) v = this.evalExpr(el.default, scope); this.bindPattern(el.target, v, scope, kind); i++; } return; }
+    if (target.type === 'ObjectPattern') { const obj = value == null ? {} : Object(value); for (const p of target.props) { if (p.type === 'Rest') { const rest = {}; const used = new Set(target.props.filter(x => x.key && !x.computed && x.key.type === 'Str').map(x => x.key.value)); for (const k in obj) if (!used.has(k)) rest[k] = obj[k]; this.bindPattern(p.target, rest, scope, kind); continue; } const k = p.computed ? this.evalExpr(p.key, scope) : p.key.value; let v = obj[k]; if (v === undefined && p.default) v = this.evalExpr(p.default, scope); this.bindPattern(p.target, v, scope, kind); } return; }
+    throw new JSError('Invalid binding target');
+  }
+  rebindPattern(target, value, scope, kind){ if (target.type === 'Ident') { if (kind === 'var') scope.declareVar(target.name, value); else { if (scope.lookup(target.name) === scope) scope.vars[target.name] = value; else scope.declare(target.name, value, kind === 'const'); } return; } this.bindPattern(target, value, scope, kind); }
+  makeFunction(params, body, closure, capturedThis){
+    const self = this;
+    const fn = function(boundThis, ...args){
+      if (self.callDepth >= JS_LIMITS.MAX_CALL_DEPTH) throw new JSError('Call depth exceeded');
+      self.callDepth++; const local = new JSScope(closure, 'function'); local.thisValue = boundThis;
+      try { self.bindParams(params, args, local); if (body.type === 'Block') self.execBlock(body.body, local); return undefined; } catch (e) { if (e instanceof ReturnSignal) return e.value; throw e; } finally { self.callDepth--; }
+    };
+    fn.__fn = true; fn.__arrow = false; fn.__capturedThis = capturedThis; fn.__params = params; return fn;
+  }
+  bindParams(params, args, local){ let i = 0; for (const p of params) { if (p.type === 'Rest') { this.bindPattern(p.target, args.slice(i), local, 'let'); i = args.length; break; } let v = args[i]; if (v === undefined && p.default) v = this.evalExpr(p.default, local); this.bindPattern(p.target, v, local, 'let'); i++; } }
+  makeArrow(params, body, exprBody, closure, capturedThis){
+    const self = this;
+    const fn = function(boundThis, ...args){
+      if (self.callDepth >= JS_LIMITS.MAX_CALL_DEPTH) throw new JSError('Call depth exceeded');
+      self.callDepth++; const local = new JSScope(closure, 'function'); local.thisValue = capturedThis;
+      try { self.bindParams(params, args, local); if (exprBody) return self.evalExpr(body, local); self.execBlock(body.body, local); return undefined; } catch (e) { if (e instanceof ReturnSignal) return e.value; throw e; } finally { self.callDepth--; }
+    };
+    fn.__fn = true; fn.__arrow = true; fn.__capturedThis = capturedThis; return fn;
+  }
+  evalExpr(e, scope){
+    this.tick();
+    switch (e.type) {
+      case 'Num': return e.value;
+      case 'Str': return e.value;
+      case 'Bool': return e.value;
+      case 'Null': return null;
+      case 'Undefined': return undefined;
+      case 'This': return scope.getThis();
+      case 'Regex': return new RegExp(e.pattern, e.flags);
+      case 'Ident': { if (e.name === 'super') return scope.lookup('super') ? scope.get('super') : undefined; const s = scope.lookup(e.name); if (!s) throw new JSError(`'${e.name}' is not defined`); return s.vars[e.name]; }
+      case 'Tmpl': { let s = ''; for (const p of e.parts) { if (p.k === 's') s += p.v; else s += this.display(this.evalExpr(p.expr, scope)); } return s; }
+      case 'Array': { const arr = []; for (const el of e.elements) { if (el === null) { arr.push(undefined); continue; } if (el.type === 'Spread') { const inner = this.evalExpr(el.arg, scope); for (const v of inner) arr.push(v); } else arr.push(this.evalExpr(el, scope)); } return arr; }
+      case 'Object': { const obj = {}; for (const p of e.props) { if (p.spread) { const src = this.evalExpr(p.spread, scope); if (src != null) for (const k of Object.keys(src)) obj[k] = src[k]; continue; } const k = p.computed ? this.evalExpr(p.key, scope) : p.key.value; obj[k] = this.evalExpr(p.value, scope); } return obj; }
+      case 'Member': return this.evalMember(e, scope);
+      case 'Call': return this.evalCall(e, scope);
+      case 'New': return this.evalNew(e, scope);
+      case 'Unary': return this.evalUnary(e, scope);
+      case 'Update': return this.evalUpdate(e, scope);
+      case 'Binary': return this.evalBinary(e, scope);
+      case 'Logical': { const l = this.evalExpr(e.left, scope); if (e.op === '&&') return this.truthy(l) ? this.evalExpr(e.right, scope) : l; if (e.op === '||') return this.truthy(l) ? l : this.evalExpr(e.right, scope); if (e.op === '??') return (l === null || l === undefined) ? this.evalExpr(e.right, scope) : l; throw new JSError(`Unknown logical: ${e.op}`); }
+      case 'Assign': return this.evalAssign(e, scope);
+      case 'Cond': return this.truthy(this.evalExpr(e.test, scope)) ? this.evalExpr(e.cons, scope) : this.evalExpr(e.alt, scope);
+      case 'Seq': { this.evalExpr(e.left, scope); return this.evalExpr(e.right, scope); }
+      case 'Arrow': return this.makeArrow(e.params, e.body, e.exprBody, scope, scope.getThis());
+      case 'FnExpr': return this.makeFunction(e.params, e.body, scope, scope.getThis());
+      case 'ClassExpr': return this.evalClass(e, scope);
+      case 'Await': return this.evalExpr(e.arg, scope);
+      default: throw new JSError(`Unknown expression: ${e.type}`);
+    }
+  }
+  evalArgs(args, scope){ const out = []; for (const a of args) { if (a.type === 'Spread') { const arr = this.evalExpr(a.arg, scope); for (const v of arr) out.push(v); } else out.push(this.evalExpr(a, scope)); } return out; }
+  evalMember(e, scope){ let obj; try { obj = this.evalExpr(e.obj, scope); } catch (err) { if (e.optional) return undefined; throw err; } if (obj === null || obj === undefined) { if (e.optional) return undefined; throw new JSError(`Cannot read property of ${obj === null ? 'null' : 'undefined'}`); } const key = e.computed ? this.evalExpr(e.prop, scope) : e.prop.value; return this.getProp(obj, key); }
+  evalCall(e, scope){
+    if (e.callee.type === 'Member') {
+      let recv; try { recv = this.evalExpr(e.callee.obj, scope); } catch (err) { if (e.optional || e.callee.optional) return undefined; throw err; }
+      if (recv === null || recv === undefined) { if (e.optional || e.callee.optional) return undefined; throw new JSError(`Cannot read property of ${recv === null ? 'null' : 'undefined'}`); }
+      const key = e.callee.computed ? this.evalExpr(e.callee.prop, scope) : e.callee.prop.value;
+      let fn; try { fn = this.getProp(recv, key); } catch (err) { if (e.optional) return undefined; throw err; }
+      if (fn === undefined || fn === null) { if (e.optional) return undefined; throw new JSError(`'${String(key)}' is not a function`); }
+      if (typeof fn !== 'function') throw new JSError(`'${String(key)}' is not a function`);
+      const args = this.evalArgs(e.args, scope);
+      if (fn.__fn) return fn.call(null, recv, ...args);
+      return fn.apply(recv, args);
+    }
+    const fn = this.evalExpr(e.callee, scope);
+    if (typeof fn !== 'function') throw new JSError('Not a function');
+    const args = this.evalArgs(e.args, scope);
+    if (fn.__fn) return fn.call(null, undefined, ...args);
+    return fn(...args);
+  }
+  evalNew(e, scope){
+    const ctor = this.evalExpr(e.callee, scope);
+    if (typeof ctor !== 'function') throw new JSError('new requires a constructor');
+    const args = this.evalArgs(e.args, scope);
+    const proto = ctor.prototype && typeof ctor.prototype === 'object' ? ctor.prototype : Object.prototype;
+    const obj = Object.create(proto);
+    if (ctor.__fn) { const ret = ctor.call(null, obj, ...args); if (ret !== undefined && ret !== null && (typeof ret === 'object' || typeof ret === 'function')) return ret; return obj; }
+    const ret = ctor.apply(obj, args);
+    if (ret !== undefined && ret !== null && (typeof ret === 'object' || typeof ret === 'function')) return ret;
+    return obj;
+  }
+  evalUnary(e, scope){
+    if (e.op === 'typeof') { try { return this.jsTypeof(this.evalExpr(e.arg, scope)); } catch (err) { return 'undefined'; } }
+    if (e.op === 'delete') { if (e.arg.type === 'Member') { const obj = this.evalExpr(e.arg.obj, scope); const key = e.arg.computed ? this.evalExpr(e.arg.prop, scope) : e.arg.prop.value; if (obj != null) { try { delete obj[key]; } catch {} } return true; } return true; }
+    const v = this.evalExpr(e.arg, scope);
+    switch (e.op) { case '!': return !this.truthy(v); case '-': return -Number(v); case '+': return +Number(v); case '~': return ~v; case 'void': return undefined; }
+    throw new JSError(`Unknown unary: ${e.op}`);
+  }
+  evalUpdate(e, scope){
+    if (e.arg.type === 'Ident') { const cur = Number(scope.get(e.arg.name)); const nv = e.op === '++' ? cur + 1 : cur - 1; scope.set(e.arg.name, nv); return e.prefix ? nv : cur; }
+    if (e.arg.type === 'Member') { const obj = this.evalExpr(e.arg.obj, scope); const key = e.arg.computed ? this.evalExpr(e.arg.prop, scope) : e.arg.prop.value; const cur = Number(obj[key]); const nv = e.op === '++' ? cur + 1 : cur - 1; obj[key] = nv; return e.prefix ? nv : cur; }
+    throw new JSError('Invalid update target');
+  }
+  evalAssign(e, scope){
+    const RHS = () => this.evalExpr(e.value, scope);
+    const apply = (cur, rhs) => {
+      switch (e.op) {
+        case '=': return rhs;
+        case '+=': return (typeof cur === 'string' || typeof rhs === 'string') ? String(cur) + String(rhs) : Number(cur) + Number(rhs);
+        case '-=': return Number(cur) - Number(rhs);
+        case '*=': return Number(cur) * Number(rhs);
+        case '/=': return Number(cur) / Number(rhs);
+        case '%=': return Number(cur) % Number(rhs);
+        case '**=': return Number(cur) ** Number(rhs);
+        case '&=': return cur & rhs;
+        case '|=': return cur | rhs;
+        case '^=': return cur ^ rhs;
+        case '<<=': return cur << rhs;
+        case '>>=': return cur >> rhs;
+        case '>>>=': return cur >>> rhs;
+        case '&&=': return this.truthy(cur) ? rhs : cur;
+        case '||=': return this.truthy(cur) ? cur : rhs;
+        case '??=': return (cur === null || cur === undefined) ? rhs : cur;
+      }
+      throw new JSError(`Unknown assignment: ${e.op}`);
+    };
+    if (e.target.type === 'Ident') { const cur = scope.get(e.target.name); const nv = apply(cur, RHS()); return scope.set(e.target.name, nv); }
+    if (e.target.type === 'Member') { const obj = this.evalExpr(e.target.obj, scope); const key = e.target.computed ? this.evalExpr(e.target.prop, scope) : e.target.prop.value; const cur = obj[key]; const nv = apply(cur, RHS()); obj[key] = nv; return nv; }
+    throw new JSError('Invalid assignment target');
+  }
+  evalBinary(e, scope){
+    const op = e.op; const l = this.evalExpr(e.left, scope);
+    if (op === 'in') { const r = this.evalExpr(e.right, scope); return (r != null && (typeof r === 'object' || typeof r === 'function')) ? (l in r) : false; }
+    if (op === 'instanceof') { const r = this.evalExpr(e.right, scope); if (typeof r !== 'function') return false; if (r.__classCtor && r.prototype) { let p = l && l.__proto__; while (p) { if (p === r.prototype) return true; p = p.__proto__; } return false; } try { return l instanceof r; } catch { return false; } }
+    const r = this.evalExpr(e.right, scope);
+    switch (op) {
+      case '+': return (typeof l === 'string' || typeof r === 'string') ? String(l) + String(r) : Number(l) + Number(r);
+      case '-': return Number(l) - Number(r);
+      case '*': return Number(l) * Number(r);
+      case '/': return Number(l) / Number(r);
+      case '%': return Number(l) % Number(r);
+      case '**': return Number(l) ** Number(r);
+      case '==': return this.looseEq(l, r);
+      case '!=': return !this.looseEq(l, r);
+      case '===': return l === r;
+      case '!==': return l !== r;
+      case '<': return l < r;
+      case '>': return l > r;
+      case '<=': return l <= r;
+      case '>=': return l >= r;
+      case '&': return l & r;
+      case '|': return l | r;
+      case '^': return l ^ r;
+      case '<<': return l << r;
+      case '>>': return l >> r;
+      case '>>>': return l >>> r;
+    }
+    throw new JSError(`Unknown binary: ${op}`);
+  }
+  looseEq(a, b){ if (a === b) return true; if (a === null && b === undefined) return true; if (a === undefined && b === null) return true; if (typeof a === typeof b) return a === b; if (typeof a === 'number' && typeof b === 'string') return a === Number(b); if (typeof a === 'string' && typeof b === 'number') return Number(a) === b; if (typeof a === 'boolean') return this.looseEq(Number(a), b); if (typeof b === 'boolean') return this.looseEq(a, Number(b)); return false; }
+  truthy(v){ if (v === null || v === undefined || v === false) return false; if (typeof v === 'number') return v !== 0 && !Number.isNaN(v); if (typeof v === 'string') return v.length > 0; return true; }
+  jsTypeof(v){ if (v === null) return 'object'; if (v === undefined) return 'undefined'; if (typeof v === 'function') return 'function'; if (Array.isArray(v)) return 'object'; return typeof v; }
+  wrapCallback(fn) {
+    if (typeof fn !== 'function' || !fn.__fn) return fn;
+    return function(...callbackArgs) {
+      return fn.call(null, undefined, ...callbackArgs);
+    };
+  }
+  getProp(obj, key){
+    const k = String(key);
+    if (BLOCKED_PROPS.has(k)) return undefined;
+    if (obj === null || obj === undefined) throw new JSError(`Cannot read '${k}'`);
+    const t = typeof obj;
+    if (t === 'string' || t === 'number' || t === 'boolean') { if (k === 'length' && t === 'string') return obj.length; const boxed = this.getPrimitiveMethod(t, obj, k); if (boxed !== undefined) return boxed; }
+    if (Array.isArray(obj)) {
+      if (k === 'length') return obj.length;
+      const m = Array.prototype[k];
+      if (typeof m === 'function') return (...args) => {
+        this.tick();
+        const wrapped = args.map(a => this.wrapCallback(a));
+        return m.apply(obj, wrapped);
       };
-      wrap.appendChild(img);
-      body.appendChild(wrap);
-      return;
+      if (k in obj) return obj[k];
+      return undefined;
     }
-    if (resolvedMime.startsWith('video/')) {
-      const wrap = document.createElement('div');
-      wrap.className = 'preview-fill';
-      const video = document.createElement('video');
-      video.src = objUrl;
-      video.controls = true;
-      video.playsInline = true;
-      video.preload = 'metadata';
-      video.className = 'preview-video';
-      video.onerror = () => {
-        wrap.innerHTML = '';
-        wrap.appendChild(buildUnsupportedPanel(name, resolvedMime, 'This video codec is not supported by your browser. Try Open in new tab.'));
+    if (obj instanceof Map) {
+      if (k === 'size') return obj.size;
+      const m = Map.prototype[k];
+      if (typeof m === 'function') return (...args) => {
+        this.tick();
+        const wrapped = args.map(a => this.wrapCallback(a));
+        return m.apply(obj, wrapped);
       };
-      wrap.appendChild(video);
-      body.appendChild(wrap);
-      return;
     }
-    if (resolvedMime.startsWith('audio/')) {
-      const wrap = document.createElement('div');
-      wrap.className = 'preview-fill preview-audio-wrap';
-      wrap.innerHTML = '<div class="preview-audio-icon">🎵</div>' +
-        '<div class="preview-audio-name">' + esc(name || 'Audio') + '</div>';
-      const audio = document.createElement('audio');
-      audio.src = objUrl;
-      audio.controls = true;
-      audio.className = 'preview-audio';
-      audio.onerror = () => {
-        wrap.innerHTML = '';
-        wrap.appendChild(buildUnsupportedPanel(name, resolvedMime, 'This audio codec is not supported by your browser.'));
+    if (obj instanceof Set) {
+      if (k === 'size') return obj.size;
+      const m = Set.prototype[k];
+      if (typeof m === 'function') return (...args) => {
+        this.tick();
+        const wrapped = args.map(a => this.wrapCallback(a));
+        return m.apply(obj, wrapped);
       };
-      wrap.appendChild(audio);
-      body.appendChild(wrap);
-      return;
     }
-    const isTextLike = resolvedMime.startsWith('text/')
-      || /(json|jsonl|ndjson|xml|yaml|toml|csv|tsv|markdown|md|sh|shell|python|ruby|rust|go|java|javascript|ecmascript|sql|graphql|log)/.test(resolvedMime);
-    if (isTextLike || !resolvedMime) {
-      const text = await blob.text();
-      const pre = document.createElement('pre');
-      pre.className = 'preview-text';
-      pre.textContent = text.length > 500000 ? text.slice(0, 500000) + '\n\n…[truncated]' : text;
-      body.appendChild(pre);
-      return;
+    if (obj instanceof RegExp) { if (['source','flags','global','ignoreCase','multiline','lastIndex'].includes(k)) return obj[k]; const m = RegExp.prototype[k]; if (typeof m === 'function') return (...args) => { this.tick(); return m.apply(obj, args); }; }
+    if (obj instanceof Date) { const m = Date.prototype[k]; if (typeof m === 'function') return (...args) => { this.tick(); return m.apply(obj, args); }; }
+    if (obj instanceof Error) { if (k === 'message' || k === 'name' || k === 'stack') return obj[k]; const m = Error.prototype[k]; if (typeof m === 'function') return (...args) => { this.tick(); return m.apply(obj, args); }; }
+    if (t === 'object' || t === 'function') { if (k === 'length' && typeof obj === 'function') return obj.length; if (k === 'name' && typeof obj === 'function') return obj.name || ''; if (k in obj) { const v = obj[k]; if (typeof v === 'function') return (...args) => { this.tick(); return v.apply(obj, args); }; return v; } if (k === 'hasOwnProperty') return (p) => Object.prototype.hasOwnProperty.call(obj, p); if (k === 'toString') return () => this.display(obj); if (k === 'valueOf') return () => obj; }
+    return undefined;
+  }
+  getPrimitiveMethod(type, obj, k){ let proto; if (type === 'string') proto = String.prototype; else if (type === 'number') proto = Number.prototype; else if (type === 'boolean') proto = Boolean.prototype; if (!proto) return undefined; const fn = proto[k]; if (typeof fn !== 'function') return undefined; return (...args) => { this.tick(); return fn.apply(obj, args); }; }
+}
+
+function evaluateJSSandboxed(src){
+  let code = String(src || '').trim();
+  if (!code) return 'Error: Empty code';
+  if (code.length > JS_LIMITS.MAX_CODE_CHARS) return `Error: Code exceeds ${JS_LIMITS.MAX_CODE_CHARS} characters`;
+  code = code.replace(/×/g, '*').replace(/÷/g, '/').replace(/−/g, '-').replace(/(\d+(?:\.\d+)?)\s*%\s*of\s*/gi, '($1/100)*');
+  if (!/\*\*/.test(code)) code = code.replace(/\^/g, '**');
+  try { const toks = jsLex(code); const ast = new JSParser(toks).parseProgram(); const interp = new JSInterpreter(); const res = interp.run(ast); return res.output; }
+  catch (e) { return 'Error: ' + (e && e.message ? e.message : String(e)); }
+}
+
+// ---------------------------------------------------------------------------
+// 6. CORS / RESPONSE HELPERS
+// ---------------------------------------------------------------------------
+function corsHeaders() {
+  return {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Max-Age': '86400',
+  };
+}
+function json(data, status = 200) { return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json', ...corsHeaders() } }); }
+function errorResponse(message, status = 400) { return json({ error: message }, status); }
+function getAllKeys(env, keyEnv) { if (!keyEnv) return []; const raw = env[keyEnv]; if (!raw) return []; return raw.split(',').map(s => s.trim()).filter(Boolean); }
+function hasAnyKey(env, mode) {
+  const providers = PROVIDERS[mode] || [];
+  for (const p of providers) if (getAllKeys(env, p.keyEnv).length) return true;
+  return false;
+}
+function pickExternalKey(env, keyEnv) {
+  const keys = getAllKeys(env, keyEnv);
+  if (!keys.length) return null;
+  if (keys.length === 1) return keys[0];
+  return keys[Math.floor(Math.random() * keys.length)];
+}
+
+// ---------------------------------------------------------------------------
+// 7. BLOB STORE
+// ---------------------------------------------------------------------------
+const BLOB_KV_PREFIX = 'blob:';
+const PREVIEW_KV_PREFIX = 'preview:';
+const KV_MAX_VALUE_BYTES = 24 * 1024 * 1024;
+const D1_MAX_BLOB_BYTES  = 1_800_000;
+
+async function blobPut(env, blobId, blob) {
+  const payload = JSON.stringify(blob);
+  const byteLen = new TextEncoder().encode(payload).length;
+  if (env.CHATS && byteLen < KV_MAX_VALUE_BYTES) {
+    try { await env.CHATS.put(BLOB_KV_PREFIX + blobId, payload); return { where: 'kv', id: blobId }; }
+    catch (e) { log(`[blobPut] KV failed: ${safeStr(e).slice(0, 160)}`); }
+  }
+  if (byteLen > D1_MAX_BLOB_BYTES) return { error: `Blob too large (${Math.round(byteLen / 1024)} KB)` };
+  try { await env.DB.prepare('INSERT INTO blobs (id, username, mime, name, size, data, created_at) VALUES (?,?,?,?,?,?,?)').bind(blobId, blob.username || '', blob.mime || 'application/octet-stream', blob.name || '', blob.size || byteLen, payload, Math.floor(Date.now() / 1000)).run(); return { where: 'd1', id: blobId }; }
+  catch (e) { return { error: safeStr(e) }; }
+}
+async function blobGet(env, blobId) {
+  if (env.CHATS) { try { const v = await env.CHATS.get(BLOB_KV_PREFIX + blobId); if (v) return JSON.parse(v); } catch (e) {} }
+  try { const row = await env.DB.prepare('SELECT data FROM blobs WHERE id = ?').bind(blobId).first(); if (row && row.data) return JSON.parse(row.data); } catch (e) {}
+  return null;
+}
+async function blobDelete(env, blobId) {
+  try { if (env.CHATS) await env.CHATS.delete(BLOB_KV_PREFIX + blobId); } catch (e) {}
+  try { if (env.CHATS) await env.CHATS.delete(PREVIEW_KV_PREFIX + blobId); } catch (e) {}
+  try { await env.DB.prepare('DELETE FROM blobs WHERE id = ?').bind(blobId).run(); } catch (e) {}
+}
+function extractBlobIds(text) { const ids = new Set(); const re = /blob:([a-zA-Z0-9-]+)/g; let m; while ((m = re.exec(String(text || ''))) !== null) ids.add(m[1]); return Array.from(ids); }
+function isTextMimeForPreview(mime) {
+  const m = String(mime || '').toLowerCase();
+  if (m.startsWith('text/')) return true;
+  if (/(json|jsonl|ndjson|xml|javascript|ecmascript|yaml|toml|markdown|md|sh\b|shell|sql|graphql|python|ruby|rust|go|java|csv|tsv)/.test(m)) return true;
+  return false;
+}
+function decodeDataUrl(dataUrl) { const m = String(dataUrl || '').match(/^data:([^;]+);base64,(.+)$/); if (!m) return null; try { const bin = atob(m[2]); const bytes = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i); return { mime: m[1], bytes }; } catch (e) { return null; } }
+function computePreviewFromBlob(blob) {
+  const mime = blob.mime || '';
+  if (!isTextMimeForPreview(mime)) { const kb = Math.max(1, Math.round((blob.size || 0) / 1024)); return { text: `[${mime || 'binary'} — ${kb} KB]`, totalLines: 0, previewComplete: true, isBinary: true }; }
+  const decoded = decodeDataUrl(blob.data);
+  if (!decoded) return { text: '[unreadable]', totalLines: 0, previewComplete: false, isBinary: false };
+  let text;
+  try { text = new TextDecoder('utf-8', { fatal: false }).decode(decoded.bytes); } catch (e) { return { text: '[decode failed]', totalLines: 0, previewComplete: false, isBinary: false }; }
+  const lines = text.split(/\r?\n/);
+  const totalLines = lines.length;
+  const previewComplete = totalLines <= FILE_PREVIEW_LINES;
+  const head = lines.slice(0, FILE_PREVIEW_LINES).join('\n');
+  const more = Math.max(0, totalLines - FILE_PREVIEW_LINES);
+  let body = previewComplete ? head : `${head}\n… (${more} more line${more === 1 ? '' : 's'})`;
+  if (body.length > FILE_PREVIEW_CHARS) body = body.slice(0, FILE_PREVIEW_CHARS) + '…';
+  return { text: body, totalLines, previewComplete, isBinary: false };
+}
+async function getBlobPreview(env, blob) {
+  if (env.CHATS) { try { const cached = await env.CHATS.get(PREVIEW_KV_PREFIX + blob.id); if (cached) { try { return JSON.parse(cached); } catch {} } } catch (e) {} }
+  const preview = computePreviewFromBlob(blob);
+  if (env.CHATS) { try { await env.CHATS.put(PREVIEW_KV_PREFIX + blob.id, JSON.stringify(preview), { expirationTtl: 30 * 24 * 60 * 60 }); } catch (e) {} }
+  return preview;
+}
+
+async function buildFileIndex(env, chat, currentImageBlobIds = null) {
+  if (!chat || !Array.isArray(chat.messages)) return '';
+  const seen = new Set();
+  const orderedIds = [];
+  for (let i = chat.messages.length - 1; i >= 0; i--) {
+    const m = chat.messages[i];
+    if (m.role !== 'user' || !m.content) continue;
+    for (const id of extractBlobIds(String(m.content))) {
+      if (seen.has(id)) continue;
+      seen.add(id);
+      orderedIds.push({ id, isCurrent: !!(currentImageBlobIds && currentImageBlobIds.has(id)) });
     }
-    body.appendChild(buildUnsupportedPanel(name, resolvedMime || 'binary', 'Preview not available for this file type.'));
+  }
+  if (!orderedIds.length) return '';
+
+  const metas = [];
+  for (const { id: bid, isCurrent } of orderedIds) {
+    const blob = await blobGet(env, bid);
+    if (!blob) continue;
+    const isImg = isImageMime(blob.mime);
+    const preview = isImg ? null : await getBlobPreview(env, { ...blob, id: bid });
+    metas.push({ bid, blob, isImg, isCurrent, preview });
+  }
+  if (!metas.length) return '';
+
+  const roster = metas.map((m, i) => {
+    const nm = m.blob.name || 'file';
+    const kb = m.blob.size ? Math.max(1, Math.round(m.blob.size / 1024)) : 0;
+    const sizeTag = kb ? `, ${kb} KB` : '';
+    const curTag = m.isCurrent ? ' ← CURRENT TURN' : '';
+    return `${i + 1}. ${nm} (${m.blob.mime || 'unknown'}${sizeTag})${curTag}`;
+  }).join('\n');
+
+  const detailParts = [];
+  let used = 0;
+  let previewsOmitted = 0;
+
+  for (const m of metas) {
+    const nm = m.blob.name || 'file';
+
+    if (m.isCurrent && m.isImg) {
+      detailParts.push(`### ${nm} — IMAGE — ALREADY ATTACHED to the CURRENT message as native input. Do NOT call <analysing>. Read the pixels directly.`);
+      used += 200;
+      continue;
+    }
+    if (m.isImg) {
+      detailParts.push(`### ${nm} — IMAGE (earlier turn). Call <analysing>${nm}</analysing> to load natively.`);
+      used += 150;
+      continue;
+    }
+    if (!m.preview) continue;
+
+    const lines = m.preview.totalLines || 0;
+    const curSuffix = m.isCurrent ? ' ← CURRENT — read it and answer.' : '';
+    const status = m.preview.isBinary
+      ? `BINARY — call <analysing>${nm}</analysing> to attach.`
+      : m.preview.previewComplete
+        ? `COMPLETE — all ${lines} line${lines === 1 ? '' : 's'} shown.${curSuffix}`
+        : `PARTIAL — first ${FILE_PREVIEW_LINES} of ${lines} lines. Full file via <analysing>${nm}</analysing>.${curSuffix}`;
+
+    const block = `### ${nm} — ${status}\n${m.preview.text}`;
+    if (used + block.length > FILE_INDEX_CHARS) {
+      previewsOmitted++;
+      detailParts.push(`### ${nm} — preview omitted (index size limit). Full via <analysing>${nm}</analysing>.`);
+      used += 120;
+      continue;
+    }
+    detailParts.push(block);
+    used += block.length + 2;
+  }
+
+  let out = `## Files in this conversation (${metas.length})\n${roster}\n`;
+  if (detailParts.length) {
+    out += `\n## Previews\n${detailParts.join('\n\n')}`;
+  }
+  if (previewsOmitted > 0) {
+    out += `\n\n_(${previewsOmitted} preview${previewsOmitted === 1 ? '' : 's'} omitted above — the full names are still listed. Use <analysing>filename.ext</analysing> to load any file's content.)_`;
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------------------
+// 8. MODELTRACKER + KEY ROUTER
+// ---------------------------------------------------------------------------
+async function mtGet(env, key) { if (!env.MODELTRACKER) return null; try { const v = await env.MODELTRACKER.get(key); if (v) return JSON.parse(v); } catch (e) {} return null; }
+async function mtPut(env, key, value, ttlSeconds) { if (!env.MODELTRACKER) return false; try { const opts = ttlSeconds ? { expirationTtl: Math.max(60, ttlSeconds) } : undefined; await env.MODELTRACKER.put(key, JSON.stringify(value), opts); return true; } catch (e) { return false; } }
+async function mtDelete(env, key) { try { if (env.MODELTRACKER) await env.MODELTRACKER.delete(key); } catch (e) {} }
+
+function hashKey(key) { let h = 0; for (let i = 0; i < key.length; i++) h = ((h << 5) - h + key.charCodeAt(i)) | 0; return (h >>> 0).toString(36); }
+
+function secondsUntilMidnightPacific() {
+  const now = Date.now();
+  try {
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/Los_Angeles',
+      hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
+    }).formatToParts(new Date(now));
+    const get = (t) => parseInt(parts.find(p => p.type === t)?.value || '0', 10);
+    const h = get('hour') % 24;
+    const mi = get('minute');
+    const s = get('second');
+    const secsToday = h * 3600 + mi * 60 + s;
+    return Math.max(300, 86400 - secsToday);
+  } catch {
+    return Math.max(300, 86400);
+  }
+}
+
+async function keyStateGet(env, key) { return await mtGet(env, `kstate:${hashKey(key)}`); }
+async function keyStateMarkRPM(env, key) { await mtPut(env, `kstate:${hashKey(key)}`, { reason: 'rpm', ts: Date.now() }, 90); }
+async function keyStateMarkRPD(env, key) {
+  const ttl = secondsUntilMidnightPacific();
+  await mtPut(env, `kstate:${hashKey(key)}`, { reason: 'rpd', ts: Date.now() }, ttl);
+  await mtDelete(env, `kstate:rpm:${hashKey(key)}`);
+}
+async function keyStateClear(env, key) { await mtDelete(env, `kstate:${hashKey(key)}`); }
+
+async function getAvailableKeys(env, keyEnv) {
+  const all = getAllKeys(env, keyEnv);
+  if (!all.length) return [];
+  const available = [];
+  for (const k of all) {
+    const st = await keyStateGet(env, k);
+    if (!st) { available.push(k); continue; }
+    const ageMs = Date.now() - (st.ts || 0);
+    if (st.reason === 'rpm' && ageMs > 90_000) { await keyStateClear(env, k); available.push(k); }
+  }
+  return available;
+}
+
+function cooldownKey(providerName, model) { return `cooldown:${providerName}:${model}`; }
+async function recordFailure(env, providerName, model, status) {
+  const now = Math.floor(Date.now() / 1000);
+  const cooldownUntil = now + FAILURE_COOLDOWN_SECONDS;
+  await mtPut(env, cooldownKey(providerName, model), { cooldownUntil, ts: now, status }, FAILURE_COOLDOWN_SECONDS + 300);
+}
+async function isOnCooldown(env, providerName, model) {
+  if (DISABLE_FAILURE_COOLDOWN) return false;
+  const now = Math.floor(Date.now() / 1000);
+  const key = cooldownKey(providerName, model);
+  const kv = await mtGet(env, key);
+  if (!kv) return false;
+  if (now < (kv.cooldownUntil || 0)) return true;
+  await mtDelete(env, key);
+  return false;
+}
+async function recordSuccess(env, mode, providerName, model, latencyMs) {
+  const now = Math.floor(Date.now() / 1000);
+  await mtDelete(env, cooldownKey(providerName, model));
+  if (typeof latencyMs === 'number' && latencyMs > 0) {
+    const fastest = await mtGet(env, `fastest:${mode}`);
+    if (!fastest || !fastest.latency || latencyMs < fastest.latency) {
+      await mtPut(env, `fastest:${mode}`, { provider: providerName, model, latency: latencyMs, ts: now, mode }, FASTEST_TTL);
+    }
+    const globalFastest = await mtGet(env, 'fastest:global');
+    if (!globalFastest || !globalFastest.latency || latencyMs < globalFastest.latency) {
+      await mtPut(env, 'fastest:global', { provider: providerName, model, latency: latencyMs, ts: now, mode }, FASTEST_TTL);
+    }
+  }
+  await setStickyModel(env, providerName, model);
+}
+async function getFastestModel(env, mode) { return await mtGet(env, `fastest:${mode}`) || null; }
+
+// ---------------------------------------------------------------------------
+// 9. AUTH
+// ---------------------------------------------------------------------------
+async function hashPassword(password) {
+  const encoder = new TextEncoder();
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const km = await crypto.subtle.importKey('raw', encoder.encode(password), 'PBKDF2', false, ['deriveBits']);
+  const hb = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' }, km, 256);
+  return Array.from(salt).map(b => b.toString(16).padStart(2, '0')).join('') + ':' + Array.from(new Uint8Array(hb)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+async function verifyPassword(password, stored) {
+  const [saltHex, hashHex] = stored.split(':');
+  if (!saltHex || !hashHex) return false;
+  const salt = new Uint8Array(saltHex.match(/.{1,2}/g).map(b => parseInt(b, 16)));
+  const encoder = new TextEncoder();
+  const km = await crypto.subtle.importKey('raw', encoder.encode(password), 'PBKDF2', false, ['deriveBits']);
+  const hb = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' }, km, 256);
+  return Array.from(new Uint8Array(hb)).map(b => b.toString(16).padStart(2, '0')).join('') === hashHex;
+}
+async function getUserFromToken(token, env) {
+  try { const r = await env.DB.prepare("SELECT username FROM tokens WHERE token = ? AND (strftime('%s', 'now') - created_at) < ?").bind(token, TOKEN_TTL).first(); return r?.username || null; } catch { return null; }
+}
+async function requireAuth(req, env) {
+  const h = req.headers.get('Authorization');
+  if (h && h.startsWith('Bearer ')) { const u = await getUserFromToken(h.slice(7), env); if (u) return u; }
+  try { const url = new URL(req.url); const qt = url.searchParams.get('t'); if (qt) return getUserFromToken(qt, env); } catch (e) {}
+  return null;
+}
+
+// ---------------------------------------------------------------------------
+// 10. DB INIT
+// ---------------------------------------------------------------------------
+async function initDatabase(db) {
+  await db.prepare(`CREATE TABLE IF NOT EXISTS users (username TEXT PRIMARY KEY, password TEXT NOT NULL)`).run();
+  await db.prepare(`CREATE TABLE IF NOT EXISTS tokens (token TEXT PRIMARY KEY, username TEXT NOT NULL, created_at INTEGER NOT NULL)`).run();
+  await db.prepare(`CREATE TABLE IF NOT EXISTS chats (id TEXT PRIMARY KEY, username TEXT NOT NULL, title TEXT NOT NULL, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL, mode TEXT DEFAULT 'quick')`).run();
+  await db.prepare(`CREATE TABLE IF NOT EXISTS messages (id TEXT PRIMARY KEY, chat_id TEXT NOT NULL, role TEXT NOT NULL, content TEXT NOT NULL, mode TEXT, timestamp INTEGER NOT NULL, blocks TEXT)`).run();
+  await db.prepare(`CREATE TABLE IF NOT EXISTS rate_limits (user_id TEXT NOT NULL, timestamp INTEGER NOT NULL)`).run();
+  await db.prepare(`CREATE TABLE IF NOT EXISTS idempotency_keys (key TEXT PRIMARY KEY, message_id TEXT NOT NULL, created_at INTEGER NOT NULL)`).run();
+  await db.prepare(`CREATE TABLE IF NOT EXISTS blobs (id TEXT PRIMARY KEY, username TEXT NOT NULL, mime TEXT NOT NULL, name TEXT, size INTEGER, data TEXT NOT NULL, created_at INTEGER NOT NULL)`).run();
+  await db.prepare(`CREATE TABLE IF NOT EXISTS embeddings (id TEXT PRIMARY KEY, username TEXT NOT NULL, chat_id TEXT, blob_id TEXT, source TEXT, mime TEXT, model TEXT, dim INTEGER, vector TEXT NOT NULL, meta TEXT, created_at INTEGER NOT NULL)`).run();
+  await db.prepare('CREATE INDEX IF NOT EXISTS idx_rate_limits_user_time ON rate_limits (user_id, timestamp)').run();
+  await db.prepare('CREATE INDEX IF NOT EXISTS idx_tokens_username ON tokens(username)').run();
+  await db.prepare('CREATE INDEX IF NOT EXISTS idx_chats_username ON chats(username)').run();
+  await db.prepare('CREATE INDEX IF NOT EXISTS idx_messages_chat_id ON messages(chat_id)').run();
+  await db.prepare('CREATE INDEX IF NOT EXISTS idx_idempotency_created ON idempotency_keys (created_at)').run();
+  await db.prepare('CREATE INDEX IF NOT EXISTS idx_blobs_username ON blobs (username)').run();
+  await db.prepare('CREATE INDEX IF NOT EXISTS idx_blobs_created ON blobs (created_at)').run();
+  await db.prepare('CREATE INDEX IF NOT EXISTS idx_embeddings_user ON embeddings (username)').run();
+  await db.prepare('CREATE INDEX IF NOT EXISTS idx_embeddings_chat ON embeddings (chat_id)').run();
+  await db.prepare('CREATE INDEX IF NOT EXISTS idx_embeddings_blob ON embeddings (blob_id)').run();
+  try { const t = await db.prepare('PRAGMA table_info(chats)').all(); if (!t.results.some(c => c.name === 'updated_at')) { await db.prepare('ALTER TABLE chats ADD COLUMN updated_at INTEGER NOT NULL DEFAULT 0').run(); await db.prepare('UPDATE chats SET updated_at = created_at WHERE updated_at = 0').run(); } } catch {}
+  try { const t = await db.prepare('PRAGMA table_info(chats)').all(); if (!t.results.some(c => c.name === 'mode')) await db.prepare("ALTER TABLE chats ADD COLUMN mode TEXT DEFAULT 'quick'").run(); } catch (e) {}
+  try { const t = await db.prepare('PRAGMA table_info(messages)').all(); if (!t.results.some(c => c.name === 'blocks')) await db.prepare('ALTER TABLE messages ADD COLUMN blocks TEXT').run(); } catch (e) {}
+}
+let __dbReadyPromise = null, __dbReadyAt = 0;
+const __DB_READY_TTL_MS = 5 * 60 * 1000;
+async function ensureDatabase(env) {
+  const now = Date.now();
+  if (!__dbReadyPromise || now - __dbReadyAt > __DB_READY_TTL_MS) {
+    __dbReadyAt = now;
+    __dbReadyPromise = initDatabase(env.DB).catch((e) => { __dbReadyPromise = null; throw e; });
+  }
+  return __dbReadyPromise;
+}
+
+// ---------------------------------------------------------------------------
+// 11. RATE LIMIT + HOUSEKEEPING
+// ---------------------------------------------------------------------------
+async function checkRateLimit(env, userId) {
+  const now = Math.floor(Date.now() / 1000);
+  const ws = now - RATE_LIMIT_WINDOW;
+  try {
+    await env.DB.prepare('DELETE FROM rate_limits WHERE user_id = ? AND timestamp < ?').bind(userId, ws).run();
+    const c = await env.DB.prepare('SELECT COUNT(*) as cnt FROM rate_limits WHERE user_id = ? AND timestamp >= ?').bind(userId, ws).first();
+    if ((c?.cnt || 0) >= RATE_LIMIT_MAX) return false;
+    await env.DB.prepare('INSERT INTO rate_limits (user_id, timestamp) VALUES (?, ?)').bind(userId, now).run();
+    return true;
+  } catch (e) { return true; }
+}
+async function saveIdempotency(env, key, messageId) {
+  const now = Math.floor(Date.now() / 1000);
+  try { await env.DB.prepare('INSERT INTO idempotency_keys (key, message_id, created_at) VALUES (?, ?, ?) ON CONFLICT (key) DO NOTHING').bind(key, messageId, now).run(); } catch (e) {}
+}
+async function cleanupIdempotencyKeys(env) { const cutoff = Math.floor(Date.now() / 1000) - 86400; try { await env.DB.prepare('DELETE FROM idempotency_keys WHERE created_at < ?').bind(cutoff).run(); } catch (e) {} }
+
+// ---------------------------------------------------------------------------
+// 12. EXTERNAL TOOLS
+// ---------------------------------------------------------------------------
+async function performWeatherLookup(env, query) {
+  const apiKey = pickExternalKey(env, 'WA_KEYS');
+  if (!apiKey) return { error: 'Weather service not configured' };
+  let location = query, highlightDate = null;
+  if (query.includes('|')) { const p = query.split('|'); location = p[0].trim(); const pa = p[1].trim(); if (/^\d{4}-\d{2}-\d{2}$/.test(pa)) highlightDate = pa; }
+  const fmt = d => d.toISOString().split('T')[0];
+  const yest = new Date(); yest.setDate(yest.getDate() - 1);
+  const startDt = new Date(); startDt.setDate(startDt.getDate() - 3);
+  try {
+    const [cr, hr] = await Promise.all([
+      fetchWithTimeout(`https://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${encodeURIComponent(location)}&aqi=no`, {}, TOOL_FETCH_TIMEOUT_MS, 'weather-current', 1),
+      fetchWithTimeout(`https://api.weatherapi.com/v1/history.json?key=${apiKey}&q=${encodeURIComponent(location)}&dt=${fmt(startDt)}&end_dt=${fmt(yest)}`, {}, TOOL_FETCH_TIMEOUT_MS, 'weather-history', 1),
+    ]);
+    const cd = await cr.json().catch(() => ({}));
+    const hd = await hr.json().catch(() => ({}));
+    if (cd.error) return { error: safeStr(cd.error.message) };
+    if (hd.error) return { error: safeStr(hd.error.message) };
+    const history = (hd.forecast?.forecastday || []).map(d => ({
+      date: d.date, condition: d.day.condition.text,
+      avgTemp: `${Math.round(d.day.avgtemp_c)}°C`, maxTemp: `${Math.round(d.day.maxtemp_c)}°C`, minTemp: `${Math.round(d.day.mintemp_c)}°C`,
+      humidity: `${d.day.avghumidity}%`, wind: `${Math.round(d.day.maxwind_kph)} km/h`,
+      rainChance: `${d.day.daily_chance_of_rain ?? 0}%`,
+    }));
+    return {
+      header: cd.location.name,
+      now: { text: cd.current.condition.text, temp: `${cd.current.temp_c}°C`, feels: `${cd.current.feelslike_c}°C`, humidity: `${cd.current.humidity}%`, wind: `${cd.current.wind_kph} km/h` },
+      history, highlightDate,
+    };
+  } catch (e) { return { error: `Weather lookup failed: ${safeStr(e)}` }; }
+}
+
+async function performWebSearch(env, query) {
+  const tv = pickExternalKey(env, 'TAVILY_KEYS');
+  if (!tv) return { error: 'Search service not configured' };
+  const isNews = /\b(news|latest|breaking|today|this week|recent|just|now|current|new)\b/i.test(query);
+  const depth = 'fast';
+  const body = {
+    api_key: tv, query, search_depth: depth,
+    include_answer: false, include_raw_content: false,
+    max_results: MAX_SEARCH_SOURCES, chunks_per_source: 1,
+    ...(isNews ? { topic: 'news', days: 1, include_published_date: true } : {}),
+  };
+  try {
+    const r = await fetchWithTimeout('https://api.tavily.com/search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    }, SEARCH_TIMEOUT_MS, 'tavily', 1);
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) return { error: `Search failed (HTTP ${r.status})` };
+    const sources = (d.results || []).slice(0, MAX_SEARCH_SOURCES).map(x => ({
+      title: x.title, url: x.url, content: x.content,
+      publishedDate: x.published_date || null, score: x.score,
+      sourceName: (() => { try { return new URL(x.url).hostname; } catch { return 'Web'; } })(),
+    }));
+    if (!sources.length) return { error: 'No search results found' };
+    return { rawText: sources.map(s => s.content).join('\n\n'), sources, isNews };
+  } catch (e) { return { error: `Search failed: ${safeStr(e)}` }; }
+}
+
+async function performFinanceLookup(env, finance) {
+  if (finance.type === 'stock') {
+    const apiKey = pickExternalKey(env, 'ONETWO_KEYS');
+    if (!apiKey) return { error: 'Stock service not configured' };
+    try {
+      const symbol = String(finance.symbol || '').toUpperCase().trim();
+      if (!symbol) return { error: 'No stock symbol provided' };
+      const r = await fetchWithTimeout(`https://api.twelvedata.com/quote?symbol=${encodeURIComponent(symbol)}&apikey=${apiKey}`, {}, TOOL_FETCH_TIMEOUT_MS, 'twelvedata', 1);
+      const d = await r.json().catch(() => ({}));
+      if (d && (d.code || d.status === 'error')) {
+        const errMsg = safeStr(d.message || d.code);
+        if (d.code === 429 || /limit/i.test(errMsg)) return { error: 'Stock service rate limit reached' };
+        return { error: `No stock data found for "${symbol}"` };
+      }
+      const price = parseFloat(d.close);
+      if (!isFinite(price) || price <= 0) return { error: `No stock data found for "${symbol}"` };
+      return { type: 'stock', symbol: d.symbol || symbol, price, high: d.high ? parseFloat(d.high) : null, low: d.low ? parseFloat(d.low) : null, open: d.open ? parseFloat(d.open) : null, previousClose: d.previous_close ? parseFloat(d.previous_close) : null, currency: d.currency || 'USD', exchange: d.exchange || null, source: 'twelvedata' };
+    } catch (e) { return { error: `Stock lookup failed: ${safeStr(e)}` }; }
+  }
+  if (finance.type === 'forex') {
+    const apiKey = pickExternalKey(env, 'ERA_KEYS');
+    if (!apiKey) return { error: 'Currency service not configured' };
+    try {
+      const base = String(finance.base || '').toUpperCase().trim();
+      const target = String(finance.target || '').toUpperCase().trim();
+      if (!base || !target) return { error: 'Currency pair missing base or target' };
+      const r = await fetchWithTimeout(`https://v6.exchangerate-api.com/v6/${apiKey}/latest/${base}`, {}, TOOL_FETCH_TIMEOUT_MS, 'exchangerate', 1);
+      const d = await r.json().catch(() => ({}));
+      if (d.result !== 'success') return { error: `Currency lookup failed: ${d['error-type'] || 'unknown'}` };
+      const rate = d.conversion_rates?.[target];
+      if (rate === undefined) return { error: `Currency pair ${base}/${target} not found` };
+      return { type: 'forex', base, target, rate, source: 'exchangerate' };
+    } catch (e) { return { error: `Currency lookup failed: ${safeStr(e)}` }; }
+  }
+  return { error: 'Invalid finance request' };
+}
+
+async function performAnalyseLookup(env, rawUrl) {
+  const urlStr = String(rawUrl || '').trim();
+  if (!urlStr) return { error: 'No URL provided' };
+  let parsedUrl;
+  try { parsedUrl = new URL(urlStr); } catch { return { error: 'Invalid URL' }; }
+  if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') return { error: 'Only http(s) URLs can be read' };
+  const sourceName = parsedUrl.hostname.replace(/^www\./, '');
+  const fc = pickExternalKey(env, 'FIRECRAWL_KEYS');
+  if (fc) {
+    try {
+      const r = await fetchWithTimeout('https://api.firecrawl.dev/v1/scrape', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${fc}` },
+        body: JSON.stringify({ url: urlStr, formats: ['markdown'], onlyMainContent: true, timeout: 12000 }),
+      }, ANALYSE_TIMEOUT_MS, 'firecrawl-scrape', 1);
+      const d = await r.json().catch(() => ({}));
+      if (r.ok && d.success !== false && d.data) {
+        const content = String(d.data.markdown || d.data.content || '').trim();
+        const title = String(d.data.metadata?.title || parsedUrl.hostname);
+        if (content) return { type: 'page', url: urlStr, title: title.slice(0, 200), sourceName, content: content.slice(0, MAX_READ_CHARS), truncated: content.length > MAX_READ_CHARS, charCount: content.length };
+      }
+      return { error: `Firecrawl couldn't extract content from ${sourceName}` };
+    } catch (e) { return { error: `Firecrawl failed: ${safeStr(e)}` }; }
+  }
+  try {
+    const r = await fetchWithTimeout(urlStr, { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; ZebAI/1.0)', 'Accept': 'text/html,application/xhtml+xml' } }, TOOL_FETCH_TIMEOUT_MS, 'analyse-raw', 1);
+    if (!r.ok) return { error: `Page returned HTTP ${r.status}` };
+    const html = await r.text();
+    const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+    const title = titleMatch ? titleMatch[1].trim() : parsedUrl.hostname;
+    const text = html
+      .replace(/<script[\s\S]*?<\/script>/gi, '').replace(/<style[\s\S]*?<\/style>/gi, '')
+      .replace(/<noscript[\s\S]*?<\/noscript>/gi, '').replace(/<nav[\s\S]*?<\/nav>/gi, '')
+      .replace(/<footer[\s\S]*?<\/footer>/gi, '').replace(/<header[\s\S]*?<\/header>/gi, '')
+      .replace(/<aside[\s\S]*?<\/aside>/gi, '').replace(/<[^>]+>/g, ' ')
+      .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/\s+/g, ' ').trim();
+    if (!text) return { error: 'Page contained no readable text' };
+    return { type: 'page', url: urlStr, title: String(title).slice(0, 200), sourceName, content: text.slice(0, MAX_READ_CHARS), truncated: text.length > MAX_READ_CHARS, charCount: text.length };
+  } catch (e) { return { error: `Failed to read page: ${safeStr(e)}` }; }
+}
+
+async function collectConversationFiles(env, chat, currentAttachments) {
+  const ids = new Set();
+  if (chat && Array.isArray(chat.messages)) {
+    for (const m of chat.messages) if (m.role === 'user' && m.content) for (const bid of extractBlobIds(String(m.content))) ids.add(bid);
+  }
+  if (Array.isArray(currentAttachments)) {
+    for (const a of currentAttachments) if (a && a.blobId) ids.add(a.blobId);
+  }
+  const files = [];
+  for (const bid of ids) {
+    const blob = await blobGet(env, bid);
+    if (!blob || !blob.data) continue;
+    files.push({ blobId: bid, name: blob.name || 'file', mime: blob.mime || 'application/octet-stream', size: blob.size || 0, data: blob.data });
+  }
+  return files;
+}
+
+// ---------------------------------------------------------------------------
+// 12.5. GEMINI FILES API
+// ---------------------------------------------------------------------------
+async function hashFileContent(mime, base64) {
+  const sample =
+    String(mime || '') + '::' +
+    String(base64 || '').length + '::' +
+    String(base64 || '').slice(0, 256) + '::' +
+    String(base64 || '').slice(-256);
+  const buf = new TextEncoder().encode(sample);
+  const digest = await crypto.subtle.digest('SHA-256', buf);
+  return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 32);
+}
+
+async function geminiFileCacheGet(env, key) { return await mtGet(env, GEMINI_FILE_CACHE_PREFIX + key); }
+async function geminiFileCacheSet(env, key, value) { await mtPut(env, GEMINI_FILE_CACHE_PREFIX + key, value, GEMINI_FILE_CACHE_TTL); }
+
+function base64ToBytes(base64) {
+  const bin = atob(base64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+async function uploadToGeminiFiles(env, key, mime, base64Data, displayName) {
+  const bytes = base64ToBytes(base64Data);
+
+  const startRes = await fetchWithTimeout(`${GEMINI_FILES_UPLOAD_URL}?key=${key}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Goog-Upload-Protocol': 'resumable',
+      'X-Goog-Upload-Command': 'start',
+      'X-Goog-Upload-Header-Content-Length': String(bytes.length),
+      'X-Goog-Upload-Header-Content-Type': mime,
+    },
+    body: JSON.stringify({ file: { displayName: displayName || 'attachment' } }),
+  }, 20000, 'gemini-files-start', 1);
+
+  if (!startRes.ok) {
+    const t = await startRes.text().catch(() => '');
+    throw new Error(`Files start ${startRes.status}: ${t.slice(0, 200)}`);
+  }
+  const uploadUrl = startRes.headers.get('X-Goog-Upload-URL')
+                 || startRes.headers.get('x-goog-upload-url');
+  if (!uploadUrl) throw new Error('No upload URL returned from Files API');
+
+  const upRes = await fetchWithTimeout(uploadUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Length': String(bytes.length),
+      'X-Goog-Upload-Offset': '0',
+      'X-Goog-Upload-Command': 'upload, finalize',
+    },
+    body: bytes,
+  }, GEMINI_FILE_UPLOAD_TIMEOUT_MS, 'gemini-files-upload', 1);
+
+  if (!upRes.ok) {
+    const t = await upRes.text().catch(() => '');
+    throw new Error(`Files upload ${upRes.status}: ${t.slice(0, 200)}`);
+  }
+  const j = await upRes.json();
+  const file = j?.file;
+  if (!file?.uri) throw new Error('No file URI returned');
+
+  return {
+    uri: file.uri,
+    name: file.name || '',
+    mimeType: file.mimeType || mime,
+    state: file.state || 'ACTIVE',
+  };
+}
+
+async function waitForFileActive(env, key, fileName, maxWaitMs = 15000) {
+  const t0 = Date.now();
+  while (Date.now() - t0 < maxWaitMs) {
+    try {
+      const r = await fetchWithTimeout(
+        `${GEMINI_FILES_BASE}/${fileName}?key=${key}`, {},
+        8000, 'gemini-files-state', 0
+      );
+      if (r.ok) {
+        const j = await r.json();
+        if (j.state === 'ACTIVE') return true;
+        if (j.state === 'FAILED') throw new Error('File processing FAILED');
+      }
+    } catch (e) {
+      if (/FAILED/.test(safeStr(e))) throw e;
+    }
+    await new Promise(res => setTimeout(res, 1000));
+  }
+  return false;
+}
+
+async function ensureGeminiFile(env, key, mime, base64Data, displayName) {
+  if (!key || !mime || !base64Data) return null;
+  try {
+    const hash = await hashFileContent(mime, base64Data);
+    const cached = await geminiFileCacheGet(env, hash);
+    if (cached && cached.uri && cached.uploadKey === key) {
+      return { uri: cached.uri, uploadKey: key, cached: true };
+    }
+
+    const now = Math.floor(Date.now() / 1000);
+    try {
+      await env.DB.prepare('DELETE FROM rate_limits WHERE user_id = ? AND timestamp < ?')
+        .bind(GEMINI_FILE_UPLOAD_BUCKET, now - 60).run();
+      const c = await env.DB.prepare('SELECT COUNT(*) as cnt FROM rate_limits WHERE user_id = ? AND timestamp >= ?')
+        .bind(GEMINI_FILE_UPLOAD_BUCKET, now - 60).first();
+      if ((c?.cnt || 0) >= GEMINI_FILE_UPLOAD_MAX_PER_MIN) {
+        log('[gemini-file] rate limit hit for', mime);
+        return null;
+      }
+      await env.DB.prepare('INSERT INTO rate_limits (user_id, timestamp) VALUES (?, ?)')
+        .bind(GEMINI_FILE_UPLOAD_BUCKET, now).run();
+    } catch (e) { /* non-fatal */ }
+
+    const up = await uploadToGeminiFiles(env, key, mime, base64Data, displayName);
+    if (up.state && up.state !== 'ACTIVE' && up.name) {
+      try { await waitForFileActive(env, key, up.name); } catch (e) {
+        log('[gemini-file] wait failed:', safeStr(e));
+      }
+    }
+    await geminiFileCacheSet(env, hash, { uri: up.uri, name: up.name, uploadKey: key });
+    return { uri: up.uri, uploadKey: key, cached: false };
   } catch (e) {
-    console.warn('[preview]', e);
-    body.innerHTML = '';
-    const err = document.createElement('div');
-    err.className = 'preview-status preview-error';
-    err.innerHTML = '<span>Could not load this file.</span>';
-    const retry = document.createElement('button');
-    retry.className = 'preview-retry';
-    retry.textContent = 'Retry';
-    retry.onclick = () => openFilePreview(opts);
-    err.appendChild(retry);
-    body.appendChild(err);
+    log('[gemini-file] upload failed:', safeStr(e));
+    return null;
   }
-};
-const stopStream=async(cidArg)=>{
-  const cid=cidArg||state.currentChatId;
-  const rt=getRuntime(cid);
-  if(!rt)return;
-  if(rt.abortController){try{rt.abortController.abort();}catch(e){}rt.abortController=null;}
-  const stream=rt.currentStream;
-  if(stream&&stream.msg){
-    const msg=stream.msg;
-    msg._generating=false;
-    msg._phase='done';
-    const hasContent=(msg.blocks&&msg.blocks.some(b=>(b.type==='thinking'||b.type==='answer')&&b.text&&b.text.trim().length>0))||(msg.content&&msg.content.trim().length>0);
-    if(hasContent){
-      const content=buildContentFromBlocks(msg.blocks);
-      const payloadBlocks=Array.isArray(msg.blocks)?msg.blocks.filter(b=>b&&b.type!==META_BLOCK_TYPE):[];
-      try{
-        await fetch(API_BASE+'/api/chats/'+cid+'/complete',{
-          method:'POST',
-          headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-          body:JSON.stringify({content,client_message_id:msg.id,mode:msg.mode||'text',blocks:payloadBlocks})
-        });
-      }catch(e){}
-      scheduleStreamRender(msg,cid);
-    }else{
-      const chat=state.chats.find(c=>c.id===cid);
-      if(chat)chat.messages=chat.messages.filter(m=>m.id!==msg.id);
-      if(state.currentChatId===cid){
-        const row=document.querySelector(`[data-message-id="${msg.id}"]`);
-        if(row)row.remove();
-      }
-    }
-  }
-  rt.currentStream=null;
-  rt.isStreaming=false;
-  renderSidebar();
-  if(state.currentChatId===cid)updateInputUI();
-};
+}
 
-/* HANDLE SEND */
-const handleSend=async(content,attachments)=>{
-  attachments = Array.isArray(attachments) ? attachments : [];
-  const chatId=state.currentChatId;
-  if(!chatId)return;
-  const rt=getRuntime(chatId);
-  if(!rt)return;
-  if(rt.isStreaming){toast('Hold on — waiting for the current response to finish','warning',2600);return;}
-  if(!content.trim()&&!attachments.length)return;
-  const now=Date.now();
-  rt.requestTimestamps=rt.requestTimestamps.filter(t=>now-t<RATE_WINDOW);
-  if(rt.requestTimestamps.length>=RATE_LIMIT){toast('Too many messages — please wait a moment','warning',2800);return;}
-  rt.requestTimestamps.push(now);
-  const chat=state.chats.find(c=>c.id===chatId);
-  if(!chat)return;
-  if(chat.messages.length>=MAX_MSG){toast('Chat limit reached — start a new chat to continue','warning',3200);return;}
-  const finalContent=content;
-  rt.attachments=[];
-  if(state.currentChatId===chatId)updateAttachmentPreviews();
-  const imgLines = attachments.filter(a=>a.isImage).map(a=>{
-    if (a.blobId) return `![uploaded](blob:${a.blobId})`;
-    return `![uploaded](${a.data})`;
-  }).join('\n');
-  const fileLines = attachments.filter(a=>!a.isImage).map(a=>{
-    if (a.blobId) return `[Attached: ${a.name} (${a.mime}) blob:${a.blobId}]`;
-    return `[Attached: ${a.name} (${a.mime})]`;
-  }).join('\n');
-  const displayContent = [imgLines, fileLines, finalContent.trim()].filter(Boolean).join('\n');
-  const userMsg={id:genId(),role:'user',content:displayContent,timestamp:Date.now(),_generating:false};
-  chat.messages.push(userMsg);
-  if(state.currentChatId===chatId){
-    const area=$('messages-area');
-    if(area){if(area.querySelector('.welcome-screen'))area.innerHTML='';area.appendChild(createUserBubble(userMsg));}
-    rt.userScrolledUp=false;
-    scrollToBottom(true);
+// ---------------------------------------------------------------------------
+// 13. GEMINI NATIVE
+// ---------------------------------------------------------------------------
+function convertToGeminiContents(messages, currentKey) {
+  const contents = [];
+  let systemInstruction = null;
+  for (const m of messages) {
+    if (m.role === 'system') { systemInstruction = { parts: [{ text: m.content || '' }] }; continue; }
+    const role = m.role === 'assistant' ? 'model' : 'user';
+    if (Array.isArray(m.attachments) && m.attachments.length) {
+      const parts = m.attachments.map(a => {
+        if (a.fileUri) {
+          return { fileData: { mimeType: a.mime, fileUri: a.fileUri } };
+        }
+        return { inlineData: { mimeType: a.mime, data: a.base64 } };
+      });
+      parts.push({ text: m.content || 'Read the attached file(s) and answer the user.' });
+      contents.push({ role, parts });
+      continue;
+    }
+    contents.push({ role, parts: [{ text: m.content || '' }] });
   }
-  const hasAttachments = attachments.length > 0;
-  const chatMode = ensureModeForChat(chatId);
-  const expertMode = chatMode === 'expert';
-  const mode = hasAttachments
-    ? (expertMode ? 'vision-agent' : 'vision')
-    : (expertMode ? 'code' : 'text');
-  const placeholder={id:genId(),role:'assistant',content:'',mode,timestamp:Date.now(),_generating:true,_completed:false,_phase:'thinking',_thinkingActive:false,_activeTool:null,blocks:[]};
-  chat.messages.push(placeholder);
-  if(state.currentChatId===chatId){
-    const area=$('messages-area');
-    const row=createAssistantBubble(placeholder);
-    if(area)area.appendChild(row);
-  }
-  const activeBlocks={search:[],weather:[],finance:[],math:[],analyse:[],analysing:[]};
-  let currentThinkingBlock=null;
-  const resolveBlock=(type,parsed,applyFn)=>{
-    const queue=activeBlocks[type];
-    let idx=-1;
-    if(parsed.blockId)idx=queue.findIndex(b=>b.blockId===parsed.blockId);
-    if(idx===-1)idx=0;
-    if(queue[idx]){applyFn(queue[idx]);queue.splice(idx,1);}
-    placeholder._activeTool=null;
-    placeholder._phase='thinking';
-    scheduleStreamRender(placeholder,chatId);
+  return { contents, systemInstruction };
+}
+
+async function tryGeminiNativeStream(provider, key, messages, isVision, mode, env, temperatureOverride = null, hasAttachments = false) {
+  if (!key) throw new Error('Gemini native route requires API key');
+  const model = provider.model;
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:streamGenerateContent?alt=sse&key=${key}`;
+  const { contents, systemInstruction } = convertToGeminiContents(messages, key);
+
+  const temp = hasAttachments
+    ? 0.6
+    : (temperatureOverride !== null ? temperatureOverride : 0);
+
+  const generationConfig = {
+    maxOutputTokens: provider.maxTokens || MAX_OUTPUT_TOKENS_PER_ROUND,
+    temperature: temp,
+    topP: 0.9,
   };
-  const processEvent=parsed=>{
-    if(typeof parsed==='string')parsed={type:'text',content:parsed};
-    if(parsed.type==='run_start')parsed={...parsed,type:'math_start'};
-    if(parsed.type==='run_results')parsed={...parsed,type:'math_results'};
-    if(parsed.type==='run_error')parsed={...parsed,type:'math_error'};
-    if(parsed.done){
-      if(currentThinkingBlock&&currentThinkingBlock.open)currentThinkingBlock.open=false;
-      placeholder._thinkingActive=false;
-      placeholder._activeTool=null;
-      placeholder._phase='done';
-      Object.values(activeBlocks).forEach(queue=>{queue.forEach(b=>{b.active=false;});queue.length=0;});
-      placeholder._generating=false;
-      scheduleStreamRender(placeholder,chatId);
+  const tc = buildGeminiThinkingConfig(model, mode);
+  if (tc) generationConfig.thinkingConfig = tc;
+  const body = { contents, generationConfig };
+  if (systemInstruction) body.systemInstruction = systemInstruction;
+
+  const inlineCount = contents.reduce((n, c) => n + c.parts.filter(p => p.inlineData).length, 0);
+  const fileCount = contents.reduce((n, c) => n + c.parts.filter(p => p.fileData).length, 0);
+  log(`[gemini-req] model=${model} mode=${mode} temp=${temp} parts: fileData=${fileCount} inlineData=${inlineCount} bodySize=${JSON.stringify(body).length}`);
+
+  const timeout = provider.timeout || 45000;
+  const response = await fetchWithTimeout(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  }, timeout, `Google-native-${model}`, 2);
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => '');
+    const err = new Error(`Google ${model} ${response.status}: ${errorText.slice(0, 300)}`);
+    err.status = response.status;
+    err.retryAfterMs = parseRetryAfterMs(response, errorText);
+    throw err;
+  }
+  return response;
+}
+
+// ---------------------------------------------------------------------------
+// 14. PIPE STREAM
+// ---------------------------------------------------------------------------
+function handleGeminiPart(part, parser, sendEventRaw, thinkingState, cotEnabled, acc) {
+  const text = part.text;
+  if (typeof text !== 'string' || !text) return;
+  if (part.thought === true) {
+    if (!cotEnabled) return;
+    if (thinkingState.charCount >= MAX_THINKING_CHARS) return;
+    if (!thinkingState.visible) {
+      thinkingState.visible = true;
+      thinkingState.sawThinking = true;
+      sendEventRaw({ done: false, type: 'thinking_start' });
+    }
+    const remain = MAX_THINKING_CHARS - thinkingState.charCount;
+    const chunk = text.length > remain ? text.slice(0, remain) : text;
+    thinkingState.charCount += chunk.length;
+    sendEventRaw({ done: false, type: 'thinking', content: chunk });
+  } else {
+    if (acc) { acc.raw = (acc.raw || '') + text; acc.text += text; }
+    parser.feed(text);
+  }
+}
+
+async function pipeStream(providerResponse, mode, sendEventRaw, env, provider, options = {}) {
+  const t0Stream = Date.now();
+  const { allowTools = true } = options;
+  const cotEnabled = mode === 'code' || mode === 'vision-agent';
+
+  const rawStream = (providerResponse && typeof providerResponse.getReader === 'function') ? providerResponse
+    : (providerResponse && providerResponse.body) ? providerResponse.body : null;
+  if (!rawStream) return { tools: [], charts: [], sawText: false, sawThinking: false, toolDetected: false, error: 'no_stream', isNetworkError: false };
+
+  const thinkingState = { visible: false, sawThinking: false, charCount: 0, truncated: false };
+  const sendEvent = (ev) => {
+    if (ev.type === 'thinking_start') {
+      thinkingState.sawThinking = true;
+      if (!cotEnabled || thinkingState.visible) return;
+      thinkingState.visible = true;
+      sendEventRaw({ done: false, type: 'thinking_start' });
       return;
     }
-    const insertBeforeAnswer=block=>{
-      const answerIdx=placeholder.blocks.findIndex(b=>b.type==='answer');
-      if(answerIdx===-1)placeholder.blocks.push(block);
-      else placeholder.blocks.splice(answerIdx,0,block);
-    };
-    const getAnswerBlock=()=>{
-      let answerBlock=placeholder.blocks.find(b=>b.type==='answer');
-      if(!answerBlock){answerBlock={type:'answer',text:''};placeholder.blocks.push(answerBlock);}
-      return answerBlock;
-    };
-    if(parsed.type==='thinking_start'){
-      if(currentThinkingBlock&&currentThinkingBlock.open)currentThinkingBlock.open=false;
-      currentThinkingBlock={type:'thinking',text:'',open:true};
-      insertBeforeAnswer(currentThinkingBlock);
-      placeholder._thinkingActive=true;
-      placeholder._phase='thinking';
-      scheduleStreamRender(placeholder,chatId);
-    }else if(parsed.type==='thinking'){
-      if(currentThinkingBlock){currentThinkingBlock.text+=parsed.content;placeholder._phase='thinking';scheduleStreamRender(placeholder,chatId);}
-    }else if(parsed.type==='thinking_end'){
-      if(currentThinkingBlock){currentThinkingBlock.open=false;currentThinkingBlock=null;}
-      placeholder._thinkingActive=false;
-      scheduleStreamRender(placeholder,chatId);
-    }else if(parsed.type==='search_start'){
-      const block={type:'search',active:true,blockId:parsed.blockId||genId(),query:parsed.query,results:null,sources:null,error:null};
-      activeBlocks.search.push(block);insertBeforeAnswer(block);
-      placeholder._activeTool='search';placeholder._phase='tool';scheduleStreamRender(placeholder,chatId);
-    }else if(parsed.type==='search_results'){
-      resolveBlock('search',parsed,b=>{b.active=false;b.results=parsed.results||null;b.sources=parsed.sources||null;});
-    }else if(parsed.type==='search_error'){
-      resolveBlock('search',parsed,b=>{b.active=false;b.error=parsed.error;});
-    }else if(parsed.type==='weather_start'){
-      const block={type:'weather',active:true,blockId:parsed.blockId||genId(),query:parsed.query,data:null,error:null};
-      activeBlocks.weather.push(block);insertBeforeAnswer(block);
-      placeholder._activeTool='weather';placeholder._phase='tool';scheduleStreamRender(placeholder,chatId);
-    }else if(parsed.type==='weather_results'){
-      resolveBlock('weather',parsed,b=>{b.active=false;b.data=parsed.data;});
-    }else if(parsed.type==='weather_error'){
-      resolveBlock('weather',parsed,b=>{b.active=false;b.error=parsed.error;});
-    }else if(parsed.type==='finance_start'){
-      const query=parsed.query||{};
-      const financeType=(query&&query.type==='forex')?'forex':'stock';
-      const block={type:'finance',active:true,blockId:parsed.blockId||genId(),financeType,symbol:query.symbol,base:query.base,target:query.target,data:null,error:null};
-      activeBlocks.finance.push(block);insertBeforeAnswer(block);
-      placeholder._activeTool='finance';placeholder._phase='tool';scheduleStreamRender(placeholder,chatId);
-    }else if(parsed.type==='finance_results'){
-      resolveBlock('finance',parsed,b=>{b.active=false;b.data=parsed.data;});
-    }else if(parsed.type==='finance_error'){
-      resolveBlock('finance',parsed,b=>{b.active=false;b.error=parsed.error;});
-    }else if(parsed.type==='math_start'){
-      const block={type:'math',active:true,blockId:parsed.blockId||genId(),code:parsed.code,result:null,error:null};
-      activeBlocks.math.push(block);insertBeforeAnswer(block);
-      placeholder._activeTool='math';placeholder._phase='tool';scheduleStreamRender(placeholder,chatId);
-    }else if(parsed.type==='math_results'){
-      resolveBlock('math',parsed,b=>{b.active=false;b.result=parsed.result;});
-    }else if(parsed.type==='math_error'){
-      resolveBlock('math',parsed,b=>{b.active=false;b.error=parsed.error||'Math error';});
-    }else if(parsed.type==='analyse_start'){
-      const block={type:'analyse',active:true,blockId:parsed.blockId||genId(),url:parsed.url,data:null,error:null};
-      activeBlocks.analyse.push(block);insertBeforeAnswer(block);
-      placeholder._activeTool='analyse';placeholder._phase='tool';scheduleStreamRender(placeholder,chatId);
-    }else if(parsed.type==='analyse_results'){
-      resolveBlock('analyse',parsed,b=>{b.active=false;b.data=parsed.data||null;});
-    }else if(parsed.type==='analyse_error'){
-      resolveBlock('analyse',parsed,b=>{b.active=false;b.error=parsed.error;});
-    }else if(parsed.type==='analysing_start'){
-      const block={type:'analysing',active:true,blockId:parsed.blockId||genId(),query:parsed.query||'',data:null,error:null,source:parsed.source||'tool_call'};
-      activeBlocks.analysing.push(block);insertBeforeAnswer(block);
-      placeholder._activeTool='analysing';placeholder._phase='tool';scheduleStreamRender(placeholder,chatId);
-    }else if(parsed.type==='analysing_results'){
-      resolveBlock('analysing',parsed,b=>{b.active=false;b.query=parsed.query||b.query;b.data=parsed.data||null;});
-    }else if(parsed.type==='analysing_error'){
-      resolveBlock('analysing',parsed,b=>{b.active=false;b.query=parsed.query||b.query;b.error=parsed.error;});
-    }else if(parsed.type==='chart_render'){
-      const spec=typeof parsed.spec==='string'?parsed.spec:JSON.stringify(parsed.spec||parsed.content||'');
-      insertBeforeAnswer({type:'chart',blockId:parsed.blockId||genId(),spec});
-      scheduleStreamRender(placeholder,chatId);
-    }else if(parsed.type==='text'||typeof parsed.content==='string'){
-      const answerBlock=getAnswerBlock();
-      answerBlock.text+=parsed.content||'';
-      placeholder.content=placeholder.blocks.filter(b=>b.type==='answer').map(b=>b.text).join('');
-      scheduleStreamRender(placeholder,chatId);
-    }else if(parsed.error){
-      setBusyIfEmpty(placeholder,parsed.error);
-      scheduleStreamRender(placeholder,chatId);
-    }
-    if(state.currentChatId===chatId && !rt.userScrolledUp)scrollToBottom();
-  };
-  const parser=new SafeSSEParser(processEvent);
-  const streamObj={id:placeholder.id,chatId,msg:placeholder,processEvent};
-  rt.currentStream=streamObj;
-  rt.isStreaming=true;
-  renderSidebar();
-  if(state.currentChatId===chatId)updateInputUI();
-  const controller=new AbortController();
-  rt.abortController=controller;
-  const signal=controller.signal;
-  const blobIds = attachments.map(a=>a.blobId).filter(Boolean);
-  const inlineAttachments = attachments
-    .filter(a => !a.blobId)
-    .map(a => ({ name: a.name, mime: a.mime, data: a.data }));
-  try{
-    const response=await fetch(API_BASE+'/api/chats/'+chatId+'/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-      body:JSON.stringify({
-        content: finalContent,
-        attachmentIds: blobIds,
-        attachments: inlineAttachments,
-        mode,
-        websearch: true
-      }),
-      signal
-    });
-    if(!response.ok){
-      let errorMsg='Request failed';
-      try{const errData=await response.json();if(errData.error)errorMsg=errData.error;}catch(_){}
-      throw new Error(errorMsg);
-    }
-    const reader=response.body.getReader();
-    const decoder=new TextDecoder();
-    while(true){
-      const {done,value}=await reader.read();
-      if(done)break;
-      if(signal.aborted){reader.cancel();break;}
-      parser.feed(decoder.decode(value,{stream:true}));
-      if(state.currentChatId===chatId && !rt.userScrolledUp)scrollToBottom();
-    }
-    {
-      if(!hasVisibleAnswer(placeholder))setBusyIfEmpty(placeholder,'No response received from the server.');
-      placeholder._generating=false;
-      placeholder._phase='done';
-      scheduleStreamRender(placeholder,chatId);
-      const payloadBlocks=Array.isArray(placeholder.blocks)?placeholder.blocks.filter(b=>b&&b.type!==META_BLOCK_TYPE):[];
-      await fetch(API_BASE+'/api/chats/'+chatId+'/complete',{
-        method:'POST',
-        headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-        body:JSON.stringify({content:buildContentFromBlocks(placeholder.blocks),client_message_id:genId(),mode,blocks:payloadBlocks})
-      });
-      const assistantCount=chat.messages.filter(m=>m.role==='assistant').length;
-      const isFirstAssistantMsg=assistantCount===1;
-      if(isFirstAssistantMsg){
-        state.titleGeneratingChatId=chatId;
-        updateChatTitleDisplay(chatId,'',true);
-        fetch(`${API_BASE}/api/chats/${chatId}/generate-title`,{
-          method:'POST',
-          headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-          body:JSON.stringify({userContent:finalContent,assistantContent:buildContentFromBlocks(placeholder.blocks)})
-        })
-          .then(res=>res.json())
-          .then(data=>{
-            state.titleGeneratingChatId=null;
-            let finalTitle=chat.title;
-            if(data.title&&data.title!=='New Chat'&&data.title!==chat.title){
-              chat.title=data.title;
-              finalTitle=data.title;
-              if(state.currentChatId===chatId)document.title=`ZebAI - ${clampTitle(data.title,40)}`;
-            }
-            updateChatTitleDisplay(chatId,finalTitle,false);
-          })
-          .catch(()=>{state.titleGeneratingChatId=null;updateChatTitleDisplay(chatId,chat.title,false);});
-      }
-    }
-  }catch(err){
-    if(!placeholder._generating)return;
-    const errorMsg=err.message||'Server Busy, Please Try Again';
-    setBusyIfEmpty(placeholder,errorMsg);
-    placeholder._generating=false;
-    placeholder._phase='done';
-    scheduleStreamRender(placeholder,chatId);
-    try{
-      const payloadBlocks=Array.isArray(placeholder.blocks)?placeholder.blocks.filter(b=>b&&b.type!==META_BLOCK_TYPE):[];
-      await fetch(API_BASE+'/api/chats/'+chatId+'/complete',{
-        method:'POST',
-        headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-        body:JSON.stringify({content:buildContentFromBlocks(placeholder.blocks),client_message_id:genId(),mode,blocks:payloadBlocks})
-      });
-    }catch(e){}
-  }finally{
-    rt.isStreaming=false;
-    rt.abortController=null;
-    rt.currentStream=null;
-    renderSidebar();
-    if(state.currentChatId===chatId){updateInputUI();updateAttachmentPreviews();}
-  }
-};
-
-/* REGENERATE */
-const handleRegen=async()=>{
-  const chatId=state.currentChatId;
-  if(!chatId)return;
-  const rt=getRuntime(chatId);
-  if(!rt)return;
-  if(rt.isStreaming){toast('Hold on — waiting for the current response to finish','warning',2600);return;}
-  const chat=state.chats.find(c=>c.id===chatId);
-  if(!chat||chat.messages.length<1)return;
-  let lastUIdx=-1;
-  for(let i=chat.messages.length-1;i>=0;i--){if(chat.messages[i].role==='user'){lastUIdx=i;break;}}
-  if(lastUIdx===-1){toast('Nothing to regenerate','warning',2000);return;}
-  const lastU=chat.messages[lastUIdx];
-  const assistantsAfter=[];
-  for(let i=lastUIdx+1;i<chat.messages.length;i++){if(chat.messages[i].role==='assistant')assistantsAfter.push(chat.messages[i]);}
-  const lastA=assistantsAfter.length?assistantsAfter[assistantsAfter.length-1]:null;
-  const hasAttach = /!\[.*?\]\((?:data|blob):/.test(String(lastU.content||'')) || /\[Attached:/.test(String(lastU.content||''));
-  const chatMode = ensureModeForChat(chatId);
-  const expertMode = chatMode === 'expert';
-  const mode = (lastA && lastA.mode)
-    || (hasAttach ? (expertMode ? 'vision-agent' : 'vision') : (expertMode ? 'code' : 'text'));
-  const oldARow=lastA?document.querySelector(`[data-message-id="${lastA.id}"]`):null;
-  if(oldARow){oldARow.style.transition='opacity .3s ease';oldARow.style.opacity='0.35';}
-  const placeholder={id:genId(),role:'assistant',content:'',mode,timestamp:Date.now(),_generating:true,_completed:false,_phase:'thinking',_thinkingActive:false,_activeTool:null,blocks:[],_isRegen:true,_replacesAssistantId:lastA?lastA.id:null};
-  chat.messages.push(placeholder);
-  const area=$('messages-area');
-  const newRow=createAssistantBubble(placeholder);
-  if(area)area.appendChild(newRow);
-  rt.userScrolledUp=false;
-  scrollToBottom(true);
-  const activeBlocks={search:[],weather:[],finance:[],math:[],analyse:[],analysing:[]};
-  let currentThinkingBlock=null;
-  const resolveBlock=(type,parsed,applyFn)=>{
-    const queue=activeBlocks[type];
-    let idx=-1;
-    if(parsed.blockId)idx=queue.findIndex(b=>b.blockId===parsed.blockId);
-    if(idx===-1)idx=0;
-    if(queue[idx]){applyFn(queue[idx]);queue.splice(idx,1);}
-    placeholder._activeTool=null;
-    placeholder._phase='thinking';
-    scheduleStreamRender(placeholder,chatId);
-  };
-  const processEvent=parsed=>{
-    if(typeof parsed==='string')parsed={type:'text',content:parsed};
-    if(parsed.type==='run_start')parsed={...parsed,type:'math_start'};
-    if(parsed.type==='run_results')parsed={...parsed,type:'math_results'};
-    if(parsed.type==='run_error')parsed={...parsed,type:'math_error'};
-    if(parsed.done){
-      if(currentThinkingBlock&&currentThinkingBlock.open)currentThinkingBlock.open=false;
-      placeholder._thinkingActive=false;
-      placeholder._activeTool=null;
-      placeholder._phase='done';
-      Object.values(activeBlocks).forEach(queue=>{queue.forEach(b=>{b.active=false;});queue.length=0;});
-      placeholder._generating=false;
-      scheduleStreamRender(placeholder,chatId);
+    if (ev.type === 'thinking_end') return;
+    if (ev.type === 'thinking') {
+      if (!cotEnabled) return;
+      thinkingState.charCount += (ev.content || '').length;
+      sendEventRaw({ done: false, type: 'thinking', content: ev.content || '' });
       return;
     }
-    const insertBeforeAnswer=block=>{
-      const answerIdx=placeholder.blocks.findIndex(b=>b.type==='answer');
-      if(answerIdx===-1)placeholder.blocks.push(block);
-      else placeholder.blocks.splice(answerIdx,0,block);
-    };
-    const getAnswerBlock=()=>{
-      let ab=placeholder.blocks.find(b=>b.type==='answer');
-      if(!ab){ab={type:'answer',text:''};placeholder.blocks.push(ab);}
-      return ab;
-    };
-    if(parsed.type==='thinking_start'){
-      if(currentThinkingBlock&&currentThinkingBlock.open)currentThinkingBlock.open=false;
-      currentThinkingBlock={type:'thinking',text:'',open:true};
-      insertBeforeAnswer(currentThinkingBlock);
-      placeholder._thinkingActive=true;placeholder._phase='thinking';
-      scheduleStreamRender(placeholder,chatId);
-    }else if(parsed.type==='thinking'){
-      if(currentThinkingBlock){currentThinkingBlock.text+=parsed.content;placeholder._phase='thinking';scheduleStreamRender(placeholder,chatId);}
-    }else if(parsed.type==='thinking_end'){
-      if(currentThinkingBlock){currentThinkingBlock.open=false;currentThinkingBlock=null;}
-      placeholder._thinkingActive=false;scheduleStreamRender(placeholder,chatId);
-    }else if(parsed.type==='search_start'){
-      const block={type:'search',active:true,blockId:parsed.blockId||genId(),query:parsed.query,results:null,sources:null,error:null};
-      activeBlocks.search.push(block);insertBeforeAnswer(block);
-      placeholder._activeTool='search';placeholder._phase='tool';scheduleStreamRender(placeholder,chatId);
-    }else if(parsed.type==='search_results'){
-      resolveBlock('search',parsed,b=>{b.active=false;b.results=parsed.results||null;b.sources=parsed.sources||null;});
-    }else if(parsed.type==='search_error'){
-      resolveBlock('search',parsed,b=>{b.active=false;b.error=parsed.error;});
-    }else if(parsed.type==='weather_start'){
-      const block={type:'weather',active:true,blockId:parsed.blockId||genId(),query:parsed.query,data:null,error:null};
-      activeBlocks.weather.push(block);insertBeforeAnswer(block);
-      placeholder._activeTool='weather';placeholder._phase='tool';scheduleStreamRender(placeholder,chatId);
-    }else if(parsed.type==='weather_results'){
-      resolveBlock('weather',parsed,b=>{b.active=false;b.data=parsed.data;});
-    }else if(parsed.type==='weather_error'){
-      resolveBlock('weather',parsed,b=>{b.active=false;b.error=parsed.error;});
-    }else if(parsed.type==='finance_start'){
-      const query=parsed.query||{};
-      const financeType=(query&&query.type==='forex')?'forex':'stock';
-      const block={type:'finance',active:true,blockId:parsed.blockId||genId(),financeType,symbol:query.symbol,base:query.base,target:query.target,data:null,error:null};
-      activeBlocks.finance.push(block);insertBeforeAnswer(block);
-      placeholder._activeTool='finance';placeholder._phase='tool';scheduleStreamRender(placeholder,chatId);
-    }else if(parsed.type==='finance_results'){
-      resolveBlock('finance',parsed,b=>{b.active=false;b.data=parsed.data;});
-    }else if(parsed.type==='finance_error'){
-      resolveBlock('finance',parsed,b=>{b.active=false;b.error=parsed.error;});
-    }else if(parsed.type==='math_start'){
-      const block={type:'math',active:true,blockId:parsed.blockId||genId(),code:parsed.code,result:null,error:null};
-      activeBlocks.math.push(block);insertBeforeAnswer(block);
-      placeholder._activeTool='math';placeholder._phase='tool';scheduleStreamRender(placeholder,chatId);
-    }else if(parsed.type==='math_results'){
-      resolveBlock('math',parsed,b=>{b.active=false;b.result=parsed.result;});
-    }else if(parsed.type==='math_error'){
-      resolveBlock('math',parsed,b=>{b.active=false;b.error=parsed.error||'Math error';});
-    }else if(parsed.type==='analyse_start'){
-      const block={type:'analyse',active:true,blockId:parsed.blockId||genId(),url:parsed.url,data:null,error:null};
-      activeBlocks.analyse.push(block);insertBeforeAnswer(block);
-      placeholder._activeTool='analyse';placeholder._phase='tool';scheduleStreamRender(placeholder,chatId);
-    }else if(parsed.type==='analyse_results'){
-      resolveBlock('analyse',parsed,b=>{b.active=false;b.data=parsed.data||null;});
-    }else if(parsed.type==='analyse_error'){
-      resolveBlock('analyse',parsed,b=>{b.active=false;b.error=parsed.error;});
-    }else if(parsed.type==='analysing_start'){
-      const block={type:'analysing',active:true,blockId:parsed.blockId||genId(),query:parsed.query||'',data:null,error:null,source:parsed.source||'tool_call'};
-      activeBlocks.analysing.push(block);insertBeforeAnswer(block);
-      placeholder._activeTool='analysing';placeholder._phase='tool';scheduleStreamRender(placeholder,chatId);
-    }else if(parsed.type==='analysing_results'){
-      resolveBlock('analysing',parsed,b=>{b.active=false;b.query=parsed.query||b.query;b.data=parsed.data||null;});
-    }else if(parsed.type==='analysing_error'){
-      resolveBlock('analysing',parsed,b=>{b.active=false;b.query=parsed.query||b.query;b.error=parsed.error;});
-    }else if(parsed.type==='chart_render'){
-      const spec=typeof parsed.spec==='string'?parsed.spec:JSON.stringify(parsed.spec||parsed.content||'');
-      insertBeforeAnswer({type:'chart',blockId:parsed.blockId||genId(),spec});
-      scheduleStreamRender(placeholder,chatId);
-    }else if(parsed.type==='text'||typeof parsed.content==='string'){
-      const ab=getAnswerBlock();
-      ab.text+=parsed.content||'';
-      placeholder.content=placeholder.blocks.filter(b=>b.type==='answer').map(b=>b.text).join('');
-      scheduleStreamRender(placeholder,chatId);
-    }else if(parsed.error){
-      setBusyIfEmpty(placeholder,parsed.error);
-      scheduleStreamRender(placeholder,chatId);
-    }
-    if(state.currentChatId===chatId && !rt.userScrolledUp)scrollToBottom();
+    if (ev.type === 'tool_end') return;
+    if (ev.type === 'tool_start') { sendEventRaw({ done: false, type: 'tool_tag', name: ev.name }); return; }
+    if (ev.type === 'chart') { sendEventRaw({ done: false, type: 'chart_render', blockId: genBlockId(), spec: ev.content || '' }); return; }
+    if (ev.type === 'text') { sendEventRaw({ done: false, type: 'text', content: ev.content || '' }); return; }
+    sendEventRaw({ done: false, ...ev });
   };
-  const parser=new SafeSSEParser(processEvent);
-  const streamObj={id:placeholder.id,chatId,msg:placeholder,processEvent};
-  rt.currentStream=streamObj;
-  rt.isStreaming=true;
-  renderSidebar();
-  updateInputUI();
-  const controller=new AbortController();
-  rt.abortController=controller;
-  const signal=controller.signal;
-  let streamSucceeded=false;
-  try{
-    const response=await fetch(API_BASE+'/api/chats/'+chatId+'/regenerate',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-      body:JSON.stringify({mode,websearch:true}),
-      signal
-    });
-    if(!response.ok){
-      let errorMsg='Request failed';
-      try{const errData=await response.json();if(errData.error)errorMsg=errData.error;}catch(_){}
-      throw new Error(errorMsg);
-    }
-    const reader=response.body.getReader();
-    const decoder=new TextDecoder();
-    while(true){
-      const {done,value}=await reader.read();
-      if(done)break;
-      if(signal.aborted){reader.cancel();break;}
-      parser.feed(decoder.decode(value,{stream:true}));
-      if(state.currentChatId===chatId && !rt.userScrolledUp)scrollToBottom();
-    }
-    {
-      if(!hasVisibleAnswer(placeholder)){setBusyIfEmpty(placeholder,'No response received from the server.');}
-      else{streamSucceeded=true;}
-      placeholder._generating=false;
-      placeholder._phase='done';
-      scheduleStreamRender(placeholder,chatId);
-      const payloadBlocks=Array.isArray(placeholder.blocks)?placeholder.blocks.filter(b=>b&&b.type!==META_BLOCK_TYPE):[];
-      await fetch(API_BASE+'/api/chats/'+chatId+'/complete',{
-        method:'POST',
-        headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-        body:JSON.stringify({content:buildContentFromBlocks(placeholder.blocks),client_message_id:genId(),mode,blocks:payloadBlocks})
-      });
-    }
-  }catch(err){
-    if(!placeholder._generating)return;
-    const errorMsg=err.message||'Server Busy, Please Try Again';
-    setBusyIfEmpty(placeholder,errorMsg);
-    placeholder._generating=false;
-    placeholder._phase='done';
-    scheduleStreamRender(placeholder,chatId);
-    try{
-      const payloadBlocks=Array.isArray(placeholder.blocks)?placeholder.blocks.filter(b=>b&&b.type!==META_BLOCK_TYPE):[];
-      await fetch(API_BASE+'/api/chats/'+chatId+'/complete',{
-        method:'POST',
-        headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-        body:JSON.stringify({content:buildContentFromBlocks(placeholder.blocks),client_message_id:genId(),mode,blocks:payloadBlocks})
-      });
-    }catch(e){}
-  }finally{
-    rt.isStreaming=false;
-    rt.abortController=null;
-    rt.currentStream=null;
-    renderSidebar();
-    if(state.currentChatId===chatId)updateInputUI();
-    if(streamSucceeded){
-      if(lastA){
-        const targetChat=state.chats.find(c=>c.id===chatId);
-        if(targetChat){targetChat.messages=targetChat.messages.filter(m=>m.id!==lastA.id);}
-        if(oldARow&&oldARow.parentNode)oldARow.remove();
-        api('DELETE',`/api/chats/${chatId}/messages/${lastA.id}`).catch(()=>{});
-      }
-      toast('Regenerated','success',1600);
-    }else{
-      const targetChat=state.chats.find(c=>c.id===chatId);
-      if(targetChat){targetChat.messages=targetChat.messages.filter(m=>m.id!==placeholder.id);}
-      if(newRow&&newRow.parentNode)newRow.remove();
-      if(oldARow)oldARow.style.opacity='';
-      toast('Regeneration failed — previous response kept','warning',2400);
-    }
-  }
-};
+  const closeRoundThinking = () => {
+    if (!thinkingState.visible) return;
+    thinkingState.visible = false;
+    sendEventRaw({ done: false, type: 'thinking_end' });
+  };
 
-const openProfile=async()=>{
-  const ov=$('profile-overlay');
-  if(!ov)return;
-  const name=state.loggedUsername||loggedUsername||'User';
-  $('profile-avatar').textContent=name.charAt(0).toUpperCase();
-  $('profile-name').textContent=name;
-  $('profile-username').textContent='@'+name.toLowerCase();
-  ov.classList.add('open');
-  queueIcons(ov);
-};
-const closeProfile=()=>{const ov=$('profile-overlay');if(ov)ov.classList.remove('open');};
-let tmpSettings={};
-const openSettings=()=>{
-  state.settingsOpen=true;
-  document.body.classList.add('locked');
-  tmpSettings={theme:state.theme,fontSize:state.fontSize,accentColor:state.accentColor};
-  renderSettings();
-};
-const closeSettings=save=>{
-  if(save){
-    Object.assign(state,tmpSettings);
-    document.documentElement.setAttribute('data-theme',state.theme);
-    document.documentElement.style.fontSize=state.fontSize+'px';
-    applyAccent();
-    saveSettings();
-  }
-  state.settingsOpen=false;
-  $('settings-overlay').classList.remove('open');
-  document.body.classList.remove('locked');
-};
-const renderSettings=()=>{
-  const ov=$('settings-overlay');
-  ov.classList.add('open');
-  const themes=[
-    { id:'dark',     label:'Dark', cls:'swatch-dark' },
-    { id:'light',    label:'Light', cls:'swatch-light' },
-    { id:'midnight', label:'Mid',  cls:'swatch-midnight' },
-  ];
-  const themeBtns = themes.map(t =>
-    `<div class="theme-swatch ${t.cls}${tmpSettings.theme===t.id?' active':''}" data-theme="${t.id}">${t.label}</div>`
-  ).join('');
-  const accents = Object.keys(THEMES).map(k =>
-    `<div class="accent-swatch${tmpSettings.accentColor===k?' active':''}" data-accent="${k}" style="background:${THEMES[k]}" title="${k}"></div>`
-  ).join('');
-  ov.innerHTML = `
-    <div class="settings-panel" onclick="event.stopPropagation()">
-      <button class="settings-close" id="close-settings-btn"><i data-lucide="x" style="width:18px;height:18px"></i></button>
-      <h3><i data-lucide="palette" style="width:18px;height:18px"></i> Customize</h3>
-      <div class="customize-row">
-        <div class="row-label">Theme</div>
-        <div class="theme-swatches">${themeBtns}</div>
-      </div>
-      <div class="customize-row">
-        <div class="row-label">Accent</div>
-        <div class="accent-swatches">${accents}</div>
-      </div>
-      <div class="customize-row">
-        <div class="row-label">Font Size <span class="slider-value" id="fsv">${tmpSettings.fontSize}px</span></div>
-        <div class="customize-slider-row">
-          <input type="range" min="12" max="22" value="${tmpSettings.fontSize}" id="st-fs">
-        </div>
-      </div>
-      <div class="customize-row">
-        <div class="customize-actions">
-          <button class="btn-secondary" id="clear-btn"><i data-lucide="trash-2" style="width:12px;height:12px"></i> Clear All</button>
-          <button class="btn-primary" id="done-btn"><i data-lucide="check-circle" style="width:12px;height:12px"></i> Done</button>
-        </div>
-      </div>
-    </div>`;
-  ov.onclick = e => { if(e.target===ov) closeSettings(false); };
-  $('close-settings-btn').onclick = () => closeSettings(false);
-  ov.querySelectorAll('.theme-swatch').forEach(sw => {
-    sw.onclick = () => {
-      tmpSettings.theme = sw.dataset.theme;
-      ov.querySelectorAll('.theme-swatch').forEach(s => s.classList.toggle('active', s === sw));
-    };
-  });
-  ov.querySelectorAll('.accent-swatch').forEach(sw => {
-    sw.onclick = () => {
-      tmpSettings.accentColor = sw.dataset.accent;
-      ov.querySelectorAll('.accent-swatch').forEach(s => s.classList.toggle('active', s === sw));
-    };
-  });
-  $('st-fs').oninput = function(){
-    tmpSettings.fontSize = parseInt(this.value, 10);
-    $('fsv').textContent = this.value + 'px';
+  const reader = rawStream.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  const parser = new StatefulXMLParser(sendEvent, { allowTools, allowThinking: false });
+  const acc = { raw: '', text: '' };
+  let lastFinishReason = null;
+  let sawFirstChunk = false;
+  let cancelReason = null;
+
+  let silenceTimer = null;
+  const armSilence = () => {
+    if (silenceTimer) clearTimeout(silenceTimer);
+    silenceTimer = setTimeout(() => {
+      sendEventRaw({ done: false, type: 'llm_still_working' });
+      armSilence();
+    }, LLM_SILENCE_MS);
   };
-  $('done-btn').onclick = () => closeSettings(true);
-  $('clear-btn').onclick = () => {
-    confirmDialog('Delete ALL chats?', async ok => {
-      if(!ok) return;
-      for(const c of state.chats) await api('DELETE','/api/chats/'+c.id);
-      state.chats=[]; state.currentChatId=null; state.chatModes={};
-      chatRuntime.clear();
-      await createNewChat(true);
-    });
-  };
-  queueIcons(ov);
-};
-const applyAccent=()=>{
-  const col=THEMES[state.accentColor]||THEMES.ice;
-  document.documentElement.style.setProperty('--accent',col);
-  document.documentElement.style.setProperty('--accent-hover',col+'dd');
-  document.documentElement.style.setProperty('--accent-subtle',hexToRgba(col,0.1));
-  const av=$('user-avatar');
-  if(av)av.style.background=col;
-};
-const hexToRgba=(hex,alpha)=>{
-  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
-  return `rgba(${r},${g},${b},${alpha})`;
-};
-const handleSidebarClick=e=>{
-  const item=e.target.closest('.chat-list-item');
-  if(item&&!e.target.closest('button')&&!e.target.closest('input'))selectChat(item.dataset.cid);
-  const ren=e.target.closest('.rename-btn');
-  if(ren){e.stopPropagation();state.renamingChatId=ren.dataset.id;renderSidebar();}
-  const del=e.target.closest('.delete-btn');
-  if(del){e.stopPropagation();deleteChat(del.dataset.id);}
-  const nw=e.target.closest('#btn-new-chat');
-  if(nw)createNewChat();
-  const st=e.target.closest('#settings-btn');
-  if(st)openSettings();
-  const ui=e.target.closest('#user-info-btn');
-  if(ui)openProfile();
-};
-const fallbackCopy=text=>{
-  try{
-    const ta=document.createElement('textarea');
-    ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
-    document.body.appendChild(ta);
-    ta.select();
-    const ok=document.execCommand('copy');
-    document.body.removeChild(ta);
-    if(ok)toast('Copied to clipboard','success');
-    else toast('Copy failed','error');
-  }catch(e){toast('Copy failed','error');}
-};
-const __zebSpeak={
-  current:null,currentBtn:null,
-  speak(text,btn){
-    if(!('speechSynthesis' in window)){toast('Text-to-speech is not supported in this browser','warning');return;}
-    if(this.current&&this.currentBtn===btn){this.stop();return;}
-    this.stop();
-    const clean=String(text||'')
-      .replace(/```[\s\S]*?```/g,' code block ')
-      .replace(/`([^`]+)`/g,' $1 ')
-      .replace(/!\[.*?\]\(.*?\)/g,'')
-      .replace(/\[([^\]]+)\]\([^)]*\)/g,'$1')
-      .replace(/[#*_>~]/g,' ')
-      .replace(/\n{2,}/g,'. ')
-      .replace(/\s+/g,' ')
-      .trim();
-    if(!clean){toast('Nothing to read','warning');return;}
-    const utter=new SpeechSynthesisUtterance(clean);
-    utter.lang=navigator.language||'en-US';
-    utter.rate=1.05;utter.pitch=1;
-    utter.onend=()=>{this.current=null;if(this.currentBtn)this.currentBtn.classList.remove('speaking');this.currentBtn=null;};
-    utter.onerror=()=>{this.current=null;if(this.currentBtn)this.currentBtn.classList.remove('speaking');this.currentBtn=null;};
-    this.current=utter;this.currentBtn=btn;
-    if(btn){btn.classList.add('speaking');queueIcons(btn);}
-    window.speechSynthesis.speak(utter);
-  },
-  stop(){
-    if('speechSynthesis' in window){try{window.speechSynthesis.cancel();}catch{}}
-    if(this.currentBtn)this.currentBtn.classList.remove('speaking');
-    this.current=null;this.currentBtn=null;
-  }
-};
-const submitInput=()=>{
-  const chatId=state.currentChatId;
-  const rt=getRuntime(chatId);
-  if(!rt||rt.isStreaming)return;
-  const i=$('chat-input');
-  if(!i)return;
-  const t=i.value.trim();
-  const atts=rt.attachments.slice();
-  if(!t&&!atts.length)return;
-  const chat=state.chats.find(c=>c.id===chatId);
-  if(chat&&chat.messages.length>=MAX_MSG){toast('Chat limit reached — start a new chat to continue','warning',3200);return;}
-  __zebSpeak.stop();
-  i.value='';
-  i.style.height='auto';
-  i.style.overflowY='hidden';
-  rt.attachments=[];
-  rt.draft='';
-  updateAttachmentPreviews();
-  updateInputUI();
-  handleSend(t||'',atts);
-};
-const initApp=()=>{
-  showScreen('app');
-  if(innerWidth<=768)state.sidebarOpen=false;
-  $('sidebar').classList.toggle('collapsed',!state.sidebarOpen);
-  const ti=$('toggle-sidebar-btn').querySelector('i');
-  ti.setAttribute('data-lucide',state.sidebarOpen?'panel-left-close':'panel-left');
-  queueIcons(ti);
-  $('user-avatar').textContent=(loggedUsername||'U').charAt(0).toUpperCase();
-  $('username-display').textContent=loggedUsername||'User';
-  $('search-input').addEventListener('input',debounce(()=>{state.searchTerm=$('search-input').value;renderSidebar();},150));
-  $('messages-area').addEventListener('scroll',toggleScrollBtn,{passive:true});
-  $('scroll-to-bottom-btn').addEventListener('click',()=>{
-    const rt=currentRuntime();
-    if(rt)rt.userScrolledUp=false;
-    scrollToBottom(true);
+  armSilence();
+
+  let ttftTimer = null;
+  const ttftPromise = new Promise((_, reject) => {
+    ttftTimer = setTimeout(() => {
+      if (!sawFirstChunk) {
+        cancelReason = 'ttft-timeout';
+        try { reader.cancel('ttft-timeout'); } catch {}
+        reject(new Error('TTFT timeout'));
+      }
+    }, mode === 'code' || mode === 'vision-agent' ? TTFT_CODE_MS : TTFT_TEXT_MS);
   });
-  $('toggle-sidebar-btn').addEventListener('click',()=>{
-    state.sidebarOpen=!state.sidebarOpen;
-    $('sidebar').classList.toggle('collapsed',!state.sidebarOpen);
-    const i=$('toggle-sidebar-btn').querySelector('i');
-    i.setAttribute('data-lucide',state.sidebarOpen?'panel-left-close':'panel-left');
-    queueIcons(i);
-  });
-  $('sidebar-inner').addEventListener('click',handleSidebarClick);
-  const handleResize=debounce(()=>{
-    if(window.innerWidth<=768&&state.sidebarOpen){
-      state.sidebarOpen=false;
-      const sb=$('sidebar');
-      if(sb)sb.classList.add('collapsed');
-      const icon=$('toggle-sidebar-btn').querySelector('i');
-      if(icon){icon.setAttribute('data-lucide','panel-left');queueIcons(icon);}
-    }
-  },200);
-  window.addEventListener('resize',handleResize);
-  const inp=$('chat-input');
-  const inputMaxHeight=()=>Math.max(120,Math.min(window.innerHeight*0.3,320));
-  const growInput=()=>{
-    inp.style.height='auto';
-    const maxH=inputMaxHeight();
-    const target=Math.min(inp.scrollHeight,maxH);
-    inp.style.height=target+'px';
-    inp.style.overflowY=inp.scrollHeight>maxH?'auto':'hidden';
-  };
-  inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();if(!(currentRuntime()?.isStreaming))submitInput();}});
-  inp.addEventListener('input',()=>{growInput();updateInputUI();});
-  window.addEventListener('resize',()=>growInput());
-  inp.addEventListener('paste',async e=>{
-    const dt=e.clipboardData||window.clipboardData;
-    if(!dt)return;
-    const items=dt.items?Array.from(dt.items):[];
-    for(const item of items){
-      if(item.kind==='file'&&item.type){
-        if(item.type.startsWith('image/')){
-          e.preventDefault();
-          await addAttachmentFromFile(item.getAsFile());
-          return;
+
+  let chunkTimer = null;
+  const readWithWatchdog = () => Promise.race([
+    reader.read(),
+    new Promise((_, reject) => {
+      chunkTimer = setTimeout(() => {
+        cancelReason = 'chunk-timeout';
+        try { reader.cancel('chunk-timeout'); } catch {}
+        reject(new Error('Chunk timeout'));
+      }, CHUNK_WATCHDOG_MS);
+    }),
+  ]);
+
+  try {
+    while (true) {
+      const chunkPromise = sawFirstChunk ? readWithWatchdog() : Promise.race([reader.read(), ttftPromise]);
+      const { done, value } = await chunkPromise;
+      if (chunkTimer) { clearTimeout(chunkTimer); chunkTimer = null; }
+      if (done) break;
+      if (!sawFirstChunk) { sawFirstChunk = true; clearTimeout(ttftTimer); ttftTimer = null; }
+      armSilence();
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const dataContent = line.slice(6).trim();
+        if (!dataContent || dataContent === '[DONE]') continue;
+        let parsed; try { parsed = JSON.parse(dataContent); } catch { continue; }
+        const candidate = parsed?.candidates?.[0];
+        if (candidate?.finishReason) lastFinishReason = candidate.finishReason;
+        const parts = candidate?.content?.parts;
+        if (Array.isArray(parts)) {
+          for (const part of parts) handleGeminiPart(part, parser, sendEventRaw, thinkingState, cotEnabled, acc);
         }
       }
     }
-    const pastedText=dt.getData('text');
-    if(!pastedText||!pastedText.trim())return;
-    const lineCount=(pastedText.match(/\n/g)||[]).length;
-    const isLargePaste=pastedText.length>400||lineCount>=4;
-    if(!isLargePaste)return;
-    e.preventDefault();
-    const rt=currentRuntime();
-    if(!rt)return;
-    const trimmed = pastedText.trim();
-    let pName = 'pasted-text.txt', pMime = 'text/plain';
-    if (/^\s*<!doctype\s+html/i.test(trimmed) || /^\s*<html[\s>]/i.test(trimmed)) {
-      pName = 'pasted.html'; pMime = 'text/html';
-    } else if (/^\s*[\[{]/.test(trimmed)) {
-      const lines = trimmed.split(/\r?\n/).filter(l => l.trim());
-      const looksJsonl = lines.length > 1 && lines.every(l => /^\s*[\{\[]/.test(l) || /^\s*[\}\]],?\s*$/.test(l));
-      pName = looksJsonl ? 'pasted.jsonl' : 'pasted.json';
-      pMime = looksJsonl ? 'application/jsonl' : 'application/json';
-    } else if (/^\s*(?:#|\/\/|\/\*|\-\-\-)/.test(trimmed) || /[\r\n].*: /.test(trimmed)) {
-      pName = 'pasted.yaml'; pMime = 'text/yaml';
+
+    // Flush residual SSE buffer — Gemini's final finishReason chunk
+    // sometimes arrives without a trailing newline, leaving it in `buffer`.
+    if (buffer) {
+      buffer += '\n\n';
+      const leftover = buffer.split('\n');
+      for (const line of leftover) {
+        if (!line.startsWith('data: ')) continue;
+        const dataContent = line.slice(6).trim();
+        if (!dataContent || dataContent === '[DONE]') continue;
+        let parsed; try { parsed = JSON.parse(dataContent); } catch { continue; }
+        const candidate = parsed?.candidates?.[0];
+        if (candidate?.finishReason) lastFinishReason = candidate.finishReason;
+        const parts = candidate?.content?.parts;
+        if (Array.isArray(parts)) {
+          for (const part of parts) handleGeminiPart(part, parser, sendEventRaw, thinkingState, cotEnabled, acc);
+        }
+      }
+      buffer = '';
     }
-    let blobId = null;
-    let dataUrl = null;
+  } catch (e) {
+    const msg = safeStr(e);
+    const isTimeout = cancelReason === 'ttft-timeout' || cancelReason === 'chunk-timeout';
+    const isExternalAbort = !isTimeout && /abort|cancel/i.test(msg);
+    try { reader.cancel(); } catch {}
+    closeRoundThinking();
+    parser.flush();
+    log(`[pipeStream] ERR mode=${mode} cancelReason=${cancelReason || 'n/a'} msg="${msg}" sawFirstChunk=${sawFirstChunk} textLen=${acc.text.length}`);
+    return {
+      tools: parser.tools, charts: parser.charts, sawText: parser.sawText, sawThinking: thinkingState.sawThinking,
+      toolDetected: parser.toolDetected, text: acc.text, raw: acc.raw, finishReason: lastFinishReason,
+      error: isTimeout ? msg : (isExternalAbort ? 'external-abort' : msg),
+      isNetworkError: isTimeout, isExternalAbort,
+      partialAnswer: acc.text,
+    };
+  } finally {
+    if (ttftTimer) clearTimeout(ttftTimer);
+    if (chunkTimer) clearTimeout(chunkTimer);
+    if (silenceTimer) clearTimeout(silenceTimer);
+    if (!sawFirstChunk) { try { await reader.cancel(); } catch {} }
+    try { reader.releaseLock(); } catch {}
+  }
+
+  parser.flush();
+  closeRoundThinking();
+
+  log(`[pipeStream] DONE mode=${mode} finishReason=${lastFinishReason === null ? 'NULL' : lastFinishReason} textLen=${acc.text.length} sawText=${parser.sawText} tools=${parser.tools.length} charts=${parser.charts.length} duration=${Date.now() - t0Stream}ms`);
+
+  return {
+    tools: parser.tools, charts: parser.charts, sawText: parser.sawText, sawThinking: thinkingState.sawThinking,
+    toolDetected: parser.toolDetected, text: acc.text, raw: acc.raw, finishReason: lastFinishReason,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// 15. TOOL EXECUTION
+// ---------------------------------------------------------------------------
+function genBlockId() { return 'blk-' + crypto.randomUUID().slice(0, 12); }
+
+function parseFinanceArgument(arg) {
+  try {
+    const obj = JSON.parse(arg);
+    if (obj.type && (obj.type === 'stock' || obj.type === 'forex')) return obj;
+    if (obj.symbol) return { type: 'stock', symbol: String(obj.symbol).toUpperCase() };
+    if (obj.base && obj.target) return { type: 'forex', base: String(obj.base).toUpperCase(), target: String(obj.target).toUpperCase() };
+  } catch (_) {}
+  if (/^[A-Z][A-Z0-9.\-]{0,9}$/.test(arg)) return { type: 'stock', symbol: arg.toUpperCase() };
+  const forexMatch = arg.match(/^([A-Z]{3})\s*[\/\-]\s*([A-Z]{3})$/);
+  if (forexMatch) return { type: 'forex', base: forexMatch[1].toUpperCase(), target: forexMatch[2].toUpperCase() };
+  throw new Error('Invalid finance format');
+}
+
+async function executeToolAndEmit(tool, env, sendEvent, context = {}) {
+  const blockId = genBlockId();
+  const name = tool.name;
+  const raw = (tool.content || '').trim();
+
+  if (name === 'weather') {
+    sendEvent({ done: false, type: 'weather_start', query: raw, blockId });
     try {
-      const b64 = btoa(unescape(encodeURIComponent(pastedText)));
-      dataUrl = `data:${pMime};base64,${b64}`;
-      blobId = await uploadBlobToServer(pName, pMime, dataUrl);
-      if (blobId) cacheBlobUrl(blobId, dataUrl);
-    } catch (err) {}
-    rt.attachments.push({
-      name: pName,
-      mime: pMime,
-      data: dataUrl,
-      isImage: false,
-      size: new Blob([pastedText]).size,
-      blobId,
-    });
-    updateAttachmentPreviews();
-    updateInputUI();
-  });
-  $('upload-btn').addEventListener('click',()=>{ $('upload-input').click(); });
-  $('upload-input').addEventListener('change',async e=>{
-    const files=Array.from(e.target.files||[]);
-    e.target.value='';
-    for(const f of files) await addAttachmentFromFile(f);
-  });
-  $('attach-strip').addEventListener('click',e=>{
-    const rt=currentRuntime();
-    if(!rt)return;
-    const rm=e.target.closest('[data-rm-att]');
-    if(rm){rt.attachments.splice(parseInt(rm.dataset.rmAtt),1);updateAttachmentPreviews();updateInputUI();return;}
-    const img=e.target.closest('img[data-att-idx]');
-    if(img){openPreviewModal('image',img.src);return;}
-    const card=e.target.closest('.att-file-card');
-    if(card){
-      const idx = parseInt(card.dataset.attIdx || '-1');
-      const att = idx >= 0 ? rt.attachments[idx] : null;
-      if(att && att.data){
-        const m = String(att.data).match(/^data:([^;]+);base64,(.+)$/);
-        if(m){
-          const isPlainText = m[1].startsWith('text/') || /(json|jsonl|ndjson|xml|yaml|toml|csv|tsv|markdown|md|javascript|ecmascript|sql|graphql)/.test(m[1]);
-          if(isPlainText){
-            try{ openPreviewModal('text', decodeURIComponent(escape(atob(m[2])))); }
-            catch(_){ openPreviewModal('text', ''); }
-          } else {
-            openFilePreview({
-              blobId: att.blobId || null,
-              name: att.name || '',
-              mime: att.mime || '',
-              inlineData: att.data || null,
+      const data = await performWeatherLookup(env, raw);
+      if (data && !data.error) { sendEvent({ done: false, type: 'weather_results', data, blockId }); return { ok: true, tool: 'weather', query: raw, data }; }
+      const err = safeStr(data?.error || 'Weather lookup failed');
+      sendEvent({ done: false, type: 'weather_error', error: err, blockId });
+      return { ok: false, tool: 'weather', query: raw, error: err };
+    } catch (e) { const err = safeStr(e); sendEvent({ done: false, type: 'weather_error', error: err, blockId }); return { ok: false, tool: 'weather', query: raw, error: err }; }
+  }
+  if (name === 'search') {
+    sendEvent({ done: false, type: 'search_start', query: raw, blockId });
+    try {
+      const data = await performWebSearch(env, raw);
+      if (data && !data.error) { sendEvent({ done: false, type: 'search_results', results: data.rawText, sources: data.sources, blockId }); return { ok: true, tool: 'search', query: raw, data }; }
+      const err = safeStr(data?.error || 'Search failed');
+      sendEvent({ done: false, type: 'search_error', error: err, blockId });
+      return { ok: false, tool: 'search', query: raw, error: err };
+    } catch (e) { const err = safeStr(e); sendEvent({ done: false, type: 'search_error', error: err, blockId }); return { ok: false, tool: 'search', query: raw, error: err }; }
+  }
+  if (name === 'run') {
+    sendEvent({ done: false, type: 'run_start', code: raw, blockId });
+    const result = evaluateJSSandboxed(raw);
+    if (typeof result === 'string' && result.startsWith('Error:')) { sendEvent({ done: false, type: 'run_error', error: result, blockId }); return { ok: false, tool: 'run', query: raw, error: result }; }
+    sendEvent({ done: false, type: 'run_results', result, blockId });
+    return { ok: true, tool: 'run', query: raw, result };
+  }
+  if (name === 'analysing') {
+    const query = raw;
+    sendEvent({ done: false, type: 'analysing_start', query, blockId, source: 'tool_call' });
+    if (!query) { const err = 'Filename required.'; sendEvent({ done: false, type: 'analysing_error', error: err, query: '', blockId, source: 'tool_call' }); return { ok: false, tool: 'analysing', query: '', error: err }; }
+    try {
+      const files = await collectConversationFiles(env, context.chat, context.currentAttachments);
+      if (!files.length) { const err = 'No files found in this conversation.'; sendEvent({ done: false, type: 'analysing_error', error: err, query, blockId, source: 'tool_call' }); return { ok: false, tool: 'analysing', query, error: err }; }
+      const q = query.toLowerCase();
+      const match = files.find(f => f.name === query) || files.find(f => f.name.toLowerCase() === q) || files.find(f => f.name.toLowerCase().includes(q)) || files.find(f => f.name.toLowerCase().startsWith(q));
+      if (!match) { const err = `File "${query}" not found. Available: ${files.map(f => f.name).join(', ')}`; sendEvent({ done: false, type: 'analysing_error', error: err, query, blockId, source: 'tool_call' }); return { ok: false, tool: 'analysing', query, error: err }; }
+      const m = String(match.data).match(/^data:([^;]+);base64,(.+)$/);
+      if (!m) { const err = 'File data is malformed.'; sendEvent({ done: false, type: 'analysing_error', error: err, query, blockId, source: 'tool_call' }); return { ok: false, tool: 'analysing', query, error: err }; }
+      const realMime = m[1] || match.mime || 'application/octet-stream';
+      sendEvent({ done: false, type: 'analysing_results', query: match.name, data: { name: match.name, mime: realMime, size: match.size }, blockId, source: 'tool_call' });
+      let fileUri = null, uploadKey = null;
+      try {
+        const uploadKeys = await getAvailableKeys(env, 'GOOGLE_KEYS');
+        if (uploadKeys.length) {
+          const res = await ensureGeminiFile(env, uploadKeys[0], realMime, m[2], match.name);
+          if (res && res.uri) { fileUri = res.uri; uploadKey = res.uploadKey; }
+        }
+      } catch (e) { log('[analysing] native upload failed:', safeStr(e)); }
+      return {
+        ok: true, tool: 'analysing', query: match.name,
+        result: `File "${match.name}" (${realMime}, ${match.size} bytes) attached as native input.`,
+        nativeAttachment: { mime: realMime, base64: m[2], name: match.name, fileUri, uploadKey },
+      };
+    } catch (e) { const err = safeStr(e); sendEvent({ done: false, type: 'analysing_error', error: err, query, blockId, source: 'tool_call' }); return { ok: false, tool: 'analysing', query, error: err }; }
+  }
+  if (name === 'finance') {
+    let financeObj;
+    try { financeObj = parseFinanceArgument(raw); }
+    catch { sendEvent({ done: false, type: 'finance_error', error: 'Invalid finance data', blockId }); return { ok: false, tool: 'finance', query: raw, error: 'Invalid finance data' }; }
+    sendEvent({ done: false, type: 'finance_start', query: financeObj, blockId });
+    try {
+      const data = await performFinanceLookup(env, financeObj);
+      if (data && !data.error) { sendEvent({ done: false, type: 'finance_results', data, blockId }); return { ok: true, tool: 'finance', query: financeObj, data }; }
+      const err = safeStr(data?.error || 'Finance lookup failed');
+      sendEvent({ done: false, type: 'finance_error', error: err, blockId });
+      return { ok: false, tool: 'finance', query: financeObj, error: err };
+    } catch (e) { const err = safeStr(e); sendEvent({ done: false, type: 'finance_error', error: err, blockId }); return { ok: false, tool: 'finance', query: financeObj, error: err }; }
+  }
+  if (name === 'analyse') {
+    sendEvent({ done: false, type: 'analyse_start', url: raw, blockId });
+    try {
+      const data = await performAnalyseLookup(env, raw);
+      if (data && !data.error) { sendEvent({ done: false, type: 'analyse_results', data, blockId }); return { ok: true, tool: 'analyse', query: raw, data }; }
+      const err = safeStr(data?.error || 'Page read failed');
+      sendEvent({ done: false, type: 'analyse_error', error: err, blockId });
+      return { ok: false, tool: 'analyse', query: raw, error: err };
+    } catch (e) { const err = safeStr(e); sendEvent({ done: false, type: 'analyse_error', error: err, blockId }); return { ok: false, tool: 'analyse', query: raw, error: err }; }
+  }
+  return { ok: false, tool: name, error: 'Unknown tool' };
+}
+
+async function runToolsInParallel(tools, env, sendEvent, failedTools, context = {}, maxConcurrency = MAX_PARALLEL_TOOLS, batchTimeoutMs = TOOL_BATCH_TIMEOUT_MS) {
+  const results = new Array(tools.length);
+  let cursor = 0;
+  const batchStart = Date.now();
+
+  const runOne = async (idx) => {
+    const tool = tools[idx];
+
+    if (Date.now() - batchStart > batchTimeoutMs) {
+      results[idx] = { ok: false, tool: tool.name, query: tool.content, error: 'Tool batch exceeded time budget', skipped: true, skipReason: 'batch-timeout' };
+      return;
+    }
+    if (failedTools.includes(tool.name)) {
+      results[idx] = { ok: false, tool: tool.name, query: tool.content, error: 'Already failed', skipped: true };
+      return;
+    }
+    try { results[idx] = await executeToolAndEmit(tool, env, sendEvent, context); }
+    catch (e) { results[idx] = { ok: false, tool: tool.name, query: tool.content, error: safeStr(e) }; }
+  };
+
+  const worker = async () => { while (true) { const idx = cursor++; if (idx >= tools.length) return; await runOne(idx); } };
+  await Promise.all(Array.from({ length: Math.min(maxConcurrency, tools.length) }, () => worker()));
+  return results;
+}
+
+function formatToolResultForLLM(result, round = 0) {
+  const GROUNDING = `\nGrounding: the values above are truth. Do not substitute training data.`;
+  const isSoftLimit = round >= SOFT_TOOL_ROUND_LIMIT && round < MAX_TOOL_ROUNDS - 2;
+  const isFinalRound = round >= MAX_TOOL_ROUNDS - 2;
+  let nextHint;
+  if (isFinalRound) nextHint = `⚠ FINAL ROUND — write the final answer now.`;
+  else if (isSoftLimit) nextHint = `⚠ You've used ${round + 1} tool rounds. Wrap up soon if possible.`;
+  else nextHint = `Either call the next tool, or write the final answer.`;
+  if (result.ok) {
+    if (result.tool === 'run') {
+      const out = capToolResult(String(result.result || ''), MAX_TOOL_RESULT_CHARS);
+      return `${nextHint}\n\nTool execution result:\nrun →\n${out}${GROUNDING}`;
+    }
+    if (result.tool === 'analysing') return `${nextHint}\n\nTool execution result:\nanalysing → ${String(result.result || '')}${GROUNDING}`;
+    const isReadTool = result.tool === 'analyse';
+    const cap = isReadTool ? MAX_READ_CHARS : MAX_TOOL_RESULT_CHARS;
+    const payload = JSON.stringify(result.data ?? result.result);
+    return `${nextHint}\n\nTool execution result:\n${result.tool} → ${capToolResult(payload, cap)}${GROUNDING}`;
+  }
+  return `${nextHint}\n\nTool execution result:\n${result.tool} → ERROR: ${result.error}\n\nPick ONE: try a different tool, answer from training, or say the tool failed. Do NOT invent data.`;
+}
+
+// ---------------------------------------------------------------------------
+// 16. FINAL-ANSWER ROUTE
+// ---------------------------------------------------------------------------
+async function streamFinalFromProviders(env, messages, mode = 'text') {
+  const temperature = (mode === 'code' || mode === 'vision-agent') ? 0.4 : 0.2;
+  const providers = await orderPipelineByQuota(env, mode);
+  for (const provider of providers) {
+    const keys = await getAvailableKeys(env, provider.keyEnv);
+    if (!keys.length) continue;
+    if (await isOnCooldown(env, provider.name, provider.model)) continue;
+    for (const key of keys) {
+      try {
+        const res = await tryGeminiNativeStream(provider, key, messages, false, mode, env, temperature, false);
+        if (res) return { response: res, provider };
+      } catch (e) {
+        const status = extractStatus(e);
+        if (status === 429) {
+          const msg = safeStr(e);
+          const isRPD = /per day|daily|quotaExceeded/i.test(msg);
+          if (isRPD) await keyStateMarkRPD(env, key);
+          else await keyStateMarkRPM(env, key);
+        } else if (status === 401 || status === 403) {
+          await keyStateMarkRPD(env, key);
+        } else if (isCapacityError(status, safeStr(e))) {
+          await keyStateMarkRPM(env, key);
+        }
+      }
+    }
+  }
+  return null;
+}
+
+// ---------------------------------------------------------------------------
+// 17. ATTACHMENT NORMALIZATION
+// ---------------------------------------------------------------------------
+function normalizeAttachments({ attachments, imageBase64, imageBase64s }) {
+  const out = [];
+  let totalBytes = 0;
+  if (Array.isArray(attachments) && attachments.length) {
+    for (const a of attachments) {
+      if (!a || typeof a !== 'object') continue;
+      const dataUrl = String(a.data || '');
+      const m = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
+      if (!m) { log(`[normalizeAttachments] dropping malformed data URL for ${a.name || '?'}`); continue; }
+      const mime = m[1];
+      if (!isSupportedMime(mime)) return { error: `Unsupported file type: ${mime}` };
+      const decodedBytes = Math.round((m[2].length * 3) / 4);
+      if (decodedBytes > MAX_ATTACHMENT_BYTES) return { error: `File "${a.name || 'attachment'}" exceeds ${Math.round(MAX_ATTACHMENT_BYTES/1024/1024)}MB limit.` };
+      totalBytes += decodedBytes;
+      if (totalBytes > MAX_TOTAL_ATTACHMENT_BYTES) return { error: `Total attachment size exceeds ${Math.round(MAX_TOTAL_ATTACHMENT_BYTES/1024/1024)}MB.` };
+      out.push({ mime, base64: m[2], name: a.name || '' });
+      if (out.length > MAX_ATTACHMENTS_PER_MESSAGE) return { error: `Maximum ${MAX_ATTACHMENTS_PER_MESSAGE} attachments per message.` };
+    }
+    if (out.length) return finalizeAttachments(out);
+  }
+  const imageList = Array.isArray(imageBase64s) && imageBase64s.length ? imageBase64s : (imageBase64 ? [imageBase64] : []);
+  for (const img of imageList) {
+    const m = String(img || '').match(/^data:([^;]+);base64,(.+)$/);
+    if (!m) continue;
+    const mime = m[1];
+    if (!isImageMime(mime)) continue;
+    const decodedBytes = Math.round((m[2].length * 3) / 4);
+    if (decodedBytes > MAX_ATTACHMENT_BYTES) return { error: `Image exceeds ${Math.round(MAX_ATTACHMENT_BYTES/1024/1024)}MB limit.` };
+    totalBytes += decodedBytes;
+    if (totalBytes > MAX_TOTAL_ATTACHMENT_BYTES) return { error: `Total attachment size exceeds ${Math.round(MAX_TOTAL_ATTACHMENT_BYTES/1024/1024)}MB.` };
+    out.push({ mime, base64: m[2], name: '' });
+    if (out.length > MAX_ATTACHMENTS_PER_MESSAGE) return { error: `Maximum ${MAX_ATTACHMENTS_PER_MESSAGE} attachments per message.` };
+  }
+  if (!out.length) return { attachments: [], hasImage: false, hasFile: false };
+  return finalizeAttachments(out);
+}
+function finalizeAttachments(list) {
+  let hasImage = false, hasFile = false;
+  for (const a of list) { if (isImageMime(a.mime)) hasImage = true; else hasFile = true; }
+  return { attachments: list, hasImage, hasFile };
+}
+
+function estimateRequestTokens(messages, attachments) {
+  let chars = 0;
+  for (const m of messages) {
+    if (typeof m.content === 'string') chars += m.content.length;
+    if (Array.isArray(m.attachments)) {
+      for (const a of m.attachments) chars += Math.round((a.base64 || '').length * 0.75);
+    }
+  }
+  for (const a of (attachments || [])) {
+    chars += Math.round((a.base64 || '').length * 0.75);
+  }
+  return Math.round(chars * ESTIMATED_TOKENS_PER_CHAR);
+}
+
+// ---------------------------------------------------------------------------
+// 18. EMBEDDING HELPERS
+// ---------------------------------------------------------------------------
+async function callGeminiEmbed(env, provider, key, parts, opts = {}) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(provider.model)}:embedContent?key=${key}`;
+  const body = { content: { parts } };
+  if (opts.taskType) body.taskType = opts.taskType;
+  if (opts.outputDimensionality) body.outputDimensionality = opts.outputDimensionality;
+  const res = await fetchWithTimeout(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }, EMBED_TIMEOUT_MS, `embed-${provider.model}`, 1);
+  if (!res.ok) { const errText = await res.text().catch(() => ''); throw new Error(`Gemini ${provider.model} ${res.status}: ${errText.slice(0, 200)}`); }
+  const j = await res.json();
+  return j?.embedding?.values || null;
+}
+async function callGeminiBatchEmbed(env, provider, key, requests) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(provider.model)}:batchEmbedContents?key=${key}`;
+  const body = { requests };
+  const res = await fetchWithTimeout(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }, EMBED_TIMEOUT_MS, `batch-embed-${provider.model}`, 1);
+  if (!res.ok) { const errText = await res.text().catch(() => ''); throw new Error(`Gemini batch ${provider.model} ${res.status}: ${errText.slice(0, 200)}`); }
+  const j = await res.json();
+  return (j?.embeddings || []).map(e => e?.values || null);
+}
+function cosineSimilarity(a, b) {
+  if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) return 0;
+  let dot = 0, na = 0, nb = 0;
+  for (let i = 0; i < a.length; i++) { dot += a[i] * b[i]; na += a[i] * a[i]; nb += b[i] * b[i]; }
+  if (na === 0 || nb === 0) return 0;
+  return dot / (Math.sqrt(na) * Math.sqrt(nb));
+}
+
+// ---------------------------------------------------------------------------
+// 19. MAIN MESSAGE HANDLER
+// ---------------------------------------------------------------------------
+async function handleMessages(chat, mode, attachmentsOrLegacy, env, username, opts = {}) {
+  if (!hasAnyKey(env, mode)) return buildErrorStream('No Google API keys configured.');
+
+  let normalized;
+  if (opts && opts.attachmentsInput) normalized = normalizeAttachments(opts.attachmentsInput);
+  else normalized = normalizeAttachments({ imageBase64s: Array.isArray(attachmentsOrLegacy) ? attachmentsOrLegacy : (attachmentsOrLegacy ? [attachmentsOrLegacy] : []) });
+  if (normalized.error) return buildErrorStream(normalized.error);
+
+  const { attachments, hasImage, hasFile } = normalized;
+  const isVisionInput = mode === 'vision' || mode === 'vision-agent';
+  const anyAttachment = attachments.length > 0;
+  const actualMode = (isVisionInput && !anyAttachment) ? 'text' : mode;
+  const isVision = actualMode === 'vision' || actualMode === 'vision-agent';
+  const isVisionAgent = actualMode === 'vision-agent';
+  const allowTools = opts.allowTools !== false;
+  const hasAttachments = attachments.length > 0;
+
+  const today = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+  const currentImageBlobIds = new Set();
+  const lastMsg = chat.messages && chat.messages[chat.messages.length - 1];
+  if (lastMsg && lastMsg.role === 'user' && lastMsg.content) {
+    for (const bid of extractBlobIds(String(lastMsg.content))) {
+      const blob = await blobGet(env, bid);
+      if (blob && isImageMime(blob.mime)) currentImageBlobIds.add(bid);
+    }
+  }
+
+  let fileIndex = '';
+  try { fileIndex = await buildFileIndex(env, chat, currentImageBlobIds); } catch (e) { log('[fileIndex] failed:', safeStr(e)); }
+
+  let initialMessages;
+  if (isVision) {
+    const rawLastUser = chat.messages[chat.messages.length - 1]?.content
+      ?.replace(/!\[.*?\]\((?:data|blob):[^)]+\)/g, '').replace(/\[Attached:[^\]]+\]/g, '').trim()
+      || (attachments.length > 1 ? 'Read the attached files and answer the user.' : 'Read the attached file and answer the user.');
+    const lastUser = escapeUserToolTags(rawLastUser);
+    const systemPrompt = getSystemPrompt(actualMode, today, { hasImage, hasFile, fileIndex, currentAttachments: hasAttachments });
+    const history = buildHistoryForLLM(chat.messages.slice(0, -1)).slice(-MAX_HISTORY_MESSAGES);
+    initialMessages = [{ role: 'system', content: systemPrompt }, ...history, { role: 'user', content: lastUser, attachments }];
+  } else {
+    const useAttachments = attachments.length > 0;
+    const historySource = useAttachments ? chat.messages.slice(0, -1) : chat.messages;
+    const history = buildHistoryForLLM(historySource).slice(-MAX_HISTORY_MESSAGES);
+    const systemPrompt = getSystemPrompt(actualMode, today, { fileIndex, currentAttachments: hasAttachments });
+    if (useAttachments) {
+      const rawLastUser = chat.messages[chat.messages.length - 1]?.content
+        ?.replace(/!\[.*?\]\((?:data|blob):[^)]+\)/g, '')
+        .replace(/\[Attached:[^\]]+\]/g, '')
+        .trim() || 'Please read the attached file(s) and answer my question.';
+      const lastUser = escapeUserToolTags(rawLastUser);
+      initialMessages = [{ role: 'system', content: systemPrompt }, ...history, { role: 'user', content: lastUser, attachments }];
+    } else {
+      initialMessages = [{ role: 'system', content: systemPrompt }, ...history];
+    }
+  }
+
+  const estimatedTokens = estimateRequestTokens(initialMessages, attachments);
+
+  if (!(await checkRateLimit(env, username))) return buildErrorStream('Rate limit exceeded.');
+  const pipeline = await orderPipelineByQuota(env, actualMode);
+  if (pipeline.length === 0) return buildErrorStream('No providers configured.');
+
+  const encoder = new TextEncoder();
+  return new Response(
+    new ReadableStream({
+      async start(controller) {
+        let closed = false;
+        const safeEnqueue = (bytes) => {
+          if (closed) return false;
+          try { controller.enqueue(bytes); return true; }
+          catch (e) { closed = true; return false; }
+        };
+        const sendEvent = (data) => {
+          safeEnqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
+        };
+
+        const heartbeat = setInterval(() => {
+          safeEnqueue(encoder.encode(`: keepalive\n\n`));
+        }, STREAM_HEARTBEAT_MS);
+
+        const cleanup = () => {
+          clearInterval(heartbeat);
+          if (!closed) {
+            closed = true;
+            try { controller.close(); } catch {}
+          }
+        };
+
+        try {
+          safeEnqueue(encoder.encode(`: ready\n\n`));
+
+          // ──────────────────────────────────────────────────────────────
+          // Attachment handling — mandatory native upload.
+          //
+          // Every attachment emits analysing_start → analysing_results/
+          // analysing_error. The model never emits these itself; the file
+          // card renders on the frontend the moment the request lands.
+          //
+          // Native Files API upload is required. There is no inline
+          // fallback. If upload fails, the file is stripped from context
+          // and a note is appended to the user message.
+          // ──────────────────────────────────────────────────────────────
+          if (attachments.length > 0) {
+            const uploadKeys = await getAvailableKeys(env, 'GOOGLE_KEYS');
+            const uploadKey = uploadKeys[0] || null;
+            const failedNames = [];
+
+            if (!uploadKey) {
+              for (let i = 0; i < attachments.length; i++) {
+                const att = attachments[i];
+                const blockId = genBlockId();
+                const attName = att.name || `attachment-${i + 1}`;
+                sendEvent({ done: false, type: 'analysing_start', query: attName, blockId, source: 'attachment', index: i + 1, total: attachments.length });
+                sendEvent({ done: false, type: 'analysing_error', query: attName, blockId, source: 'attachment', error: 'No Google API key available for native upload' });
+                failedNames.push(attName);
+              }
+              attachments.length = 0;
+              const lastUserMsg = initialMessages[initialMessages.length - 1];
+              if (lastUserMsg && Array.isArray(lastUserMsg.attachments)) {
+                lastUserMsg.attachments = [];
+              }
+              if (lastUserMsg && failedNames.length) {
+                lastUserMsg.content = String(lastUserMsg.content || '') +
+                  `\n\n[Note: ${failedNames.length} attached file(s) could not be uploaded and are not available in this turn: ${failedNames.join(', ')}.]`;
+              }
+            } else {
+              for (let i = 0; i < attachments.length; i++) {
+                const att = attachments[i];
+                if (!att.base64 || !att.mime) { failedNames.push(att.name || `attachment-${i + 1}`); continue; }
+                const blockId = genBlockId();
+                const attName = att.name || `attachment-${i + 1}`;
+                const attSize = Math.round((att.base64.length * 3) / 4);
+
+                sendEvent({ done: false, type: 'analysing_start', query: attName, blockId, source: 'attachment', index: i + 1, total: attachments.length });
+
+                let uploadOk = false;
+                try {
+                  const res = await ensureGeminiFile(env, uploadKey, att.mime, att.base64, attName);
+                  if (res && res.uri) {
+                    att.fileUri = res.uri;
+                    att.uploadKey = res.uploadKey;
+                    uploadOk = true;
+                    log(`[auto-attach] ${res.cached ? 'cache-hit' : 'uploaded'} ${att.mime} → ${res.uri}`);
+                  } else {
+                    log(`[auto-attach] native upload returned null for ${att.mime}`);
+                  }
+                } catch (e) {
+                  log('[auto-attach] error:', safeStr(e));
+                }
+
+                if (uploadOk) {
+                  sendEvent({ done: false, type: 'analysing_results', query: attName, blockId, source: 'attachment', data: { name: attName, mime: att.mime, size: attSize } });
+                } else {
+                  sendEvent({ done: false, type: 'analysing_error', query: attName, blockId, source: 'attachment', error: 'Native upload failed — file not available this turn' });
+                  failedNames.push(attName);
+                }
+              }
+
+              if (failedNames.length > 0) {
+                const keep = attachments.filter(a => a.fileUri);
+                attachments.length = 0;
+                for (const a of keep) attachments.push(a);
+                const lastUserMsg = initialMessages[initialMessages.length - 1];
+                if (lastUserMsg && Array.isArray(lastUserMsg.attachments)) {
+                  lastUserMsg.attachments = attachments.slice();
+                }
+                if (lastUserMsg && failedNames.length) {
+                  lastUserMsg.content = String(lastUserMsg.content || '') +
+                    `\n\n[Note: ${failedNames.length} attached file(s) could not be uploaded and are not available in this turn: ${failedNames.join(', ')}.]`;
+                }
+              }
+            }
+          }
+
+          const messages = [...initialMessages];
+          let answerSent = false;
+          const failedTools = [];
+          const attemptedCalls = new Set();
+          let continuationCount = 0;
+          const t0 = Date.now();
+
+          const pushContinuation = (text, promptOverride = null) => {
+            const prompt = promptOverride || CONTINUATION_PROMPT;
+            const lastIdx = messages.length - 1;
+            const prev = lastIdx >= 1 ? messages[lastIdx - 1] : null;
+            const last = messages[lastIdx];
+            if (prev && prev.role === 'assistant' && prev._partial &&
+                last && last.role === 'user' && last.content === prompt) {
+              prev.content += text;
+              return;
+            }
+            messages.push({ role: 'assistant', content: text, _partial: true });
+            messages.push({ role: 'user', content: prompt });
+          };
+
+          try {
+            for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
+              if (Date.now() - t0 > TURN_DEADLINE_MS) {
+                log(`[turn] deadline hit at round ${round}, forcing final answer`);
+                break;
+              }
+              if (messages.length > 1 + MAX_HISTORY_FOR_TOOLS) {
+                const system = messages[0];
+                const head = messages.slice(1, 3);
+                const tail = messages.slice(-(MAX_HISTORY_FOR_TOOLS - head.length));
+                const seen = new Set();
+                const merged = [system];
+                for (const m of [...head, ...tail]) {
+                  const k = `${m.role}|${typeof m.content === 'string' ? m.content.slice(0, 64) : ''}`;
+                  if (seen.has(k)) continue;
+                  seen.add(k);
+                  merged.push(m);
+                }
+                messages.length = 0;
+                messages.push(...merged);
+              }
+
+              let providerResponse = null;
+              let usedProvider = null;
+              const slotCodes = {};
+              const roundErrors = [];
+
+              for (let pi = 0; pi < pipeline.length; pi++) {
+                const provider = pipeline[pi];
+                const slot = `M${pi + 1}`;
+
+                if (await isOnCooldown(env, provider.name, provider.model)) {
+                  slotCodes[slot] = 'C'; continue;
+                }
+                const keys = await getAvailableKeys(env, provider.keyEnv);
+                if (!keys.length) { slotCodes[slot] = 'K'; continue; }
+                let resolved = false;
+
+                for (const key of keys) {
+                  let attempt = 0;
+                  let success = false;
+                  while (attempt < LLM_MAX_ATTEMPTS_CAPACITY) {
+                    try {
+                      sendEvent({ done: false, type: 'llm_start', round, model: provider.model });
+                      const startT = Date.now();
+                      const resp = await tryGeminiNativeStream(provider, key, messages, isVision, actualMode, env, null, hasAttachments);
+                      if (resp) {
+                        providerResponse = resp; usedProvider = provider;
+                        const latency = Date.now() - startT;
+                        await recordSuccess(env, actualMode, provider.name, provider.model, latency);
+                        slotCodes[slot] = 'OK'; resolved = true; success = true;
+                        break;
+                      }
+                    } catch (e) {
+                      const status = extractStatus(e);
+                      const msg = safeStr(e).slice(0, 300);
+                      const isCapacity = isCapacityError(status, msg);
+                      const isTransient = isCapacity || status === 429;
+                      const maxAttempts = isCapacity ? LLM_MAX_ATTEMPTS_CAPACITY : LLM_MAX_ATTEMPTS;
+
+                      roundErrors.push(`${provider.model}: ${msg.slice(0, 120)}`);
+
+                      if (isTransient && attempt < maxAttempts - 1) {
+                        const hinted = (e && e.retryAfterMs) ? e.retryAfterMs : null;
+                        const base = hinted || (Math.pow(2, attempt) * 1500);
+                        const jitter = Math.floor(Math.random() * 800);
+                        const backoffMs = Math.min(base + jitter, 30000);
+                        await new Promise(r => setTimeout(r, backoffMs));
+                        attempt++;
+                        continue;
+                      }
+
+                      log(`[round ${round}] ${provider.model} failed (${status}): ${msg}`);
+                      slotCodes[slot] = codeForStatus(status, msg);
+
+                      if (status === 429) {
+                        const isRPD = /per day|per_day|daily|quotaExceeded/i.test(msg);
+                        if (isRPD) await keyStateMarkRPD(env, key);
+                        else await keyStateMarkRPM(env, key);
+                        break;
+                      }
+                      if (status === 404) { await recordFailure(env, provider.name, provider.model, status); break; }
+                      if (status === 401 || status === 403) { await keyStateMarkRPD(env, key); break; }
+                      if (isCapacity) { break; }
+                      await recordFailure(env, provider.name, provider.model, status);
+                      break;
+                    }
+                  }
+                  if (success || resolved) break;
+                }
+                if (resolved) break;
+              }
+
+              if (!providerResponse) {
+                for (let i = 0; i < pipeline.length; i++) { const s = `M${i + 1}`; if (!slotCodes[s]) slotCodes[s] = 'X'; }
+                const fingerprint = formatErrorFingerprint(slotCodes);
+                log(`[round ${round}] all models failed: ${fingerprint} — ${roundErrors.join(' | ')}`);
+                sendEvent({ done: false, type: 'text', content: `**All Gemini models failed this round.**\n\n\`${fingerprint}\`` });
+                sendEvent({ done: true, error: fingerprint, code: fingerprint });
+                cleanup();
+                return;
+              }
+
+              const result = await pipeStream(providerResponse, actualMode, sendEvent, env, usedProvider, { allowTools });
+
+              if (result.error && usedProvider && !result.isExternalAbort) {
+                await recordFailure(env, usedProvider.name, usedProvider.model, 500);
+              }
+
+              const hasFetchTool = result.tools.length > 0;
+
+              if (!hasFetchTool) {
+                const hasText = result.sawText;
+                const hasChart = result.charts.length > 0;
+                const hasAnything = hasText || hasChart;
+
+                const isSafetyBlock =
+                  result.finishReason === 'SAFETY' ||
+                  result.finishReason === 'PROHIBITED_CONTENT' ||
+                  result.finishReason === 'SPII';
+
+                if (isSafetyBlock) {
+                  log(`[round ${round}] safety block: ${result.finishReason}`);
+                  sendEvent({
+                    done: false,
+                    type: 'text',
+                    content: `**Response blocked by Gemini's safety filter** (\`${result.finishReason}\`). Rephrase the request, or remove any content that might have triggered it.`,
+                  });
+                  answerSent = true;
+                  break;
+                }
+
+                const missingFinishReason =
+                  hasAnything && (result.finishReason === null || result.finishReason === undefined);
+                const otherFinishReason =
+                  hasAnything && result.finishReason === 'OTHER';
+                const recitationStop =
+                  hasAnything && result.finishReason === 'RECITATION';
+                const truncatedStop =
+                  isTruncatedStop(result);
+
+                if ((missingFinishReason || otherFinishReason || recitationStop || truncatedStop)
+                    && continuationCount < MAX_CONTINUATIONS) {
+                  continuationCount++;
+                  const reason = missingFinishReason ? 'no-finish-reason'
+                               : otherFinishReason  ? 'finish-reason-OTHER'
+                               : recitationStop     ? 'recitation'
+                               :                     'truncated-STOP';
+                  log(`[round ${round}] silent continuation (${reason}) after ${result.text.length} chars — ${continuationCount}/${MAX_CONTINUATIONS}`);
+                  pushContinuation(
+                    result.raw || result.text,
+                    recitationStop ? RECITATION_CONTINUATION_PROMPT : null
+                  );
+                  continue;
+                }
+
+                if (result.isNetworkError && continuationCount < MAX_CONTINUATIONS) {
+                  continuationCount++;
+                  log(`[round ${round}] silent continuation (network) — ${continuationCount}/${MAX_CONTINUATIONS}`);
+                  pushContinuation(result.raw || result.text);
+                  continue;
+                }
+
+                if (!hasAnything) {
+                  const nudgeCount = messages.filter(m => m.role === 'user' && typeof m.content === 'string' && m.content.startsWith('Please write your final answer')).length;
+                  if (nudgeCount < 2) {
+                    messages.push({ role: 'assistant', content: '' });
+                    messages.push({ role: 'user', content: 'Please write your final answer now.' });
+                    continue;
+                  }
+                  break;
+                }
+
+                if (result.finishReason === 'MAX_TOKENS' && continuationCount < MAX_CONTINUATIONS) {
+                  continuationCount++;
+                  log(`[round ${round}] silent continuation (MAX_TOKENS) — ${continuationCount}/${MAX_CONTINUATIONS}`);
+                  pushContinuation(result.raw || result.text);
+                  continue;
+                }
+
+                answerSent = true;
+                break;
+              }
+
+              const filteredTools = result.tools;
+              const toolsToRun = filteredTools.slice(0, MAX_PARALLEL_TOOLS);
+              if (toolsToRun.length === 0) { answerSent = true; break; }
+              if (Date.now() - t0 > TURN_DEADLINE_MS * 0.75) {
+                log(`[turn] near deadline at round ${round}, skipping tools`);
+                break;
+              }
+
+              const blocked = new Set();
+              for (const t of toolsToRun) if (failedTools.includes(t.name)) blocked.add(t);
+
+              const runnable = toolsToRun.filter(t => {
+                if (blocked.has(t)) return false;
+                const fp = `${t.name}::${t.content}`;
+                if (attemptedCalls.has(fp)) return false;
+                attemptedCalls.add(fp);
+                return true;
+              });
+
+              let toolResults = [];
+              if (runnable.length > 0) {
+                const toolContext = { chat, currentAttachments: attachments };
+                toolResults = await runToolsInParallel(runnable, env, sendEvent, failedTools, toolContext, MAX_PARALLEL_TOOLS, TOOL_BATCH_TIMEOUT_MS);
+              }
+
+              let runnableIdx = 0;
+              const ordered = toolsToRun.map(t => {
+                if (blocked.has(t)) return { ok: false, tool: t.name, query: t.content, error: 'Already failed', skipped: true, skipReason: 'already-failed' };
+                if (!runnable.includes(t)) return { ok: false, tool: t.name, query: t.content, error: 'Duplicate call', skipped: true, skipReason: 'duplicate' };
+                return toolResults[runnableIdx++];
+              });
+
+              for (let i = 0; i < toolsToRun.length; i++) {
+                const tool = toolsToRun[i];
+                const r = ordered[i];
+                messages.push({ role: 'assistant', content: `<${tool.name}>${tool.content}</${tool.name}>` });
+                if (r.skipped) {
+                  const reason = r.skipReason === 'duplicate'
+                    ? `You already ran this exact ${tool.name} call. Do NOT repeat it.`
+                    : r.skipReason === 'batch-timeout'
+                    ? `The ${tool.name} batch exceeded its time budget. Do not retry the same call in this turn.`
+                    : `You already tried the ${tool.name} tool and it FAILED. Do not use it again.`;
+                  messages.push({ role: 'user', content: reason });
+                } else {
+                  if (!r.ok) failedTools.push(r.tool);
+                  if (r.nativeAttachment) {
+                    const projected = estimateRequestTokens(messages, []) +
+                                     Math.round((r.nativeAttachment.base64 || '').length * 0.75 * ESTIMATED_TOKENS_PER_CHAR);
+                    if (projected > FREE_TIER_TPM_LIMIT * 0.9) {
+                      log(`[tpm] native attachment projected ${projected} — falling back to text notice`);
+                      messages.push({ role: 'user', content: `Tool execution result:\n${r.tool} → ${r.result}\n\n(file contents omitted — token budget).` });
+                    } else {
+                      messages.push({
+                        role: 'user',
+                        content: `Tool execution result:\n${r.tool} → ${r.result}\n\nGrounding rule: contents of the file attached below are the source of truth.`,
+                        attachments: [{
+                          mime: r.nativeAttachment.mime,
+                          base64: r.nativeAttachment.base64,
+                          name: r.nativeAttachment.name,
+                          fileUri: r.nativeAttachment.fileUri || null,
+                          uploadKey: r.nativeAttachment.uploadKey || null,
+                        }],
+                      });
+                    }
+                  } else {
+                    messages.push({ role: 'user', content: formatToolResultForLLM(r, round) });
+                  }
+                }
+              }
+            }
+
+            if (!answerSent) {
+              const convoOnly = messages.filter(m => m.role !== 'system').map(m => {
+                const out = { role: m.role, content: m.content };
+                if (Array.isArray(m.attachments) && m.attachments.length) out.attachments = m.attachments;
+                return out;
+              });
+              const forceMessages = [
+                messages[0],
+                ...convoOnly,
+                { role: 'user', content: `## FINAL ROUND\nWrite the detailed final answer now. No tool tag (except a leading <chart>). If tools failed and you lack live data, say so — never invent numbers.` },
+              ];
+              let sent = false;
+              try {
+                const forceResult = await streamFinalFromProviders(env, forceMessages, 'text');
+                if (forceResult) { const r = await pipeStream(forceResult.response, 'text', sendEvent, env, null, { allowTools: false }); if (r.sawText) sent = true; }
+              } catch (e) { log('forced final failed:', safeStr(e)); }
+
+              if (!sent && isVision && !isVisionAgent) {
+                try {
+                  const simpleSystem = `You are ${ASSISTANT_NAME}, created by ${ASSISTANT_CREATOR}. Describe the attached file(s) in 3–5 detailed sentences. No tools.`;
+                  const simpleMessages = [{ role: 'system', content: simpleSystem }, ...initialMessages.filter(m => m.role !== 'system')];
+                  const retryResult = await streamFinalFromProviders(env, simpleMessages, 'text');
+                  if (retryResult) { const r2 = await pipeStream(retryResult.response, 'text', sendEvent, env, null, { allowTools: false }); if (r2.sawText) sent = true; }
+                } catch (e) { log('vision fallback failed:', safeStr(e)); }
+              }
+
+              if (!sent) sendEvent({ done: false, type: 'text', content: `I wasn't able to complete that request. Please try again.` });
+            }
+
+            log(`[turn done] total ${Date.now() - t0}ms`);
+            sendEvent({ done: true, completed: true });
+          } catch (e) {
+            const raw = safeStr(e);
+            log('handleMessages inner error:', raw);
+            sendEvent({
+              done: false,
+              type: 'text',
+              content: `**Something went wrong on the server.** Please try again. If it keeps happening, check the Cloudflare Worker logs.`
             });
+            sendEvent({ done: true, error: 'internal-error' });
+          }
+        } catch (e) {
+          const raw = safeStr(e);
+          log('handleMessages outer error:', raw);
+          sendEvent({
+            done: false,
+            type: 'text',
+            content: `**Something went wrong on the server.** Please try again. If it keeps happening, check the Cloudflare Worker logs.`
+          });
+          sendEvent({ done: true, error: 'internal-error' });
+        } finally {
+          cleanup();
+        }
+      },
+    }),
+    { headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive', ...corsHeaders() } }
+  );
+}
+
+function buildErrorStream(msg) {
+  const encoder = new TextEncoder();
+  return new Response(
+    new ReadableStream({
+      start(c) {
+        try { c.enqueue(encoder.encode(`: ready\n\n`)); } catch {}
+        c.enqueue(encoder.encode(`data: ${JSON.stringify({ done: false, type: 'text', content: `**Error:** ${msg}` })}\n\n`));
+        c.enqueue(encoder.encode(`data: ${JSON.stringify({ done: true, error: msg })}\n\n`));
+        c.close();
+      },
+    }),
+    { headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive', ...corsHeaders() } }
+  );
+}
+
+// ---------------------------------------------------------------------------
+// 20. FETCH HANDLER
+// ---------------------------------------------------------------------------
+export default {
+  async fetch(request, env, ctx) {
+    const url = new URL(request.url);
+    const path = url.pathname.replace(/^\/api/, '') || '/';
+    const method = request.method;
+    if (method === 'OPTIONS') return new Response(null, { headers: corsHeaders() });
+    await ensureDatabase(env);
+    if (Math.random() < 0.05) cleanupIdempotencyKeys(env).catch(() => {});
+    try {
+      if (path === '/' || path === '/health') return json({ status: 'ok', version: WORKER_VERSION, assistant: ASSISTANT_NAME, creator: ASSISTANT_CREATOR });
+
+      if (path === '/auth/signup' && method === 'POST') {
+        const { username, password } = await request.json();
+        if (!username || !password) return errorResponse('Missing credentials');
+        if (await env.DB.prepare('SELECT username FROM users WHERE username=?').bind(username).first()) return errorResponse('Username taken', 409);
+        await env.DB.prepare('INSERT INTO users (username, password) VALUES (?, ?)').bind(username, await hashPassword(password)).run();
+        const token = crypto.randomUUID();
+        await env.DB.prepare('INSERT INTO tokens (token, username, created_at) VALUES (?, ?, ?)').bind(token, username, Math.floor(Date.now() / 1000)).run();
+        return json({ token, username });
+      }
+      if (path === '/auth/login' && method === 'POST') {
+        const { username, password } = await request.json();
+        if (!username || !password) return errorResponse('Missing credentials');
+        const user = await env.DB.prepare('SELECT password FROM users WHERE username=?').bind(username).first();
+        if (!user || !(await verifyPassword(password, user.password))) return errorResponse('Invalid credentials', 401);
+        const token = crypto.randomUUID();
+        await env.DB.prepare('INSERT INTO tokens (token, username, created_at) VALUES (?, ?, ?)').bind(token, username, Math.floor(Date.now() / 1000)).run();
+        return json({ token, username });
+      }
+      const username = await requireAuth(request, env);
+      if (!username) return errorResponse('Authentication required', 401);
+
+      if (path === '/debug' && method === 'GET') {
+        return json({
+          version: WORKER_VERSION, provider: 'Google Gemini only',
+          modes: ['text', 'code', 'vision', 'vision-agent'],
+          chat: { text: PROVIDERS.text.map(p => p.model), code: PROVIDERS.code.map(p => p.model), vision: PROVIDERS.vision.map(p => p.model) },
+          embeddings: EMBEDDING_PROVIDERS.map(p => ({ model: p.model, dim: p.dim })),
+          cooldownSeconds: FAILURE_COOLDOWN_SECONDS, errorCodeLegend: ERROR_CODES, you: username,
+        });
+      }
+      if (path === '/debug/keys' && method === 'GET') {
+        const keys = getAllKeys(env, 'GOOGLE_KEYS');
+        const states = [];
+        for (const k of keys) {
+          const st = await keyStateGet(env, k);
+          states.push({ hash: hashKey(k).slice(0, 6), state: st ? st.reason : 'available', ageSeconds: st ? Math.round((Date.now() - st.ts) / 1000) : null });
+        }
+        return json({ totalKeys: keys.length, availableKeys: states.filter(s => s.state === 'available').length, keys: states, resetInSeconds: secondsUntilMidnightPacific() });
+      }
+      if (path === '/debug-run' && method === 'GET') { const q = url.searchParams.get('q') || 'sqrt(144) + 2**10'; return json({ code: q, output: evaluateJSSandboxed(q) }); }
+
+      if (path === '/embed' && method === 'POST') {
+        const body = await request.json();
+        const { texts, text, image, video, audio, pdf, taskType, outputDimensionality, model: modelOverride, chatId, blobId, store } = body || {};
+        const isBatch = Array.isArray(texts) && texts.length > 0;
+        if (!isBatch && !text && !image && !video && !audio && !pdf) return errorResponse('Provide text, texts, image, video, audio, or pdf', 400);
+        let provider = EMBEDDING_PROVIDERS[0];
+        if (modelOverride) { const found = EMBEDDING_PROVIDERS.find(p => p.model === modelOverride); if (found) provider = found; }
+        if (isBatch) {
+          if (texts.length > MAX_EMBED_TEXTS_PER_CALL) return errorResponse(`Batch too large. Max ${MAX_EMBED_TEXTS_PER_CALL}.`, 400);
+          const truncated = texts.map(t => String(t || '').slice(0, MAX_EMBED_CHARS));
+          const requests = truncated.map(t => {
+            const req = { model: `models/${provider.model}`, content: { parts: [{ text: t }] } };
+            if (taskType) req.taskType = taskType;
+            if (outputDimensionality) req.outputDimensionality = outputDimensionality;
+            return req;
+          });
+          const keys = await getAvailableKeys(env, provider.keyEnv);
+          if (!keys.length) return errorResponse('No API key available', 503);
+          const key = keys[0];
+          try {
+            const vectors = await callGeminiBatchEmbed(env, provider, key, requests);
+            if (store === true) {
+              const now = Date.now();
+              for (let i = 0; i < vectors.length; i++) {
+                if (!vectors[i]) continue;
+                const id = crypto.randomUUID();
+                try { await env.DB.prepare('INSERT INTO embeddings (id, username, chat_id, blob_id, source, mime, model, dim, vector, meta, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)').bind(id, username, chatId || null, blobId || null, 'text', 'text/plain', provider.model, vectors[i].length, JSON.stringify(vectors[i]), JSON.stringify({ preview: truncated[i].slice(0, 120) }), now).run(); } catch (e) {}
+              }
+            }
+            return json({ model: provider.model, dim: vectors[0]?.length || 0, count: vectors.length, embeddings: vectors });
+          } catch (e) { return errorResponse(`Embedding failed: ${safeStr(e)}`, 502); }
+        }
+        let parts; let source = 'text'; let mimeForStore = 'text/plain';
+        if (text) { parts = [{ text: String(text).slice(0, MAX_EMBED_CHARS) }]; source = 'text'; }
+        else {
+          const binInput = image || video || audio || pdf;
+          const m = String(binInput).match(/^data:([^;]+);base64,(.+)$/);
+          if (!m) return errorResponse('Binary input must be a data URL', 400);
+          parts = [{ inlineData: { mimeType: m[1], data: m[2] } }];
+          mimeForStore = m[1];
+          source = m[1].startsWith('image/') ? 'image' : m[1].startsWith('video/') ? 'video' : m[1].startsWith('audio/') ? 'audio' : m[1] === 'application/pdf' ? 'pdf' : 'binary';
+        }
+        const keys = await getAvailableKeys(env, provider.keyEnv);
+        if (!keys.length) return errorResponse('No API key available', 503);
+        const key = keys[0];
+        try {
+          const vec = await callGeminiEmbed(env, provider, key, parts, { taskType, outputDimensionality });
+          if (!vec) return errorResponse('Empty embedding returned', 502);
+          if (store === true) {
+            const id = crypto.randomUUID();
+            try { await env.DB.prepare('INSERT INTO embeddings (id, username, chat_id, blob_id, source, mime, model, dim, vector, meta, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)').bind(id, username, chatId || null, blobId || null, source, mimeForStore, provider.model, vec.length, JSON.stringify(vec), null, Date.now()).run(); } catch (e) {}
+          }
+          return json({ model: provider.model, dim: vec.length, source, embedding: vec });
+        } catch (e) { return errorResponse(`Embedding failed: ${safeStr(e)}`, 502); }
+      }
+
+      if (path === '/auth/delete-account' && method === 'POST') {
+        try {
+          const rows = await env.DB.prepare('SELECT content FROM messages WHERE chat_id IN (SELECT id FROM chats WHERE username=?)').bind(username).all();
+          const ids = new Set();
+          for (const r of (rows.results || [])) for (const bid of extractBlobIds(r.content)) ids.add(bid);
+          for (const bid of ids) await blobDelete(env, bid);
+        } catch (e) {}
+        await env.DB.prepare('DELETE FROM embeddings WHERE username=?').bind(username).run();
+        await env.DB.prepare('DELETE FROM blobs WHERE username=?').bind(username).run();
+        await env.DB.prepare('DELETE FROM tokens WHERE username=?').bind(username).run();
+        await env.DB.prepare('DELETE FROM messages WHERE chat_id IN (SELECT id FROM chats WHERE username=?)').bind(username).run();
+        await env.DB.prepare('DELETE FROM chats WHERE username=?').bind(username).run();
+        await env.DB.prepare('DELETE FROM users WHERE username=?').bind(username).run();
+        return json({ success: true });
+      }
+
+      if (path === '/chats' && method === 'GET') {
+        const { results } = await env.DB.prepare(`SELECT c.id, c.title, c.mode, c.created_at, c.updated_at, (SELECT COUNT(*) FROM messages WHERE chat_id = c.id) AS messageCount FROM chats c WHERE c.username = ? ORDER BY COALESCE(c.updated_at, c.created_at) DESC`).bind(username).all();
+        return json(results);
+      }
+      if (path === '/chats' && method === 'POST') {
+        const id = crypto.randomUUID(); const now = Date.now();
+        let mode = 'quick';
+        try { const body = await request.json(); if (body && (body.mode === 'quick' || body.mode === 'expert')) mode = body.mode; } catch (e) {}
+        await env.DB.prepare('INSERT INTO chats (id, username, title, created_at, updated_at, mode) VALUES (?, ?, ?, ?, ?, ?)').bind(id, username, 'New Chat', now, now, mode).run();
+        return json({ id, title: 'New Chat', mode, createdAt: now, messages: [] }, 201);
+      }
+
+      const chatMatch = path.match(/^\/chats\/([a-zA-Z0-9-]+)$/);
+      if (chatMatch) {
+        const chatId = chatMatch[1];
+        const chat = await env.DB.prepare('SELECT id, title, mode FROM chats WHERE id = ? AND username = ?').bind(chatId, username).first();
+        if (!chat) return errorResponse('Chat not found', 404);
+        if (method === 'GET') {
+          const messages = await env.DB.prepare('SELECT id, role, content, mode, timestamp, blocks FROM messages WHERE chat_id = ? ORDER BY timestamp ASC').bind(chatId).all();
+          const enriched = messages.results.map((m) => {
+            const base = { ...m, content: String(m.content) };
+            if (m.role === 'assistant' && m.blocks) { try { base.blocks = JSON.parse(m.blocks); } catch (e) {} }
+            return base;
+          });
+          return json({ id: chat.id, title: chat.title, mode: chat.mode || 'quick', messages: enriched });
+        }
+        if (method === 'DELETE') {
+          try {
+            const rows = await env.DB.prepare('SELECT content FROM messages WHERE chat_id = ?').bind(chatId).all();
+            const ids = new Set();
+            for (const r of (rows.results || [])) for (const bid of extractBlobIds(r.content)) ids.add(bid);
+            for (const bid of ids) await blobDelete(env, bid);
+          } catch (e) {}
+          try { await env.DB.prepare('DELETE FROM embeddings WHERE chat_id = ? AND username = ?').bind(chatId, username).run(); } catch (e) {}
+          await env.DB.prepare('DELETE FROM messages WHERE chat_id = ?').bind(chatId).run();
+          await env.DB.prepare('DELETE FROM chats WHERE id = ?').bind(chatId).run();
+          return json({ success: true });
+        }
+        if (method === 'PATCH') {
+          const body = await request.json();
+          const sets = [];
+          const binds = [];
+          if (typeof body.title === 'string' && body.title.trim()) { sets.push('title = ?'); binds.push(body.title.trim()); }
+          if (body.mode === 'quick' || body.mode === 'expert') { sets.push('mode = ?'); binds.push(body.mode); }
+          if (sets.length) {
+            sets.push('updated_at = ?');
+            binds.push(Date.now());
+            binds.push(chatId);
+            binds.push(username);
+            await env.DB.prepare(`UPDATE chats SET ${sets.join(', ')} WHERE id = ? AND username = ?`).bind(...binds).run();
+          }
+          const fresh = await env.DB.prepare('SELECT id, title, mode FROM chats WHERE id = ? AND username = ?').bind(chatId, username).first();
+          return json({ id: fresh.id, title: fresh.title, mode: fresh.mode || 'quick' });
+        }
+      }
+
+      const msgDeleteMatch = path.match(/^\/chats\/([a-zA-Z0-9-]+)\/messages\/([a-zA-Z0-9-]+)$/);
+      if (msgDeleteMatch && method === 'DELETE') {
+        const chatId = msgDeleteMatch[1]; const messageId = msgDeleteMatch[2];
+        const chat = await env.DB.prepare('SELECT id FROM chats WHERE id = ? AND username = ?').bind(chatId, username).first();
+        if (!chat) return errorResponse('Chat not found', 404);
+        try {
+          const row = await env.DB.prepare('SELECT content FROM messages WHERE id = ? AND chat_id = ?').bind(messageId, chatId).first();
+          if (row && row.content) for (const bid of extractBlobIds(row.content)) await blobDelete(env, bid);
+        } catch (e) {}
+        const result = await env.DB.prepare('DELETE FROM messages WHERE id = ? AND chat_id = ?').bind(messageId, chatId).run();
+        return json({ success: true, deleted: result.meta?.changes || 0 });
+      }
+
+      const completeMatch = path.match(/^\/chats\/([a-zA-Z0-9-]+)\/complete$/);
+      if (completeMatch && method === 'POST') {
+        const chatId = completeMatch[1];
+        const chat = await env.DB.prepare('SELECT id FROM chats WHERE id = ? AND username = ?').bind(chatId, username).first();
+        if (!chat) return errorResponse('Chat not found', 404);
+        const body = await request.json();
+        const { content, client_message_id, message_id, mode, blocks } = body || {};
+        if (!content || typeof content !== 'string') return errorResponse('Missing content', 400);
+        const blocksJson = (Array.isArray(blocks) && blocks.length) ? JSON.stringify(blocks) : null;
+        let messageId;
+        if (message_id) {
+          const existing = await env.DB.prepare('SELECT id FROM messages WHERE id = ? AND chat_id = ?').bind(message_id, chatId).first();
+          if (!existing) return errorResponse('Message not found', 404);
+          await env.DB.prepare('UPDATE messages SET content = ?, mode = ?, blocks = ? WHERE id = ?').bind(content, mode || 'text', blocksJson, message_id).run();
+          messageId = message_id;
+        } else {
+          messageId = crypto.randomUUID();
+          await env.DB.prepare('INSERT INTO messages (id, chat_id, role, content, mode, timestamp, blocks) VALUES (?, ?, ?, ?, ?, ?, ?)').bind(messageId, chatId, 'assistant', content, mode || 'text', Date.now(), blocksJson).run();
+        }
+        await env.DB.prepare('UPDATE chats SET updated_at = ? WHERE id = ?').bind(Date.now(), chatId).run();
+        if (client_message_id) await saveIdempotency(env, `complete:${chatId}:${client_message_id}`, messageId);
+        return json({ success: true, id: messageId });
+      }
+
+      const regenMatch = path.match(/^\/chats\/([a-zA-Z0-9-]+)\/regenerate$/);
+      if (regenMatch && method === 'POST') {
+        const chatId = regenMatch[1];
+        const body = await request.json();
+        const { mode = 'text', websearch = true } = body || {};
+        const chat = await env.DB.prepare('SELECT id, title FROM chats WHERE id = ? AND username = ?').bind(chatId, username).first();
+        if (!chat) return errorResponse('Chat not found', 404);
+        const count = await env.DB.prepare('SELECT COUNT(*) as c FROM messages WHERE chat_id = ? AND role = ?').bind(chatId, 'user').first();
+        if ((count?.c || 0) >= MAX_MSG) return errorResponse('Chat limit reached', 400);
+        const allMessages = await env.DB.prepare('SELECT id, role, content, mode, timestamp FROM messages WHERE chat_id = ? ORDER BY timestamp ASC').bind(chatId).all();
+        const msgs = allMessages.results || [];
+        let lastUserIdx = -1;
+        for (let i = msgs.length - 1; i >= 0; i--) { if (msgs[i].role === 'user') { lastUserIdx = i; break; } }
+        const trimmed = lastUserIdx >= 0 ? msgs.slice(0, lastUserIdx + 1) : msgs;
+        const attachmentsInput = { attachments: [] };
+        if (lastUserIdx >= 0) {
+          const content = String(msgs[lastUserIdx].content);
+          const seen = new Set();
+          const blobIds = extractBlobIds(content);
+          for (const bid of blobIds) {
+            if (seen.has(bid)) continue;
+            seen.add(bid);
+            const blob = await blobGet(env, bid);
+            if (blob && blob.data && (!blob.username || blob.username === username)) attachmentsInput.attachments.push({ name: blob.name || '', mime: blob.mime || 'application/octet-stream', data: blob.data });
           }
         }
+        return handleMessages({ id: chatId, title: chat.title, messages: trimmed }, mode, null, env, username, { allowTools: websearch, ...(attachmentsInput.attachments.length ? { attachmentsInput } : {}) });
       }
-      return;
+
+      if (path === '/blobs' && method === 'POST') {
+        const body = await request.json();
+        const { name = '', mime = '', data = '' } = body || {};
+        if (!data || typeof data !== 'string') return errorResponse('Missing attachment data', 400);
+        const m = data.match(/^data:([^;]+);base64,(.+)$/);
+        if (!m) return errorResponse('Malformed attachment', 400);
+        const realMime = m[1] || mime;
+        if (!isSupportedMime(realMime)) return errorResponse(`Unsupported file type: ${realMime}`, 400);
+        const decodedBytes = Math.round((m[2].length * 3) / 4);
+        if (decodedBytes > MAX_ATTACHMENT_BYTES) return errorResponse(`File exceeds ${Math.round(MAX_ATTACHMENT_BYTES/1024/1024)}MB limit.`, 413);
+        const blobBucket = `blobrl:${username}`;
+        const now = Math.floor(Date.now() / 1000);
+        try {
+          await env.DB.prepare('DELETE FROM rate_limits WHERE user_id = ? AND timestamp < ?').bind(blobBucket, now - 60).run();
+          const c = await env.DB.prepare('SELECT COUNT(*) as cnt FROM rate_limits WHERE user_id = ? AND timestamp >= ?').bind(blobBucket, now - 60).first();
+          if ((c?.cnt || 0) >= 60) return errorResponse('Too many uploads — slow down a moment.', 429);
+          await env.DB.prepare('INSERT INTO rate_limits (user_id, timestamp) VALUES (?, ?)').bind(blobBucket, now).run();
+        } catch (e) {}
+        const blobId = crypto.randomUUID();
+        const put = await blobPut(env, blobId, { username, mime: realMime, name, size: decodedBytes, data });
+        if (put.error) return errorResponse(`Storage failed: ${put.error}`, 500);
+        try { await getBlobPreview(env, { id: blobId, name, mime: realMime, size: decodedBytes, data }); } catch (e) {}
+        return json({ id: blobId, name, mime: realMime, size: decodedBytes, where: put.where }, 201);
+      }
+
+      const blobMatch = path.match(/^\/blobs\/([a-zA-Z0-9-]+)$/);
+      if (blobMatch && method === 'GET') {
+        const blobId = blobMatch[1];
+        const blob = await blobGet(env, blobId);
+        if (!blob || !blob.data) return errorResponse('Blob not found', 404);
+        if (blob.username && blob.username !== username) return errorResponse('Blob not found', 404);
+        const m = String(blob.data).match(/^data:([^;]+);base64,(.+)$/);
+        if (!m) return errorResponse('Malformed blob', 500);
+        let bytes;
+        try { const bin = atob(m[2]); bytes = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i); } catch (e) { return errorResponse('Corrupt blob', 500); }
+        return new Response(bytes, { status: 200, headers: { 'Content-Type': m[1], 'Content-Length': String(bytes.length), 'Cache-Control': 'private, max-age=31536000, immutable', 'Access-Control-Allow-Origin': '*' } });
+      }
+
+      const msgMatch = path.match(/^\/chats\/([a-zA-Z0-9-]+)\/messages$/);
+      if (msgMatch && method === 'POST') {
+        const chatId = msgMatch[1];
+        const body = await request.json();
+        const { content = '', attachments, attachmentIds, imageBase64, imageBase64s, mode = 'text', websearch = true } = body || {};
+        if (!['text', 'code', 'vision', 'vision-agent'].includes(mode)) return errorResponse('Invalid mode', 400);
+
+        let preparedAttachments = [];
+        const storeMarkers = [];
+        const preUploadedIds = Array.isArray(attachmentIds) ? attachmentIds : [];
+        const addedBlobIds = new Set();
+
+        const ingestAttachment = async (a) => {
+          const dataUrl = String(a.data || '');
+          const m = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
+          if (!m) return;
+          const mime = m[1];
+          if (!isSupportedMime(mime)) return;
+          const decodedBytes = Math.round((m[2].length * 3) / 4);
+          preparedAttachments.push({ mime, data: dataUrl, name: a.name || '' });
+          const blobId = crypto.randomUUID();
+          const put = await blobPut(env, blobId, { username, mime, name: a.name || '', size: decodedBytes, data: dataUrl });
+          storeMarkers.push({ name: a.name || '', mime, isImg: isImageMime(mime), blobId: put && put.id ? put.id : null, dataUrl: put && put.id ? null : dataUrl });
+        };
+
+        if (preUploadedIds.length) {
+          for (const blobId of preUploadedIds.slice(0, MAX_ATTACHMENTS_PER_MESSAGE)) {
+            if (typeof blobId !== 'string') continue;
+            const blob = await blobGet(env, blobId);
+            if (!blob || !blob.data) continue;
+            if (blob.username && blob.username !== username) continue;
+            preparedAttachments.push({ mime: blob.mime, data: blob.data, name: blob.name || '' });
+            storeMarkers.push({ name: blob.name || '', mime: blob.mime, isImg: isImageMime(blob.mime), blobId, dataUrl: null });
+            addedBlobIds.add(blobId);
+          }
+        }
+        if (Array.isArray(attachments) && attachments.length) {
+          for (const a of attachments) {
+            if (!a || typeof a !== 'object') continue;
+            if (a.blobId && addedBlobIds.has(a.blobId)) continue;
+            const dataUrl = String(a.data || '');
+            const m = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
+            if (!m) continue;
+            const mime = m[1];
+            if (!isSupportedMime(mime)) return errorResponse(`Unsupported file type: ${mime}`, 400);
+            await ingestAttachment(a);
+          }
+        }
+        if (!preUploadedIds.length && !(Array.isArray(attachments) && attachments.length)) {
+          const legacyImages = Array.isArray(imageBase64s) && imageBase64s.length ? imageBase64s : (imageBase64 ? [imageBase64] : []);
+          for (const img of legacyImages) { if (typeof img !== 'string') continue; await ingestAttachment({ data: img, name: '' }); }
+        }
+
+        if (preparedAttachments.length > MAX_ATTACHMENTS_PER_MESSAGE) return errorResponse(`Too many attachments. Maximum ${MAX_ATTACHMENTS_PER_MESSAGE}.`, 400);
+
+        const chat = await env.DB.prepare('SELECT id, title FROM chats WHERE id = ? AND username = ?').bind(chatId, username).first();
+        if (!chat) return errorResponse('Chat not found', 404);
+        const count = await env.DB.prepare('SELECT COUNT(*) as c FROM messages WHERE chat_id = ? AND role = ?').bind(chatId, 'user').first();
+        if ((count?.c || 0) >= MAX_MSG) return errorResponse('Chat limit reached', 400);
+
+        const messageId = crypto.randomUUID();
+        const imgLines = storeMarkers.filter(s => s.isImg).map(s => `![uploaded](${s.blobId ? 'blob:' + s.blobId : s.dataUrl})`).join('\n');
+        const fileLines = storeMarkers.filter(s => !s.isImg).map(s => {
+          if (s.blobId) return `[Attached: ${s.name || 'file'} (${s.mime}) blob:${s.blobId}]`;
+          if (s.dataUrl) return `[Attached: ${s.name || 'file'} (${s.mime}) inline:${s.dataUrl}]`;
+          return `[Attached: ${s.name || 'file'} (${s.mime})]`;
+        }).join('\n');
+        const userContent = [imgLines, fileLines, content].filter(Boolean).join('\n');
+
+        await env.DB.batch([
+          env.DB.prepare('INSERT INTO messages (id, chat_id, role, content, mode, timestamp, blocks) VALUES (?, ?, ?, ?, ?, ?, ?)').bind(messageId, chatId, 'user', userContent, mode, Date.now(), null),
+          env.DB.prepare('UPDATE chats SET updated_at = ? WHERE id = ?').bind(Date.now(), chatId),
+        ]);
+
+        const allMessages = await env.DB.prepare('SELECT role, content, mode FROM messages WHERE chat_id = ? ORDER BY timestamp ASC').bind(chatId).all();
+        const attachmentsInput = { attachments: preparedAttachments.map(a => ({ name: a.name, data: a.data })) };
+        return handleMessages({ id: chatId, title: chat.title, messages: allMessages.results }, mode, null, env, username, { allowTools: websearch, attachmentsInput });
+      }
+
+      const titleMatch = path.match(/^\/chats\/([a-zA-Z0-9-]+)\/generate-title$/);
+      if (titleMatch && method === 'POST') {
+        const chatId = titleMatch[1];
+        const chat = await env.DB.prepare('SELECT id, title FROM chats WHERE id = ? AND username = ?').bind(chatId, username).first();
+        if (!chat) return errorResponse('Chat not found', 404);
+        let userContent = '', assistantContent = '';
+        try { const body = await request.json(); userContent = body?.userContent || ''; assistantContent = body?.assistantContent || ''; } catch {}
+        if (!userContent && !assistantContent) return json({ title: chat.title });
+        const aiTitle = await generateAITitle(env, userContent, assistantContent);
+        if (!aiTitle) return json({ title: chat.title });
+        await env.DB.prepare('UPDATE chats SET title = ?, updated_at = ? WHERE id = ?').bind(aiTitle, Date.now(), chatId).run();
+        return json({ title: aiTitle, generated: true });
+      }
+
+      return errorResponse('Not found', 404);
+    } catch (e) {
+      console.error(e);
+      if (path.includes('/messages') && !path.includes('/generate-title')) return buildErrorStream(`Internal error: ${safeStr(e)}`);
+      return errorResponse(`Internal server error: ${safeStr(e)}`, 500);
     }
-  });
-  $('send-btn').addEventListener('click',submitInput);
-  $('regen-btn').addEventListener('click',handleRegen);
-  $('stop-btn').addEventListener('click',()=>stopStream());
-  const dropTarget=document.body;
-  let dragDepth=0;
-  const hasFiles=e=>e.dataTransfer&&Array.from(e.dataTransfer.types||[]).includes('Files');
-  dropTarget.addEventListener('dragenter',e=>{if(!hasFiles(e))return;e.preventDefault();dragDepth++;document.body.classList.add('fullscreen-drag');});
-  dropTarget.addEventListener('dragover',e=>{if(!hasFiles(e))return;e.preventDefault();e.dataTransfer.dropEffect='copy';});
-  dropTarget.addEventListener('dragleave',e=>{if(!hasFiles(e))return;dragDepth=Math.max(0,dragDepth-1);if(dragDepth===0)document.body.classList.remove('fullscreen-drag');});
-  dropTarget.addEventListener('drop',async e=>{
-    if(!hasFiles(e))return;
-    e.preventDefault();dragDepth=0;
-    document.body.classList.remove('fullscreen-drag');
-    const files=Array.from(e.dataTransfer.files||[]);
-    for(const f of files) await addAttachmentFromFile(f);
-  });
-  $('messages-area').addEventListener('click',e=>{
-    const copyBtn=e.target.closest('.copy-code-btn');
-    if(copyBtn){
-      e.stopPropagation();
-      if(copyBtn.disabled)return;
-      let code;try{code=decodeURIComponent(copyBtn.dataset.code);}catch{toast('Copy failed','error');return;}
-      navigator.clipboard.writeText(code).then(()=>{
-        toast('Code copied','success');
-        copyBtn.innerHTML='<i data-lucide="check" style="width:12px;height:12px"></i>';
-        queueIcons(copyBtn);
-        setTimeout(()=>{copyBtn.innerHTML='<i data-lucide="copy" style="width:12px;height:12px"></i>';queueIcons(copyBtn);},1400);
-      }).catch(()=>{fallbackCopy(code);});
-      return;
-    }
-    const downloadBtn=e.target.closest('.download-code-btn');
-    if(downloadBtn){
-      e.stopPropagation();
-      if(downloadBtn.disabled)return;
-      let code;try{code=decodeURIComponent(downloadBtn.dataset.code);}catch{toast('Download failed','error');return;}
-      const lang=downloadBtn.dataset.lang||'txt';
-      const extMap={python:'py',javascript:'js',typescript:'ts',html:'html',css:'css',json:'json',bash:'sh',java:'java',c:'c',cpp:'cpp',go:'go',rust:'rs',sql:'sql',markdown:'md',yaml:'yml',xml:'xml'};
-      const defaultNames={html:'index.html',js:'script.js',javascript:'script.js',python:'main.py',css:'styles.css',json:'data.json',bash:'script.sh',markdown:'README.md'};
-      let filename=defaultNames[lang]||`zebai-code.${extMap[lang]||'txt'}`;
-      const blob=new Blob([code],{type:'text/plain;charset=utf-8'});
-      const url=URL.createObjectURL(blob);
-      const a=document.createElement('a');
-      a.href=url;a.download=filename;
-      document.body.appendChild(a);a.click();document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      toast('Code downloaded','success');
-      return;
-    }
-    const userImg=e.target.closest('.message-row.user .image-bubble img');
-    if(userImg){e.stopPropagation();openPreviewModal('image',userImg.src);return;}
-    const fileCard=e.target.closest('.message-row.user .file-card-external');
-    if(fileCard){
-      e.stopPropagation();
-      openFilePreview({
-        blobId: fileCard.dataset.blobId || null,
-        name: fileCard.dataset.filename || '',
-        mime: fileCard.dataset.mime || '',
-        inlineData: fileCard.dataset.inlineData || null,
-      });
-      return;
-    }
-    const speakBtn=e.target.closest('.speak-btn');
-    if(speakBtn){
-      e.stopPropagation();
-      const rowEl=speakBtn.closest('.message-row');
-      const clean=rowEl?.querySelector('.msg-content')?.dataset.rawCleanText||'';
-      if(!clean){toast('Nothing to read','warning');return;}
-      __zebSpeak.speak(clean,speakBtn);
-      return;
-    }
-    const copyMsg=e.target.closest('.copy-btn');
-    if(copyMsg){e.stopPropagation();const rowEl=copyMsg.closest('.message-row');const clean=rowEl?.querySelector('.msg-content')?.dataset.rawCleanText||'';if(!clean){toast('Nothing to copy','warning');return;}navigator.clipboard?.writeText(clean).then(()=>toast('Copied to clipboard','success')).catch(()=>fallbackCopy(clean));return;}
-    const dlMsg=e.target.closest('.download-msg-btn');
-    if(dlMsg){e.stopPropagation();const rowEl=dlMsg.closest('.message-row');const clean=rowEl?.querySelector('.msg-content')?.dataset.rawCleanText||'';if(!clean){toast('Nothing to download','warning');return;}const blob=new Blob([clean],{type:'text/markdown;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`zebai-message-${Date.now()}.md`;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);toast('Message downloaded','success');return;}
-    const sourcesBtn=e.target.closest('.sources-btn');
-    if(sourcesBtn){e.stopPropagation();const rowEl=sourcesBtn.closest('.message-row');const msgId=rowEl?.dataset.messageId;const chat=state.chats.find(c=>c.id===state.currentChatId);const msg=chat?.messages.find(m=>m.id===msgId);if(msg)openSourcesPanel(msg);return;}
-    const fsBtn=e.target.closest('.chart-fs-btn');
-    if(fsBtn){e.stopPropagation();openChartFullscreen(fsBtn.dataset.chartId);return;}
-    const dlChartBtn=e.target.closest('.chart-dl-btn');
-    if(dlChartBtn){e.stopPropagation();downloadChart(dlChartBtn.dataset.chartId);return;}
-  });
-  $('run-modal-close').addEventListener('click',closePreviewModal);
-  $('code-runner-overlay').addEventListener('click',e=>{if(e.target===$('code-runner-overlay'))closePreviewModal();});
-  $('profile-close').addEventListener('click',closeProfile);
-  $('profile-overlay').addEventListener('click',e=>{if(e.target===$('profile-overlay'))closeProfile();});
-  $('profile-logout').addEventListener('click',()=>{closeProfile();logout();});
-  $('profile-delete').addEventListener('click',()=>{confirmDialog('PERMANENTLY delete your account and all data?',async ok=>{if(!ok)return;try{await api('POST','/api/auth/delete-account');closeProfile();logout();}catch(err){toast('Failed to delete account','error');}});});
-  $('sources-close').addEventListener('click',closeSourcesPanel);
-  $('sources-overlay').addEventListener('click',e=>{if(e.target===$('sources-overlay'))closeSourcesPanel();});
-  $('chart-fullscreen-close').addEventListener('click',closeChartFullscreen);
-  $('chart-fullscreen-overlay').addEventListener('click',e=>{if(e.target===$('chart-fullscreen-overlay'))closeChartFullscreen();});
-  $('chart-fullscreen-download').addEventListener('click',()=>{if(activeFullscreenChart)downloadChart(activeFullscreenChart);});
-  document.addEventListener('keydown',e=>{
-    if(e.key==='Escape'){
-      if($('chart-fullscreen-overlay').classList.contains('open'))closeChartFullscreen();
-      else if(state.settingsOpen)closeSettings(false);
-      else if($('sources-overlay').classList.contains('open'))closeSourcesPanel();
-      else if($('profile-overlay').classList.contains('open'))closeProfile();
-      else if($('code-runner-overlay').classList.contains('open'))closePreviewModal();
-    }
-  });
-  applyAccent();
-  updateAttachmentPreviews();
-  loadChats().then(()=>{
-    if(state.chats.length>0){
-      state.currentChatId=state.chats[0].id;
-      getRuntime(state.currentChatId);
-      loadChatMessages(state.chats[0].id).then(full=>{
-        if(full){const idx=state.chats.findIndex(c=>c.id===state.chats[0].id);if(idx!==-1)state.chats[idx]=full;}
-        renderSidebar();renderMessages();setInput('');updateInputUI();
-        const rt=getRuntime(state.currentChatId);
-        if(rt)rt.userScrolledUp=false;
-        scrollToBottom(true);queueIcons();
-      });
-    }else{
-      createNewChat(true).then(()=>{
-        renderSidebar();renderMessages();setInput('');updateInputUI();queueIcons();
-      });
-    }
-  });
+  },
 };
-showScreen('loading');
-setupAuth();
-(async()=>{
-  if(token){
-    try{
-      const res=await fetch(API_BASE+'/api/chats',{headers:{'Authorization':'Bearer '+token}});
-      if(res.ok){initApp();return;}
-      if(res.status===401){localStorage.removeItem(TOKEN_KEY);localStorage.removeItem(USERNAME_KEY);token=null;loggedUsername=null;}
-    }catch(e){}
-  }
-  showScreen('auth');
-})();
-})();
-</script>
-</body>
-</html>
