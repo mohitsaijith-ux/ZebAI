@@ -1,5 +1,5 @@
 // ============================================================================
-// ZEBAI WORKER – v106.27.1
+// ZEBAI WORKER – v106.28.0
 //   • Google Gemini only. Flash-Lite family + 2.5 fallbacks.
 //   • Chat: gemini-3.5-flash-lite, gemini-3.1-flash-lite,
 //           gemini-2.5-flash-lite, gemini-2.5-flash.
@@ -11,19 +11,27 @@
 //   • Structured error fingerprint: E=M1-code/M2-code/M3-code/M4-code
 //   • Search: Tavily discovery-only. Analyse: Firecrawl.
 //   • Gemini Files API native upload (cached 47h) for all attachments.
-//   • v106.27.1:
-//      - Purged remaining <vid> references from sanitizeAssistantContent,
-//        escapeUserToolTags, and generateAITitle. The video tool was
-//        removed in v106.27.0; these were leftover regex terms that
-//        silently escaped user-typed <vid> for no reason.
-//      - All v106.27.0 fixes retained: <vid> YouTube embedding tool
-//        removed end to end, chats.mode column in D1, isTruncatedStop
-//        trusts provider, pipeStream flushes residual SSE, exact-URL
-//        citation rules for prose links.
+//   • v106.28.0:
+//      - Current-message attachments are hidden from the model's tool list.
+//        When the user attaches a file, <analysing> is removed from the
+//        system prompt's # Tools section and the checklist is collapsed
+//        to a single note. The tag remains available on follow-up turns
+//        with no attachments (for "re-read that PDF" style requests).
+//      - analysing_start/analysing_results are now emitted programmatically
+//        by handleMessages for every current-message attachment. The model
+//        does not need to emit anything — the file card renders on the
+//        frontend the moment the request lands.
+//      - Native Files API upload is mandatory. Inline fallback removed.
+//        If upload fails (no key, rate limit, service error), the file is
+//        stripped from context and an analysing_error fires, with a note
+//        appended to the user message explaining the absence.
+//      - All v106.27.x fixes retained: <vid> fully purged, chats.mode in
+//        D1, isTruncatedStop trusts provider, pipeStream flushes residual
+//        SSE, exact-URL citation rules for prose links.
 // ============================================================================
 
 const DEBUG = true;
-const WORKER_VERSION = '106.27.1';
+const WORKER_VERSION = '106.28.0';
 const ASSISTANT_NAME = 'ZebAI';
 const ASSISTANT_CREATOR = 'MCOS Private Limited';
 
@@ -447,10 +455,23 @@ class StatefulXMLParser {
 
 // ---------------------------------------------------------------------------
 // 2. SYSTEM PROMPT
+//
+// currentAttachments: when the current turn carries files, we hide the
+// <analysing> tag from the tool list entirely. The tag remains available on
+// follow-up turns so the user can say "re-read that PDF" and have it work.
 // ---------------------------------------------------------------------------
-function getSystemPrompt(mode, date, { hasImage = false, hasFile = false, fileIndex = '' } = {}) {
+function getSystemPrompt(mode, date, { hasImage = false, hasFile = false, fileIndex = '', currentAttachments = false } = {}) {
   const fileSection = fileIndex ? `\n\n# Files in this conversation\n\n${fileIndex}` : '';
   const vision = mode === 'vision' || mode === 'vision-agent';
+
+  const analysingToolLine = currentAttachments
+    ? ''
+    : `    <analysing>filename.ext</analysing>         Re-attach a file from an EARLIER turn.\n`;
+
+  const analysingChecklist = currentAttachments
+    ? `- **A file on the CURRENT message?** → ALREADY in your context. Answer directly. No file tool needed.`
+    : `- **A file from an EARLIER turn the user is referring to?** → \`<analysing>\`.
+- **A file on the CURRENT message?** → ALREADY in your context. Answer directly. NEVER call \`<analysing>\` on it.`;
 
   const base = `You are ZebAI. Today is ${date}.
 
@@ -507,8 +528,7 @@ Cap: 4 tags per reply. Mixing families is fine — the round just can't exceed 4
     <finance>{"type":"stock","symbol":"AAPL"}</finance>
     <finance>{"type":"forex","base":"USD","target":"INR"}</finance>
     <run>javascript</run>                       Execute JS in the sandbox — see below.
-    <analysing>filename.ext</analysing>         Re-attach a file from an EARLIER turn.
-    <chart>{...}</chart>                        Chart inside the final answer.
+${analysingToolLine}    <chart>{...}</chart>                        Chart inside the final answer.
 
 # Choosing a tool — run this checklist before every reply
 
@@ -516,8 +536,7 @@ Cap: 4 tags per reply. Mixing families is fine — the round just can't exceed 4
 - **Live / current / changes over time?** → \`<search>\`, \`<weather>\`, or \`<finance>\`.
 - **Any math at all, even "15% of 82"?** → \`<run>\`. Never compute in your head.
 - **A specific URL the user gave you, or one a search snippet pointed at?** → \`<analyse>\`.
-- **A file from an EARLIER turn the user is referring to?** → \`<analysing>\`.
-- **A file on the CURRENT message?** → ALREADY in your context. Answer directly. NEVER call \`<analysing>\` on it.
+${analysingChecklist}
 
 Never search for what you know. Never duplicate a call. Never fire a tool "just to be safe".
 
@@ -727,9 +746,32 @@ Never write: "What I looked up:", "Specific values:", "Interpretation:", a tool 
     const attachmentLine = hasImage && hasFile
       ? 'The user attached images and files.'
       : hasFile ? 'The user attached files.' : 'The user attached images.';
+
+    if (currentAttachments) {
+      // The file is in context as native input. No file tool is listed, so
+      // there's nothing to warn against. Keep it short and direct.
+      return `${base}
+
+# Files on the current message
+
+${attachmentLine}
+
+**The file(s) attached to this exact message are ALREADY loaded as native input to this turn. They are in your context right now.**
+
+Read them and answer. No tool call needed.
+
+Read the attachment(s). Describe specific values, labels, names. Be detailed.
+
+**Paraphrase rule — CRITICAL.** When summarising, analysing, or extracting from a document, rewrite every idea in your own words. Do not quote sentences verbatim. Do not reproduce section headings, definitions, or list items as they appear in the source. Gemini's recitation filter terminates the stream silently when your output too closely matches the input. Paraphrase aggressively — new sentence structures, new word choices.${fileSection}
+
+---
+
+Your turn. Read the attached file(s) and answer. No tool tag needed.`;
+    }
+
     return `${base}
 
-# Files on the current message — do not call a tool
+# Files on the current message — do not call a file tool
 
 ${attachmentLine}
 
@@ -748,13 +790,9 @@ Do NOT call \`<analysing>\` on them. Do NOT call \`<analyse>\` on them. Do NOT c
 
 Neither applies to a file on the current message. Both apply only when the user is asking you to look at something that isn't already in your context.
 
-**When you should use \`<analysing>\`:** only if the user refers to a file from a *previous* turn — "that PDF I sent earlier", "the CSV from before", "re-read report.pdf". In that case, the file is no longer in your context and you must re-attach it.
-
-**When you should use \`<analyse>\`:** only if the user gives you a URL or you're reading a specific page you found via search. Never for a file.
-
 Read the attachment(s). Describe specific values, labels, names. Be detailed.
 
-**Paraphrase rule — CRITICAL.** When summarising, analysing, or extracting from a document, rewrite every idea in your own words. Do not quote sentences verbatim. Do not reproduce section headings, definitions, or list items as they appear in the source. Gemini's recitation filter terminates the stream silently when your output too closely matches the input. Paraphrase aggressively — new sentence structures, new word choices.${fileSection}
+**Paraphrase rule — CRITICAL.** When paraphrasing or summarising a source document, rewrite every idea in your own words. Gemini's recitation filter terminates the stream silently when output too closely matches the input.${fileSection}
 
 ---
 
@@ -2152,7 +2190,7 @@ async function ensureGeminiFile(env, key, mime, base64Data, displayName) {
       const c = await env.DB.prepare('SELECT COUNT(*) as cnt FROM rate_limits WHERE user_id = ? AND timestamp >= ?')
         .bind(GEMINI_FILE_UPLOAD_BUCKET, now - 60).first();
       if ((c?.cnt || 0) >= GEMINI_FILE_UPLOAD_MAX_PER_MIN) {
-        log('[gemini-file] rate limit hit — falling back to inline for', mime);
+        log('[gemini-file] rate limit hit for', mime);
         return null;
       }
       await env.DB.prepare('INSERT INTO rate_limits (user_id, timestamp) VALUES (?, ?)')
@@ -2732,14 +2770,14 @@ async function handleMessages(chat, mode, attachmentsOrLegacy, env, username, op
       ?.replace(/!\[.*?\]\((?:data|blob):[^)]+\)/g, '').replace(/\[Attached:[^\]]+\]/g, '').trim()
       || (attachments.length > 1 ? 'Read the attached files and answer the user.' : 'Read the attached file and answer the user.');
     const lastUser = escapeUserToolTags(rawLastUser);
-    const systemPrompt = getSystemPrompt(actualMode, today, { hasImage, hasFile, fileIndex });
+    const systemPrompt = getSystemPrompt(actualMode, today, { hasImage, hasFile, fileIndex, currentAttachments: hasAttachments });
     const history = buildHistoryForLLM(chat.messages.slice(0, -1)).slice(-MAX_HISTORY_MESSAGES);
     initialMessages = [{ role: 'system', content: systemPrompt }, ...history, { role: 'user', content: lastUser, attachments }];
   } else {
     const useAttachments = attachments.length > 0;
     const historySource = useAttachments ? chat.messages.slice(0, -1) : chat.messages;
     const history = buildHistoryForLLM(historySource).slice(-MAX_HISTORY_MESSAGES);
-    const systemPrompt = getSystemPrompt(actualMode, today, { fileIndex });
+    const systemPrompt = getSystemPrompt(actualMode, today, { fileIndex, currentAttachments: hasAttachments });
     if (useAttachments) {
       const rawLastUser = chat.messages[chat.messages.length - 1]?.content
         ?.replace(/!\[.*?\]\((?:data|blob):[^)]+\)/g, '')
@@ -2753,7 +2791,6 @@ async function handleMessages(chat, mode, attachmentsOrLegacy, env, username, op
   }
 
   const estimatedTokens = estimateRequestTokens(initialMessages, attachments);
-  const skipNativeUpload = estimatedTokens > FREE_TIER_TPM_LIMIT * 0.8;
 
   if (!(await checkRateLimit(env, username))) return buildErrorStream('Rate limit exceeded.');
   const pipeline = await orderPipelineByQuota(env, actualMode);
@@ -2788,29 +2825,84 @@ async function handleMessages(chat, mode, attachmentsOrLegacy, env, username, op
         try {
           safeEnqueue(encoder.encode(`: ready\n\n`));
 
-          if (attachments.length > 0 && !skipNativeUpload) {
+          // ──────────────────────────────────────────────────────────────
+          // Attachment handling — mandatory native upload.
+          //
+          // Every attachment emits analysing_start → analysing_results/
+          // analysing_error. The model never emits these itself; the file
+          // card renders on the frontend the moment the request lands.
+          //
+          // Native Files API upload is required. There is no inline
+          // fallback. If upload fails, the file is stripped from context
+          // and a note is appended to the user message.
+          // ──────────────────────────────────────────────────────────────
+          if (attachments.length > 0) {
             const uploadKeys = await getAvailableKeys(env, 'GOOGLE_KEYS');
             const uploadKey = uploadKeys[0] || null;
-            if (uploadKey) {
+            const failedNames = [];
+
+            if (!uploadKey) {
               for (let i = 0; i < attachments.length; i++) {
                 const att = attachments[i];
-                if (!att.base64 || !att.mime) continue;
                 const blockId = genBlockId();
                 const attName = att.name || `attachment-${i + 1}`;
                 sendEvent({ done: false, type: 'analysing_start', query: attName, blockId, source: 'attachment', index: i + 1, total: attachments.length });
+                sendEvent({ done: false, type: 'analysing_error', query: attName, blockId, source: 'attachment', error: 'No Google API key available for native upload' });
+                failedNames.push(attName);
+              }
+              attachments.length = 0;
+              const lastUserMsg = initialMessages[initialMessages.length - 1];
+              if (lastUserMsg && Array.isArray(lastUserMsg.attachments)) {
+                lastUserMsg.attachments = [];
+              }
+              if (lastUserMsg && failedNames.length) {
+                lastUserMsg.content = String(lastUserMsg.content || '') +
+                  `\n\n[Note: ${failedNames.length} attached file(s) could not be uploaded and are not available in this turn: ${failedNames.join(', ')}.]`;
+              }
+            } else {
+              for (let i = 0; i < attachments.length; i++) {
+                const att = attachments[i];
+                if (!att.base64 || !att.mime) { failedNames.push(att.name || `attachment-${i + 1}`); continue; }
+                const blockId = genBlockId();
+                const attName = att.name || `attachment-${i + 1}`;
+                const attSize = Math.round((att.base64.length * 3) / 4);
+
+                sendEvent({ done: false, type: 'analysing_start', query: attName, blockId, source: 'attachment', index: i + 1, total: attachments.length });
+
+                let uploadOk = false;
                 try {
                   const res = await ensureGeminiFile(env, uploadKey, att.mime, att.base64, attName);
                   if (res && res.uri) {
                     att.fileUri = res.uri;
                     att.uploadKey = res.uploadKey;
+                    uploadOk = true;
                     log(`[auto-attach] ${res.cached ? 'cache-hit' : 'uploaded'} ${att.mime} → ${res.uri}`);
                   } else {
-                    log(`[auto-attach] fell back to inline for ${att.mime}`);
+                    log(`[auto-attach] native upload returned null for ${att.mime}`);
                   }
-                  sendEvent({ done: false, type: 'analysing_results', query: attName, blockId, source: 'attachment', data: { name: attName, mime: att.mime, size: att.size || 0 } });
                 } catch (e) {
                   log('[auto-attach] error:', safeStr(e));
-                  sendEvent({ done: false, type: 'analysing_error', query: attName, blockId, source: 'attachment', error: safeStr(e) });
+                }
+
+                if (uploadOk) {
+                  sendEvent({ done: false, type: 'analysing_results', query: attName, blockId, source: 'attachment', data: { name: attName, mime: att.mime, size: attSize } });
+                } else {
+                  sendEvent({ done: false, type: 'analysing_error', query: attName, blockId, source: 'attachment', error: 'Native upload failed — file not available this turn' });
+                  failedNames.push(attName);
+                }
+              }
+
+              if (failedNames.length > 0) {
+                const keep = attachments.filter(a => a.fileUri);
+                attachments.length = 0;
+                for (const a of keep) attachments.push(a);
+                const lastUserMsg = initialMessages[initialMessages.length - 1];
+                if (lastUserMsg && Array.isArray(lastUserMsg.attachments)) {
+                  lastUserMsg.attachments = attachments.slice();
+                }
+                if (lastUserMsg && failedNames.length) {
+                  lastUserMsg.content = String(lastUserMsg.content || '') +
+                    `\n\n[Note: ${failedNames.length} attached file(s) could not be uploaded and are not available in this turn: ${failedNames.join(', ')}.]`;
                 }
               }
             }
