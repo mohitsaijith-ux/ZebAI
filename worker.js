@@ -724,6 +724,69 @@ Rules:
 - Display math (\`$$...$$\`) on its own line, alone.
 - Never write raw LaTeX commands outside math delimiters.
 
+## LaTeX in tables — default to plain text
+
+Table cells are for readable data, not for typesetting. Default to plain text in every cell. Use math delimiters ONLY when the cell's content is genuinely math notation that plain text can't express.
+
+**Plain text (no delimiters):**
+
+    Numbers             120, 12500, 3.14          NOT  $120$, $12500$, $3.14$
+    Percentages         45%, -12%                 NOT  $45\\%$, $-12\\%$
+    Currency            $49.99, €120, ₹1500       NOT  \\$49.99$, $\\text{€}120$
+    Dates               2026-10-02, 25.09.2026    NOT  $2026-10-02$
+    Units               25°C, 5 km, 12 kg         NOT  $25°C$, $5\\,km$
+    Short labels        Q1, AAPL, Grade V         NOT  $Q1$, $AAPL$
+    Simple ranges       5–10, 20 to 30            NOT  $5-10$
+    Plain prose         Maths, Science, SST       NOT  $\\text{Maths}$
+
+**LaTeX (with delimiters):**
+
+    Fractions           $\\frac{1}{2}$, $\\frac{-b}{2a}$
+    Powers & roots      $x^2$, $a^3 + b^3$, $\\sqrt{n+1}$
+    Integrals & sums    $\\int_0^1 f(x)\\,dx$, $\\sum_{i=1}^{n} x_i$
+    Greek letters       $\\alpha$, $\\Delta t$, $\\theta$
+    Subscripts          $H_2O$, $v_0$, $x_{i+1}$
+    Comparison ops      $\\geq$, $\\approx$, $\\neq$, $\\leq$
+    Multi-part math     $E = mc^2$, $F = ma$
+    Real formulas       $x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$
+
+**The test:** would you write it the same way in a plain-text email? If yes — plain, no delimiters. If it's a formula, equation, or symbol that needs typesetting to be legible — wrap it in \`$...$\`.
+
+Multiple math parts in one cell is fine when they're all real math:
+
+    | Formula | Result |
+    |---|---|
+    | $E = mc^2$ | $9 \\times 10^{16}$ J |
+    | $a^2 + b^2 = c^2$ | $c = \\sqrt{a^2 + b^2}$ |
+
+Do NOT mix — writing \`$E = mc^2$ and $F = ma$\` inside one cell is fine. Writing \`$Q1$ 2026 and $45\\%$\` is not — those are plain data, use plain text.
+
+**Consistency rule — per column, per row, per table.** Once you decide a table needs LaTeX, apply it uniformly to every cell that contains the same KIND of content. Do not mix typeset and plain versions of the same thing in one table.
+
+    GOOD — every formula in every row is delimited:
+    | Formula | Expression |
+    |---|---|
+    | Kinetic energy | $E_k = \\frac{1}{2}mv^2$ |
+    | Potential energy | $E_p = mgh$ |
+    | Work | $W = Fd$ |
+
+    BAD — first two delimited, third not:
+    | Formula | Expression |
+    |---|---|
+    | Kinetic energy | $E_k = \\frac{1}{2}mv^2$ |
+    | Potential energy | $E_p = mgh$ |
+    | Work | W = Fd |
+
+    BAD — one cell uses a unicode superscript, another uses $^2$:
+    | Quantity | Value |
+    |---|---|
+    | Area | 25 m² |
+    | Volume | $125\\,\\text{m}^3$ |
+
+The column is the unit of consistency. If the "Expression" column has math in row 1, every row in that column has math. If the "Value" column is plain numbers in row 1, every row is plain numbers.
+
+The same applies to units, percentages, and symbols. If you write \`$45\\%\` in one cell, write \`$60\\%\` in the next — not \`45%\` and \`$60\\%\` side by side. Pick one form per column and hold it.
+
 # Formatting safety
 
 - Never nest code fences. Use \`~~~\` if you must show a fenced block inside a fence.
