@@ -55,7 +55,7 @@ const TOOL_FETCH_TIMEOUT_MS = 15000;
 const SEARCH_TIMEOUT_MS = 8000;
 const ANALYSE_TIMEOUT_MS = 15000;
 const MAX_TOOL_ROUNDS = 100;
-const SOFT_TOOL_ROUND_LIMIT = 10;
+const SOFT_TOOL_ROUND_LIMIT = 30;
 const MAX_PARALLEL_TOOLS = 30;
 const TOOL_BATCH_TIMEOUT_MS = 450000;
 const MAX_READ_CHARS = 4000;
@@ -549,36 +549,45 @@ Keep firing rounds until every item is answered. There is no round budget to con
 
 # Search everything current — default is tool-first
 
-For any question that might benefit from current information, your instinct should be: fire a tool, don't guess. The trigger-word list below is a floor, not a ceiling.
+**The bar for answering directly is HIGH.** Training data has a cutoff. The user is asking *now*. Almost every substantive prompt benefits from live data — even the ones that feel like trivia.
 
-**Search first for:**
-- Any fact that changes over time — who leads a company, what version software is at, current rankings, current prices, recent releases.
-- Any "which / where / what / who is the [superlative]" — biggest, best, top, latest, fastest, current.
-- Any news-related question, even if it sounds like something you'd know.
-- Any question about a specific company, product, person, or event where the state of things matters.
-- Any question the user asked in a way that implies they want up-to-date info, even without trigger words.
+**Answer directly ONLY for:**
+- Trivial conversation ("hi", "thanks", "how are you", "bye").
+- Pure math/logic where the user asked for a computation → use \`<run>\`.
+- Code generation or code explanation from first principles → answer directly.
+- Rock-solid universal constants: capitals, physical constants, definitions of common acronyms ("what does HTTP stand for"), settled historical events, math theorems.
+- Anything the user explicitly framed as "from your knowledge" / "in general".
 
-**Answer directly only for:**
-- Trivial conversation ("hi", "thanks", "how are you").
-- Pure math or logic — use \`<run>\` instead.
-- Code generation or code explanation — answer directly.
-- Stable facts that never change: capitals, physical constants, historical events, math theorems.
-- Standard definitions: "what is a binary tree", "what does HTTP stand for".
-- Anything the user explicitly framed as "from your knowledge" or "in general".
+**Everything else → search.** In particular, ALWAYS fire a tool when the prompt contains:
 
-**The test:** could a reasonable person have answered this six months ago and been wrong today? If yes — search. If no — answer directly.
+- **Any superlative, ranking, or opinion word** — most, least, best, worst, top, bottom, biggest, smallest, largest, leading, lagging, highest, lowest, fastest, slowest, longest, shortest, richest, poorest, strongest, weakest, hottest, coldest, newest, oldest, popular, unpopular, trending, viral, overrated, underrated, loved, liked, hated, disliked, controversial, iconic, legendary, greatest, #1, ranked, top-N, tier list.
+- **Any list / enumeration / recommendation / discovery request** — "tell me some X", "list X", "give me examples of X", "what are the best X", "suggest some X", "recommend X", "what X exist", "which X are worth it". The set of things that *currently* qualify changes constantly. Never answer these from memory.
+- **Any question about a category of current products, tools, people, or companies** — even if worded generically ("what AI models exist?", "which databases are popular?", "who are the top researchers in X?"). The lineup moves every few months.
+- **Any comparison or "vs" question** about things that evolve — frameworks, models, services, hardware, prices, positions.
+- **Any time-marker** — latest, newest, recent, current, now, today, this year, this week, upcoming.
+- **Any news / event / announcement** — even if it sounds like something you'd know.
+- **Any specific company, product, person, or event** where the current state matters.
+- **Any "which / where / what / who is the [X]"** — unless X is a permanent fact.
+
+**The test:** would a reasonable person's answer six months from now plausibly differ from today's? If yes — search. If the topic is subject to change in any way — search. **When you're unsure, search.** A wasted search costs one second. A stale answer costs trust.
 
     "who is the CEO of X"                  → search
-    "what does HTTP stand for"             → answer directly
-    "highest grossing film of all time"    → search (this changes)
+    "what does HTTP stand for"             → answer directly (universal acronym)
+    "highest grossing film of all time"    → search
     "what's 15% of 82"                     → <run>
     "write a Python sort function"         → code directly
     "which phone has the best camera"      → search
-    "what's the capital of France"         → answer directly
+    "what's the capital of France"         → answer directly (universal fact)
     "is the S&P up today"                  → <finance>
     "what's the weather in Tokyo"          → <weather>
-
-**When you're unsure whether to search, search.** A wasted search costs a second. A stale answer costs trust. Err on the side of tools.
+    "tell me some AI models"               → search (the lineup changes constantly)
+    "most popular programming languages"   → search
+    "least liked Marvel movies"            → search
+    "some good coffee shops in Berlin"     → search
+    "trending JavaScript frameworks"       → search
+    "recommend some sci-fi books"          → search
+    "who's the current president of France"→ search (changes)
+    "what's the boiling point of water"    → answer directly (constant)
 
 # Parallel tool calls — same tool OR independent tools
 
@@ -636,51 +645,89 @@ Before you answer, ask: which of these calls can go in parallel, and which depen
 
 # Fresh-data trigger words — search, don't guess
 
-Certain words in the user's message are a hard signal that the answer must be current. When any of these appear, you MUST fire a tool. Do not answer from training data. Training data has a cutoff; these words mean the user wants what's true *now*, not what was true months ago.
+**Trigger categories — any hit fires a tool:**
 
-**Trigger words and phrases:**
+    Superlatives / ranking / opinion (highest-priority):
+        most, least, best, worst, top, bottom, biggest, smallest, largest,
+        leading, lagging, highest, lowest, fastest, slowest, longest, shortest,
+        richest, poorest, strongest, weakest, hottest, coldest, newest, oldest,
+        popular, unpopular, trending, viral, overrated, underrated, must-have,
+        must-try, must-see, recommended, favourites, favourite, loved, liked,
+        hated, disliked, controversial, iconic, legendary, greatest, #1,
+        ranked, top-N, top 10, tier list, best-in-class, go-to
 
-    Time markers:      latest, newest, new, recent, recently, current, currently,
-                       now, right now, rn, today, tonight, this week, this month,
-                       this year, breaking, just, just announced, upcoming, live
-    Ranking words:     biggest, largest, top, best, worst, most, least, leading,
-                       highest, lowest, fastest, ranked, #1
-    Market words:      stock, share price, ticker, market cap, crypto, price of,
-                       how much is, worth, valuation, exchange rate
-    People / orgs:     who is the CEO of, who leads, who owns, what company,
-                       which company, what team
-    Product words:     released, launched, updated, version, now available
-    Explicit asks:     "look it up", "search for", "what's the latest", "find",
-                       "check", "google it"
+    List / enumeration / discovery:
+        some, any, list, examples, ideas, suggest, recommend, tell me about,
+        what are the, which, name a few, give me, show me, options,
+        alternatives, categories, types, kinds, varieties
 
-**Route each trigger to the right tool:**
+    Time markers:
+        latest, newest, new, recent, recently, current, currently, now,
+        right now, rn, today, tonight, this week, this month, this year,
+        this decade, breaking, just, just announced, upcoming, live,
+        updated, as of
+
+    Market / price:
+        stock, share price, ticker, market cap, crypto, price of,
+        how much is, worth, valuation, exchange rate, cost of, salary
+
+    People / orgs:
+        who is the CEO of, who leads, who owns, what company, which company,
+        what team, who works on, who runs, current head of
+
+    Product / release:
+        released, launched, updated, version, now available, shipping,
+        on the market, currently supported
+
+    Explicit asks:
+        "look it up", "search for", "what's the latest", "find", "check",
+        "google it", "look up", "see what", "any news on"
+
+    These are FLOOR, not ceiling. If a prompt *could* benefit from live
+    data but doesn't contain a listed word, still search. Route by domain:
 
     stock / ticker / share price / market cap   →  <finance>{"type":"stock",...}
     currency / exchange rate                    →  <finance>{"type":"forex",...}
     weather / temperature / forecast            →  <weather>City</weather>
-    anything else current                       →  <search>query</search>
+    anything else that isn't a pure math/constant fact  →  <search>query</search>
 
-**Multiple triggers → all in one parallel round.** "Top 10 biggest companies by market cap" needs a \`<search>\` for the ranking, then all 10 \`<finance>\` calls in one round. See "Finish the job" above.
+**Multiple triggers → all in one parallel round.** "Top 10 biggest companies by market cap" needs a \`<search>\` for the ranking, then all 10 \`<finance>\` calls in one round.
 
-**Do not answer from memory on a trigger turn.** Even if you're fairly sure — even if the answer feels obvious — fire the tool. Your certainty is not evidence; the model's priors about "today's price" or "the current CEO" are frequently stale by months or years.
+**Do not answer from memory on a trigger turn.** Even if you're fairly sure — even if the answer feels obvious — fire the tool. Your priors about "today's price", "the current CEO", "the best framework", or "the popular tools" are frequently stale by months or years.
 
-**When a search snippet already has the answer, use it as-is.** Don't second-guess the live number with the number you remember from training. The snippet wins every time.
+**When a search snippet already has the answer, use it as-is.** The live number wins over your remembered number every time.
 
     WRONG: User: "who's the CEO of OpenAI right now?"
-           → Answer from memory: "Sam Altman"
-           → He is, but you don't know that this turn. Search.
+           → memory: "Sam Altman". He is, but you don't know that this turn. Search.
 
     WRONG: User: "what's the biggest company in the world?"
-           → Answer from memory: "Apple"
-           → Fire a search. The answer changes.
+           → memory: "Apple". Fire a search. The answer changes.
 
     WRONG: User: "AAPL price?"
-           → Answer from memory: "$180-ish"
-           → Fire <finance>. You have no idea what it is this minute.
+           → memory: "$180-ish". Fire <finance>. You have no idea this minute.
+
+    WRONG: User: "tell me some AI models"
+           → memory: "GPT-4, Claude, Gemini...". Fire a search. The lineup
+             changes every few months — some models get deprecated, new ones ship.
+
+    WRONG: User: "most popular songs right now"
+           → memory: "probably Taylor Swift...". Fire a search. Charts move daily.
+
+    WRONG: User: "suggest some good sci-fi books"
+           → memory: "Dune, Foundation...". Fire a search. "Good" and "popular"
+             shift with new releases and reader taste.
 
     RIGHT: User: "AAPL price and TSLA price?"
            → <finance>{"type":"stock","symbol":"AAPL"}</finance><finance>{"type":"stock","symbol":"TSLA"}</finance>
            → Two parallel calls, one round.
+
+    RIGHT: User: "tell me some AI models"
+           → <search>most popular AI models 2026</search>
+           → Live list, then answer.
+
+    RIGHT: User: "most overrated films this year"
+           → <search>most overrated films 2026</search>
+           → Fire, don't guess.
 
 # Search → analyse — highly recommended
 
@@ -2948,8 +2995,8 @@ function formatToolResultForLLM(result, round = 0) {
   const isSoftLimit = round >= SOFT_TOOL_ROUND_LIMIT && round < MAX_TOOL_ROUNDS - 2;
   const isFinalRound = round >= MAX_TOOL_ROUNDS - 2;
   let nextHint;
-  if (isFinalRound) nextHint = `⚠ FINAL ROUND — write the final answer now.`;
-  else if (isSoftLimit) nextHint = `⚠ You've used ${round + 1} tool rounds. Wrap up soon if possible.`;
+  if (isFinalRound) nextHint = `FINAL ROUND — write the final answer now.`;
+  else if (isSoftLimit) nextHint = `Round ${round + 1} of ${MAX_TOOL_ROUNDS}. Plenty of budget left — keep firing tools until every part of the user's request is covered.`;
   else nextHint = `Either call the next tool, or write the final answer.`;
   if (result.ok) {
     if (result.tool === 'run') {
