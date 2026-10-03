@@ -1,5 +1,5 @@
 // ============================================================================
-// ZEBAI WORKER – v106.30.0
+// ZEBAI WORKER – v106.31.0
 //   • Google Gemini only. Flash-Lite family + 2.5 fallbacks.
 //   • Chat: gemini-3.5-flash-lite, gemini-3.1-flash-lite,
 //           gemini-2.5-flash-lite, gemini-2.5-flash.
@@ -10,23 +10,24 @@
 //   • Exponential backoff on 5xx/429. Aborts classified as transient 503.
 //   • Structured error fingerprint: E=M1-code/M2-code/M3-code/M4-code
 //   • Search: Tavily discovery-only (15 sources, 3 chunks each).
-//   • Analyse: Firecrawl. Mandatory after every search.
+//   • Analyse: Firecrawl v2. Mandatory after every search.
 //   • Gemini Files API native upload (cached 47h) for all attachments.
-//   • v106.30.0:
-//      - Search requests 15 sources with 3 chunks per source.
-//      - Search payload gets its own 30k-char budget to the model.
-//      - Analyse is mandatory after every search round.
-//      - Prompt batch cap is 10 tools per round (worker tolerates 30).
-//      - Subrequest guard: trims batch if it would blow Cloudflare's cap.
-//      - No emojis — anywhere. Hard rule in the prompt.
-//      - Soft tool round limit raised 10 -> 30.
-//      - Preserved: chronological file index, current-turn attachment
-//        marking, mandatory native upload, programmatic analysing events,
-//        prompt-level tool carry-over guards.
+//   • v106.31.0:
+//      - Search results label FULL_URL and DOMAIN separately so the model
+//        always analyses the exact page, not the bare domain.
+//      - Prompt teaches full-URL usage with explicit WRONG/RIGHT pairs.
+//      - Firecrawl migrated from v1/scrape to v2/scrape with better
+//        defaults (blockAds, removeBase64Images) and longer timeouts.
+//      - ANALYSE_TIMEOUT_MS 15s -> 32s so Firecrawl has time to respond.
+//      - New /debug-analyse endpoint for isolating Firecrawl from the model.
+//      - Preserved: 15-source search, mandatory search -> analyse flow,
+//        10-tools-per-round prompt cap (worker tolerates 30), subrequest
+//        guard, no-emoji rule, chronological file index, current-turn
+//        attachment marking, mandatory native upload.
 // ============================================================================
 
 const DEBUG = true;
-const WORKER_VERSION = '106.30.0';
+const WORKER_VERSION = '106.31.0';
 const ASSISTANT_NAME = 'ZebAI';
 const ASSISTANT_CREATOR = 'MCOS Private Limited';
 
@@ -52,7 +53,7 @@ const MAX_ATTACHMENT_BYTES = 15 * 1024 * 1024;
 const MAX_TOTAL_ATTACHMENT_BYTES = 20 * 1024 * 1024;
 const TOOL_FETCH_TIMEOUT_MS = 15000;
 const SEARCH_TIMEOUT_MS = 8000;
-const ANALYSE_TIMEOUT_MS = 15000;
+const ANALYSE_TIMEOUT_MS = 32000;
 const MAX_TOOL_ROUNDS = 100;
 const SOFT_TOOL_ROUND_LIMIT = 30;
 const MAX_PARALLEL_TOOLS = 30;
@@ -639,6 +640,23 @@ Keep firing rounds until every item is answered. There is no round budget to con
 
 Search gives you headlines. \`<analyse>\` gives you the story. **Every single search must be followed by at least one \`<analyse>\` on a URL from those results before you write the final answer.** This is not optional. This is not "when useful". It is the default and it applies to every search round you fire.
 
+**CRITICAL — always use the FULL URL, including the path.**
+
+Search returns URLs like \`FULL_URL: https://codershub.com/deepseekisw\`. The FULL_URL is the exact page you must analyse. The \`DOMAIN\` field is just the hostname — using it scrapes the homepage, not the article.
+
+    WRONG:  <analyse>https://codershub.com</analyse>              <- scrapes the homepage
+    WRONG:  <analyse>codershub.com/deepseekisw</analyse>          <- missing scheme
+    RIGHT:  <analyse>https://codershub.com/deepseekisw</analyse>  <- exact FULL_URL
+
+Copy the \`FULL_URL\` value character-for-character. Do not trim it. Do not drop the path. Do not add or remove \`www.\`. Do not append a trailing slash. The URL you pass to \`<analyse>\` must be byte-for-byte the same as the \`FULL_URL\` line from the search result you're citing.
+
+    WRONG:  Search says  FULL_URL: https://www.codershub.com/deepseekisw
+            You write    <analyse>https://codershub.com/deepseekisw</analyse>     <- dropped www
+            You write    <analyse>https://codershub.com/deepseekisw/</analyse>    <- added slash
+            You write    <analyse>https://codershub.com/deepseekisw?ref=1</analyse> <- added param
+
+    RIGHT:  You write    <analyse>https://www.codershub.com/deepseekisw</analyse>  <- exact copy
+
 **The mandatory pattern:**
 
     Round 1:  <search>query</search>
@@ -662,6 +680,17 @@ Two analyses is common. Three is fine for comparative or contested topics. **Nev
 - Prefer the most authoritative domain: official docs, primary sources, major outlets, government sites. Skip Pinterest, Quora, SEO farms, social aggregators.
 - Prefer results whose snippet mentions specifics (numbers, names, dates, quotes) — those lead to pages with substance.
 - If two sources are clearly the same article syndicated across domains, analyse only one.
+- **Always copy the FULL_URL field, never the DOMAIN field.** The FULL_URL is what Firecrawl scrapes. The DOMAIN is informational only.
+
+    Search result looks like:
+        [1] DeepSeek V4 launches — TechCrunch (2026-10-03)
+            FULL_URL: https://techcrunch.com/2026/10/03/deepseek-v4-launch
+            DOMAIN: techcrunch.com
+            DeepSeek released V4 today...
+
+    You fire:
+        <analyse>https://techcrunch.com/2026/10/03/deepseek-v4-launch</analyse>   <- correct
+        NOT <analyse>https://techcrunch.com</analyse>                            <- homepage, wrong
 
 **Never search again without analysing the first search's results.** If search round 1 returned usable URLs and you fire another search instead of analysing, you're doing it wrong. The rule is: search -> analyse -> optionally search again -> analyse -> answer. Never: search -> search -> search -> answer.
 
@@ -687,10 +716,22 @@ Only when *every* URL from the search is unusable: all return paywalls, 403s, em
     Round 2: <analyse>https://twitter.com/some-thread</analyse>
     -> Social aggregators, not primary sources. Pick better URLs.
 
+    WRONG — dropped the path, scraped the homepage:
+    Round 1: <search>DeepSeek V4 release notes</search>
+             -> result: FULL_URL: https://api-docs.deepseek.com/news/v4
+    Round 2: <analyse>https://api-docs.deepseek.com</analyse>
+    -> You scraped the docs index, not the V4 release notes. Always copy FULL_URL.
+
     RIGHT — search then analyse every time:
     Round 1: <search>current US inflation rate 2026</search>
     Round 2: <analyse>https://bls.gov/latest-cpi-release</analyse>
     Round 3: "US CPI rose 0.3% in September 2026, per the BLS release. Year-over-year inflation is 3.2%. [BLS link]"
+
+    RIGHT — copied FULL_URL exactly:
+    Round 1: <search>DeepSeek V4 release notes</search>
+             -> result: FULL_URL: https://api-docs.deepseek.com/news/v4
+    Round 2: <analyse>https://api-docs.deepseek.com/news/v4</analyse>
+    -> Correct page, correct content.
 
     RIGHT — multi-topic, multi-analyse:
     Round 1: <search>React performance benchmarks 2026</search>
@@ -733,7 +774,7 @@ Batch size: up to 10 tags per reply. Beyond 10, split across rounds. See the "Fi
 # Tools
 
     <search>query</search>                      Live web search. Returns up to 15 sources with snippets.
-    <analyse>https://exact-url</analyse>        Read a specific URL in full.
+    <analyse>https://exact-full-url-with-path</analyse>    Read one specific page in full. Copy the FULL_URL from search results character-for-character — including the path, the www, and any query string. Never truncate to the domain.
     <weather>City</weather>                     Current weather.
     <finance>{"type":"stock","symbol":"AAPL"}</finance>
     <finance>{"type":"forex","base":"USD","target":"INR"}</finance>
@@ -1159,7 +1200,7 @@ The same applies to units, percentages, and symbols. If you write \`$45\\%\` in 
 
 # Anti-patterns
 
-Never write: an emoji, an emoticon, a symbol standing in for a word, "What I looked up:", "Specific values:", "Interpretation:", a tool tag wrapped in prose, a trailing period after a tool tag, an invented tool result, a <chart> tag anywhere except the first position, a capabilities pitch in response to a greeting, a long preamble or "in conclusion" summary, a URL that didn't appear in a tool result this turn, a URL from training data presented as if it came from a search, a tool call that repeats one from a previous turn without the user asking for it again, "I couldn't find" without at least two attempted queries, delivering N-1 items when the user asked for N, chunking a batch of <=10 calls into multiple rounds, a research answer without at least 1 analysed source, a search round with no follow-up analyse, firing more than 4 analyses on a single search round unless the user asked for a deep dive, dropping items when a set is larger than 10 instead of firing a second round, searching again without having analysed the previous search's results.`;
+Never write: an emoji, an emoticon, a symbol standing in for a word, "What I looked up:", "Specific values:", "Interpretation:", a tool tag wrapped in prose, a trailing period after a tool tag, an invented tool result, a <chart> tag anywhere except the first position, a capabilities pitch in response to a greeting, a long preamble or "in conclusion" summary, a URL that didn't appear in a tool result this turn, a URL from training data presented as if it came from a search, a tool call that repeats one from a previous turn without the user asking for it again, "I couldn't find" without at least two attempted queries, delivering N-1 items when the user asked for N, chunking a batch of <=10 calls into multiple rounds, a research answer without at least 1 analysed source, a search round with no follow-up analyse, firing more than 4 analyses on a single search round unless the user asked for a deep dive, dropping items when a set is larger than 10 instead of firing a second round, searching again without having analysed the previous search's results, truncating a FULL_URL to just its domain before passing it to \`<analyse>\`.`;
 
   if (vision) {
     const attachmentLine = hasImage && hasFile
@@ -1293,9 +1334,9 @@ RULES:
 - Output ONLY the title
 
 EXAMPLES:
-"hi" → Casual Greeting
-"what's the weather in tokyo" → Tokyo Weather Check
-"AAPL stock price" → Apple Stock Price
+"hi" -> Casual Greeting
+"what's the weather in tokyo" -> Tokyo Weather Check
+"AAPL stock price" -> Apple Stock Price
 
 USER: ${userSeed.slice(0, 400)}
 ASSISTANT: ${cleanAssistant.slice(0, 300)}
@@ -2445,7 +2486,7 @@ async function performWebSearch(env, query) {
     if (!sources.length) return { error: 'No search results found' };
     log(`[tavily] requested=${MAX_SEARCH_SOURCES} returned=${rawResults.length} used=${sources.length}`);
     let rawText = sources.map((s, i) =>
-      `[${i + 1}] ${s.title} — ${s.sourceName}${s.publishedDate ? ' (' + s.publishedDate + ')' : ''}\n    URL: ${s.url}\n    ${s.content}`
+      `[${i + 1}] ${s.title}${s.publishedDate ? ' (' + s.publishedDate + ')' : ''}\n    FULL_URL: ${s.url}\n    DOMAIN: ${s.sourceName}\n    ${s.content}`
     ).join('\n\n');
     if (rawText.length > MAX_SEARCH_RAW_CHARS) {
       rawText = rawText.slice(0, MAX_SEARCH_RAW_CHARS) + '\n…[truncated at worker]';
@@ -2503,10 +2544,19 @@ async function performAnalyseLookup(env, rawUrl) {
   const fc = pickExternalKey(env, 'FIRECRAWL_KEYS');
   if (fc) {
     try {
-      const r = await fetchWithTimeout('https://api.firecrawl.dev/v1/scrape', {
+      log(`[firecrawl] scraping: ${urlStr}`);
+      const r = await fetchWithTimeout('https://api.firecrawl.dev/v2/scrape', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${fc}` },
-        body: JSON.stringify({ url: urlStr, formats: ['markdown'], onlyMainContent: true, timeout: 12000 }),
+        body: JSON.stringify({
+          url: urlStr,
+          formats: ['markdown'],
+          onlyMainContent: true,
+          timeout: 25000,
+          blockAds: true,
+          skipTlsVerification: false,
+          removeBase64Images: true,
+        }),
       }, ANALYSE_TIMEOUT_MS, 'firecrawl-scrape', 1);
       const d = await r.json().catch(() => ({}));
       if (r.ok && d.success !== false && d.data) {
@@ -2514,10 +2564,13 @@ async function performAnalyseLookup(env, rawUrl) {
         const title = String(d.data.metadata?.title || parsedUrl.hostname);
         if (content) return { type: 'page', url: urlStr, title: title.slice(0, 200), sourceName, content: content.slice(0, MAX_READ_CHARS), truncated: content.length > MAX_READ_CHARS, charCount: content.length };
       }
-      return { error: `Firecrawl couldn't extract content from ${sourceName}` };
-    } catch (e) { return { error: `Firecrawl failed: ${safeStr(e)}` }; }
+      const errMsg = d?.error || `Firecrawl couldn't extract content from ${sourceName}`;
+      log(`[firecrawl] failed: ${errMsg}`);
+      return { error: errMsg };
+    } catch (e) { const msg = safeStr(e); log(`[firecrawl] error: ${msg}`); return { error: `Firecrawl failed: ${msg}` }; }
   }
   try {
+    log(`[analyse-raw] fetching: ${urlStr}`);
     const r = await fetchWithTimeout(urlStr, { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; ZebAI/1.0)', 'Accept': 'text/html,application/xhtml+xml' } }, TOOL_FETCH_TIMEOUT_MS, 'analyse-raw', 1);
     if (!r.ok) return { error: `Page returned HTTP ${r.status}` };
     const html = await r.text();
@@ -3782,6 +3835,7 @@ export default {
           parallelTools: MAX_PARALLEL_TOOLS,
           subrequestBudget: SUBREQUEST_BUDGET,
           softToolRoundLimit: SOFT_TOOL_ROUND_LIMIT,
+          analyseTimeoutMs: ANALYSE_TIMEOUT_MS,
         });
       }
       if (path === '/debug/keys' && method === 'GET') {
@@ -3794,6 +3848,29 @@ export default {
         return json({ totalKeys: keys.length, availableKeys: states.filter(s => s.state === 'available').length, keys: states, resetInSeconds: secondsUntilMidnightPacific() });
       }
       if (path === '/debug-run' && method === 'GET') { const q = url.searchParams.get('q') || 'sqrt(144) + 2**10'; return json({ code: q, output: evaluateJSSandboxed(q) }); }
+      if (path === '/debug-analyse' && method === 'GET') {
+        const target = url.searchParams.get('url');
+        if (!target) return errorResponse('Pass ?url=https://example.com/path', 400);
+        const keys = getAllKeys(env, 'FIRECRAWL_KEYS');
+        if (!keys.length) return errorResponse('No FIRECRAWL_KEYS configured', 503);
+        const t0 = Date.now();
+        const result = await performAnalyseLookup(env, target);
+        return json({
+          requestedUrl: target,
+          keysAvailable: keys.length,
+          durationMs: Date.now() - t0,
+          ok: !result.error,
+          result: result.error ? { error: result.error } : {
+            type: result.type,
+            title: result.title,
+            sourceName: result.sourceName,
+            url: result.url,
+            charCount: result.charCount,
+            truncated: result.truncated,
+            contentPreview: String(result.content || '').slice(0, 500),
+          },
+        });
+      }
 
       if (path === '/embed' && method === 'POST') {
         const body = await request.json();
