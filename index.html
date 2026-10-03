@@ -133,10 +133,10 @@ svg.lucide{vertical-align:middle;display:inline-block}
   left:-13px;
   top:calc(0.62em + 12px);
 }
-.trace-line > .trace-tool::before,
-.trace-line > .trace-block::before{
+.trace-line > .trace-tool::before{
   left:7px;
 }
+.trace-line > .trace-block::before{ display:none; }
 
 /* Nested trace-lines (inside an "Executions" wrapper) don't draw connectors */
 .trace-line > .trace-block .trace-line > *::before{ display:none !important; }
