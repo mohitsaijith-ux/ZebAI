@@ -107,18 +107,43 @@ svg.lucide{vertical-align:middle;display:inline-block}
 .trace-line > * + *{margin-top:.6rem}
 .trace-line > .trace-block{margin:0;padding:0}
 .trace-line > .trace-tool{margin:0;padding:0}
-.trace-line::before{content:'';position:absolute;left:7px;top:12px;bottom:12px;width:2px;background:var(--think-border);border-radius:1px}
 .trace-line > .trace-reason::after{content:'';position:absolute;left:5px;top:.62em;width:6px;height:6px;border-radius:50%;background:var(--think-header-text);box-shadow:0 0 0 2px var(--think-bg);box-sizing:border-box;z-index:50;transform:translateX(-20px)}
-.trace-line > .trace-reason::before{content:none}
 .trace-line > .trace-tool,.trace-line > .trace-block{margin-left:-20px;margin-right:0;position:relative;z-index:2;width:calc(100% + 20px);padding:0}
 .trace-line > .trace-tool{margin-top:0;margin-bottom:0}
 .trace-line > .trace-block{margin-top:16px;margin-bottom:16px}
-.trace-line > .trace-tool::before,.trace-line > .trace-block::before{content:'';position:absolute;top:-8px;bottom:-8px;left:6px;width:5px;background:var(--think-bg);z-index:-1;pointer-events:none}
+
+/* Segmented timeline — each item draws its own connector. Nothing draws
+   above the first item's top edge, so the line cannot overshoot upward.
+   The dot (::after on .trace-reason) paints above its own ::before segment
+   thanks to z-index:50 vs z-index:-1. Tool/block cards paint above their
+   own ::before segment because they are in-flow while ::before is
+   negative-z-index inside the tool's stacking context. */
+.trace-line > *::before{
+  content:'';
+  position:absolute;
+  width:2px;
+  background:var(--think-border);
+  border-radius:1px;
+  pointer-events:none;
+  z-index:-1;
+  top:0;
+  bottom:0;
+}
+.trace-line > .trace-reason::before{
+  left:-13px;
+  top:calc(0.62em + 12px);
+}
+.trace-line > .trace-tool::before,
+.trace-line > .trace-block::before{
+  left:7px;
+}
+
+/* Nested trace-lines (inside an "Executions" wrapper) don't draw connectors */
+.trace-line > .trace-block .trace-line > *::before{ display:none !important; }
+
 .trace-line > .trace-tool + .trace-tool,.trace-line > .trace-tool + .trace-block,.trace-line > .trace-block + .trace-tool,.trace-line > .trace-tool + .trace-reason,.trace-line > .trace-reason + .trace-tool{margin-top:8px}
-.trace-line > .trace-block .trace-line::before{display:none !important}
 .trace-line > .trace-block .trace-line{padding-left:0 !important}
 .trace-line > .trace-block .trace-line > .trace-tool,.trace-line > .trace-block .trace-line > .trace-block{margin-left:0 !important;width:100% !important}
-.trace-line > .trace-block .trace-line > .trace-tool::before{display:none !important}
 .trace-line > .trace-block{margin-top:6px !important;margin-bottom:6px !important}
 .trace-line > .trace-block:first-child{margin-top:0 !important}
 .trace-line > .trace-block:last-child{margin-bottom:0 !important}
@@ -130,6 +155,7 @@ svg.lucide{vertical-align:middle;display:inline-block}
 .trace-line > .trace-block .trace-line > .trace-reason{padding-left:14px !important;position:relative !important}
 .trace-line > .trace-block .trace-line > .trace-reason::after{left:3px !important;top:10px !important;width:5px !important;height:5px !important;transform:none !important;box-shadow:0 0 0 2px var(--think-bg) !important;z-index:3 !important}
 .trace-line > .trace-block .trace-line > .trace-reason + .trace-reason::after{display:none !important}
+
 .trace-reason{font-size:.82rem;line-height:1.7;color:var(--think-text);white-space:normal;word-break:break-word}
 .trace-reason p{margin:0 0 .6rem}
 .trace-reason p:last-child{margin-bottom:0}
@@ -293,7 +319,7 @@ span.katex-inline-block{display:block;width:100%;text-align:center;margin:.8rem 
 span.katex-inline-block::-webkit-scrollbar{display:none;width:0;height:0}
 span.katex-inline-block > .katex{display:inline-block;text-align:center}
 
-/* TABLE — no horizontal scroll, clean wrapping */
+/* TABLE — vertical scroll off, horizontal scroll on */
 .table-scroll{display:block;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;margin:0.8rem 0;border-radius:var(--radius-sm);border:1px solid var(--border-color);width:100%;max-width:100%}
 .table-scroll table{width:max-content;min-width:100%;table-layout:auto;border-collapse:collapse}
 .message-bubble table{border-collapse:collapse;font-size:0.85rem;display:table;border-spacing:0}
