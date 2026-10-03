@@ -2004,13 +2004,33 @@ const renderMathStep=(block,key='math-default')=>{
   const resultHtml=(result!==undefined&&result!==null&&result!=='')?`\n<span style="color:var(--accent);font-weight:700">= ${esc(result)}</span>`:'';
   return `<div class="trace-tool"><div class="math-card${openClass}" data-toggle-key="${key}"><div class="math-header tool-hdr">${chev}${icon}<span class="th-label">${TOOL_LABELS.math.done}</span></div><div class="math-body"><div class="math-body-inner"><div class="math-code-block">${highlightedCode}${resultHtml}</div></div></div></div></div>`;
 };
-const hostFromUrl = (url) => { try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return String(url || ''); } };
+const shortUrlLabel = (url, maxLen = 70) => {
+  if (!url) return '';
+  try {
+    const u = new URL(url);
+    const host = u.hostname.replace(/^www\./, '');
+    const path = u.pathname === '/' ? '' : u.pathname;
+    const query = u.search || '';
+    let label = host + path + query;
+    if (label.length > maxLen) label = label.slice(0, maxLen - 1) + '…';
+    return label;
+  } catch {
+    const s = String(url);
+    return s.length > maxLen ? s.slice(0, maxLen - 1) + '…' : s;
+  }
+};
 const renderAnalyseBlock = (b) => {
   const icon = `<span class="analyse-icon">${svgToolIcon('search',13)}</span>`;
-  if (b.active) return `<div class="trace-tool"><div class="analyse-block loading"><div class="analyse-header static-icon">${icon}<span class="analyse-label">Analysing ${esc(hostFromUrl(b.url))}…</span></div></div></div>`;
-  if (b.error) return `<div class="trace-tool"><div class="analyse-block"><div class="analyse-header static-icon">${icon}<span class="analyse-label">Can't read ${esc(hostFromUrl(b.url))}</span></div></div></div>`;
-  const host = hostFromUrl((b.data && b.data.sourceName) || b.url);
-  return `<div class="trace-tool"><div class="analyse-block"><div class="analyse-header static-icon">${icon}<span class="analyse-label">Analysed ${esc(host)}</span></div></div></div>`;
+  const fullUrl = (b.data && b.data.url) || b.url || '';
+  const label = shortUrlLabel(fullUrl);
+  const titleAttr = fullUrl ? ` title="${esc(fullUrl)}"` : '';
+  if (b.active) {
+    return `<div class="trace-tool"><div class="analyse-block loading"><div class="analyse-header static-icon">${icon}<span class="analyse-label"${titleAttr}>Analysing ${esc(label)}…</span></div></div></div>`;
+  }
+  if (b.error) {
+    return `<div class="trace-tool"><div class="analyse-block"><div class="analyse-header static-icon">${icon}<span class="analyse-label"${titleAttr}>Can't read ${esc(label)}</span></div></div></div>`;
+  }
+  return `<div class="trace-tool"><div class="analyse-block"><div class="analyse-header static-icon">${icon}<span class="analyse-label"${titleAttr}>Analysed ${esc(label)}</span></div></div></div>`;
 };
 const renderAnalysingBlock = (b) => {
   const icon = `<span class="analyse-icon">${svgToolIcon('search',13)}</span>`;
