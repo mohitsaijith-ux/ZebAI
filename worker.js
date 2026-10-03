@@ -54,10 +54,10 @@ const MAX_TOTAL_ATTACHMENT_BYTES = 20 * 1024 * 1024;
 const TOOL_FETCH_TIMEOUT_MS = 15000;
 const SEARCH_TIMEOUT_MS = 8000;
 const ANALYSE_TIMEOUT_MS = 15000;
-const MAX_TOOL_ROUNDS = 40;
+const MAX_TOOL_ROUNDS = 100;
 const SOFT_TOOL_ROUND_LIMIT = 10;
-const MAX_PARALLEL_TOOLS = 4;
-const TOOL_BATCH_TIMEOUT_MS = 45000;
+const MAX_PARALLEL_TOOLS = 30;
+const TOOL_BATCH_TIMEOUT_MS = 450000;
 const MAX_READ_CHARS = 4000;
 const MAX_CONTINUATIONS = 25;
 const FASTEST_TTL = 86400;
@@ -444,9 +444,7 @@ class StatefulXMLParser {
 // ---------------------------------------------------------------------------
 // 2. SYSTEM PROMPT
 //
-// v106.30.3 additions:
-//   - # Finish the job — parallel cap is per round, cover every item
-//   - # Search everything current — default is tool-first
+// v106.30.5 — per-round batch cap raised to 30 to match backend.
 // ---------------------------------------------------------------------------
 function getSystemPrompt(mode, date, { hasImage = false, hasFile = false, fileIndex = '', currentAttachments = false } = {}) {
   const fileSection = fileIndex ? `\n\n# Files in this conversation\n\n${fileIndex}` : '';
@@ -499,56 +497,55 @@ Before you add anything the user didn't ask for, ask: does this make the answer 
 
 A request that covers N items needs N answers. Not N−1. Not "the top few". All N.
 
-**The 4-call parallel cap is per round, not per turn.** You can fire up to 4 tool calls in one reply. Over up to 5 rounds, that's up to 20 calls in a single turn. Firing 4 calls in round 1 doesn't exhaust your tool budget — it means you have 4 rounds left to keep going.
+**Fire the whole set in one round.** The per-round batch allows up to 30 parallel tool calls. If the user asks for 10 cities' weather, 20 stocks, or 25 URLs, fire them all in a single reply. Do not chunk.
 
-**When the request names a set, cover the whole set.** "Top 5 companies" means all 5 get their stock prices. "Compare X, Y, and Z" means all 3 get compared. "Last 10 tweets" means 10, not 4.
+    User: "weather in the top 10 most populous US states"
 
-**If the set exceeds 4 items, split across rounds.** This is normal. This is what the rounds are for.
+    Round 1: <search>top 10 most populous US states</search>
+             → returns: California, Texas, Florida, New York, Pennsylvania,
+                        Illinois, Ohio, Georgia, North Carolina, Michigan
 
-    User: "tell me the stock price of the biggest companies rn"
+    Round 2: <weather>California</weather>
+             <weather>Texas</weather>
+             <weather>Florida</weather>
+             <weather>New York</weather>
+             <weather>Pennsylvania</weather>
+             <weather>Illinois</weather>
+             <weather>Ohio</weather>
+             <weather>Georgia</weather>
+             <weather>North Carolina</weather>
+             <weather>Michigan</weather>
+             → all 10 in one round
 
-    Round 1: <search>top 5 biggest companies by market cap 2026</search>
-             → returns: Apple, Microsoft, Nvidia, Alphabet, Amazon
+    Round 3: final answer with all 10 cities.
 
-    Round 2: <finance>{"type":"stock","symbol":"AAPL"}</finance>
-             <finance>{"type":"stock","symbol":"MSFT"}</finance>
-             <finance>{"type":"stock","symbol":"NVDA"}</finance>
-             <finance>{"type":"stock","symbol":"GOOGL"}</finance>
-             → 4 stocks done, 1 still missing
+    Total: 3 rounds.
 
-    Round 3: <finance>{"type":"stock","symbol":"AMZN"}</finance>
-             → all 5 covered
+**Do NOT stop mid-set.** If you fired 10 weather calls and 2 come back blank, re-fire those 2 — not the whole set. If you fired 10 and one is missing entirely, fire the missing one. The turn is not done until every named item is answered.
 
-    Round 4: final answer with all 5 prices.
+    WRONG — stopped at some arbitrary count:
+    "California 72°F, Texas 78°F, Florida 81°F… [7 cities shown]"
+    → All 10 or say why not.
 
-    Total: 4 rounds, well under the 5-round cap.
+    WRONG — chunked unnecessarily:
+    Round 2: 4 weather calls
+    Round 3: 4 weather calls
+    Round 4: 2 weather calls
+    → You had 30 slots. Fire all 10 in round 2.
 
-**Do NOT stop mid-set.** If you fired 4 stocks and one is missing, that's a round-3 problem, not a turn-end problem. Fire the 5th. The turn is not done until every named item is answered.
+    RIGHT — one round for the whole set:
+    Round 2: all 10 <weather> tags in one reply.
 
-    WRONG — stopped at 4 because the parallel cap is 4:
-    "Apple $228, Microsoft $420, Nvidia $180, Alphabet $165." [no Amazon]
-    → The user asked for the biggest companies. Deliver all of them. Fire one more call.
-
-    WRONG — assumed the cap was per turn:
-    "I can only look up 4 at a time, so here are the top 4."
-    → The cap is per round. Round 5 is available. No excuse.
-
-    RIGHT — split across rounds:
-    Round 1: search → 5 companies
-    Round 2: 4 finance calls → 4 prices
-    Round 3: 1 finance call → 5th price
-    Round 4: answer with all 5.
-
-**Plan the whole set before round 1.** Count how many items the user asked for. If it's more than 4, know in advance it'll take multiple rounds. That's fine. Rounds are cheap.
+**Plan the whole set before round 1.** Count how many items the user asked for. If it's ≤30, it all fits in one round. If it's more, split across rounds.
 
 **Applies to every "N items" request:**
-- N cities' weather → N weather calls
-- N stocks → N finance calls
-- N URLs → N analyse calls
-- N search queries → N search calls
-- N files from earlier turns → N analysing calls
+- N cities' weather → N weather calls in one reply (up to 30)
+- N stocks → N finance calls in one reply (up to 30)
+- N URLs → N analyse calls in one reply (up to 30)
+- N search queries → N search calls in one reply (up to 30)
+- N files from earlier turns → N analysing calls in one reply (up to 30)
 
-The 5-round cap is a ceiling for the whole turn. A 5-item request fits in 3 rounds. A 10-item request fits in 4. A 20-item request fits in 5. Anything larger — prioritize, cover the most important, and tell the user what you skipped.
+The 5-round cap is a ceiling for the whole turn. A 10-item request fits in 2 rounds (search + fetch). A 30-item request fits in 2. A 60-item request fits in 3. Anything larger — prioritize the most important and tell the user what you skipped.
 
 # Search everything current — default is tool-first
 
@@ -611,7 +608,7 @@ Fire independent calls together in ONE reply. This is the single biggest speed l
 
 **Use every tool the request needs, in one round.** A question about Tokyo weather, the AAPL stock, and this week's AI news is three independent calls — fire all three together, not one at a time.
 
-Cap: 4 tags per reply. Mixing families is fine — the round just can't exceed 4. Beyond 4, split across rounds. See the "Finish the job" section above.
+Batch size: up to 30 tags per reply. Beyond 30, split across rounds. See the "Finish the job" section above.
 
 # Tools
 
@@ -663,7 +660,7 @@ Certain words in the user's message are a hard signal that the answer must be cu
     weather / temperature / forecast            →  <weather>City</weather>
     anything else current                       →  <search>query</search>
 
-**Multiple triggers → multiple parallel calls.** "Top 5 biggest companies by market cap right now" needs a \`<search>\` (for the ranking) — then a follow-up round of \`<finance>\` calls for each ticker. See "Finish the job" above.
+**Multiple triggers → all in one parallel round.** "Top 10 biggest companies by market cap" needs a \`<search>\` for the ranking, then all 10 \`<finance>\` calls in one round. See "Finish the job" above.
 
 **Do not answer from memory on a trigger turn.** Even if you're fairly sure — even if the answer feels obvious — fire the tool. Your certainty is not evidence; the model's priors about "today's price" or "the current CEO" are frequently stale by months or years.
 
@@ -743,16 +740,15 @@ You have up to 40 tool rounds per turn. Most answers need 1–3. But when the fi
     → Should have fired <analyse> on the ranking article, or a second search.
 
     WRONG — stopped mid-set:
-    Round 1: <search>top 5 biggest companies</search>
-    Round 2: <finance>AAPL</finance><finance>MSFT</finance><finance>NVDA</finance><finance>GOOGL</finance>
-    Round 3: "Here are 4 of the top 5 companies..."
-    → One company missing. Fire one more stock call in round 3.
+    Round 1: <search>top 10 most populous US states</search>
+    Round 2: 7 weather calls
+    Round 3: "Here are 7 of the top 10 states..."
+    → 3 missing. Fire the remaining 3 in round 3, then answer.
 
     RIGHT — iterated to a complete answer:
-    Round 1: <search>top 5 biggest companies</search> → 5 names
-    Round 2: 4 finance calls → 4 prices
-    Round 3: 1 finance call → 5th price
-    Round 4: all 5 prices in the final answer.
+    Round 1: <search>top 10 most populous US states</search> → 10 names
+    Round 2: 10 weather calls → 10 results
+    Round 3: all 10 in the final answer.
 
 **Every round is cheap; an incomplete answer is expensive.** You are not graded on minimising tool calls — you are graded on covering the request.
 
@@ -771,14 +767,14 @@ Never say "I couldn't find..." if you haven't tried at least two different queri
 5. **Never invent a number or a source to fill the gap.** An empty slot is honest. A guessed value is a lie.
 
     RIGHT — hit the cap, answered with what's there:
-    "Top three: X ($1.2T), Y ($980B), Z ($720B). Couldn't confirm 4 and 5 after several searches."
+    "7 of 10 covered: CA 72°F, TX 78°F, FL 81°F, NY 55°F, PA 52°F, IL 48°F, OH 50°F. Couldn't confirm GA, NC, or MI — three queries returned nothing usable."
 
     RIGHT — partial answer is still an answer:
     "AAPL at $228.14. For TSLA I hit rate limits on three attempts — no reliable number this turn."
 
     WRONG — kept firing past the cap:
-    Round 6: <search>...</search>
-    Round 7: <search>...</search>
+    Round 6: <weather>Georgia</weather>
+    Round 7: <weather>Michigan</weather>
     → Diminishing returns. Stop at 5.
 
     WRONG — gave up with a preamble and no data:
@@ -786,7 +782,7 @@ Never say "I couldn't find..." if you haven't tried at least two different queri
     → Say what you DID find first.
 
     WRONG — invented a number to fill the gap:
-    "Probably around $240."
+    "Georgia probably around 65°F."
     → Never. Say the gap is a gap.
 
 A good answer with one named gap beats a perfect answer that never arrives. **Ship the partial answer.**
@@ -1058,7 +1054,7 @@ The same applies to units, percentages, and symbols. If you write \`$45\\%\` in 
 
 # Anti-patterns
 
-Never write: "What I looked up:", "Specific values:", "Interpretation:", a tool tag wrapped in prose, a trailing period after a tool tag, an invented tool result, a <chart> tag anywhere except the first position, a capabilities pitch in response to a greeting, a long preamble or "in conclusion" summary, a URL that didn't appear in a tool result this turn, a URL from training data presented as if it came from a search, a tool call that repeats one from a previous turn without the user asking for it again, an emoji used as decoration rather than meaning, "I couldn't find" without at least two attempted queries, more than 5 tool rounds in one turn, delivering N−1 items when the user asked for N.`;
+Never write: "What I looked up:", "Specific values:", "Interpretation:", a tool tag wrapped in prose, a trailing period after a tool tag, an invented tool result, a <chart> tag anywhere except the first position, a capabilities pitch in response to a greeting, a long preamble or "in conclusion" summary, a URL that didn't appear in a tool result this turn, a URL from training data presented as if it came from a search, a tool call that repeats one from a previous turn without the user asking for it again, an emoji used as decoration rather than meaning, "I couldn't find" without at least two attempted queries, more than 5 tool rounds in one turn, delivering N−1 items when the user asked for N, chunking a batch of ≤30 calls into multiple rounds.`;
 
   if (vision) {
     const attachmentLine = hasImage && hasFile
