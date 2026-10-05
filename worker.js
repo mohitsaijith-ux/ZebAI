@@ -1,5 +1,5 @@
 // ============================================================================
-// ZEBAI WORKER – v106.32.0
+// ZEBAI WORKER – v106.33.0
 //   • Google Gemini only. Flash-Lite family + 2.5 fallbacks.
 //   • Chat: gemini-3.5-flash-lite, gemini-3.1-flash-lite,
 //           gemini-2.5-flash-lite, gemini-2.5-flash.
@@ -12,20 +12,27 @@
 //   • Search: Tavily discovery-only (15 sources, 3 chunks each).
 //   • Analyse: Firecrawl v2 with full-path URL enforcement.
 //   • Gemini Files API native upload (cached 47h) for all attachments.
-//   • v106.32.0:
-//      - Full math preprocessor: × ÷ − π √ ∛ ² ³ ^ % of N! 30° implicit mul.
-//      - Expanded sandbox globals: stats, combinatorics, number theory,
-//        base conversion, string/array/set utilities, date helpers,
-//        matrix ops, BigInt constructor.
-//      - evalNew handles native constructors (Date/Map/Set/RegExp/BigInt).
-//      - Real native Date instead of stub.
-//      - Prompt # Run section rewritten with explicit CAN/CANNOT lists.
-//      - Preserved: 15-source search, mandatory search->analyse flow,
+//   • v106.33.0:
+//      - System prompt: user's explicit instruction is the highest rule.
+//        Specific URL / query / computation / format wins over every
+//        heuristic below it. "Just search, no analyse" now allowed.
+//      - <analyse> and <analysing> return full, uncapped content — the
+//        prompt tells the model to read pages/files in full, so the
+//        worker no longer trims them at 4K. Every other tool result
+//        (including <search>) is capped at 10 000 chars.
+//      - Removed MAX_READ_CHARS and MAX_SEARCH_RAW_CHARS (30K → 10K).
+//      - Native file attachments: no longer dropped when projected
+//        tokens exceed the free-tier estimate — logged, not truncated.
+//      - Sandbox fix: user class constructors now receive the correct
+//        `this` and un-shifted arguments (was off by one).
+//      - Sandbox fix: string primitive indexing ("abc"[0]) works.
+//      - Preserved: math preprocessor, expanded sandbox globals,
+//        15-source search, mandatory search->analyse default flow,
 //        10-tools-per-round prompt cap, subrequest guard, no-emoji rule.
 // ============================================================================
 
 const DEBUG = true;
-const WORKER_VERSION = '106.32.0';
+const WORKER_VERSION = '106.33.0';
 const ASSISTANT_NAME = 'ZebAI';
 const ASSISTANT_CREATOR = 'MCOS Private Limited';
 
@@ -36,11 +43,14 @@ const CHUNK_WATCHDOG_MS = 120000;
 
 const DISABLE_FAILURE_COOLDOWN = false;
 const MAX_HISTORY_MESSAGES = 6;
-const MAX_TOOL_RESULT_CHARS = 1200;
-const MAX_SEARCH_RESULT_CHARS = 30000;
+// <analyse> and <analysing> return full, uncapped content — the model
+// is told to read the page/file in full, so the worker must not trim it.
+// Every other tool result is capped at 10 000 chars.
+const MAX_TOOL_RESULT_CHARS = 10000;
+const MAX_SEARCH_RESULT_CHARS = 10000;
 const MAX_SEARCH_SOURCES = 15;
 const MAX_SEARCH_SNIPPET_CHARS = 1500;
-const MAX_SEARCH_RAW_CHARS = 30000;
+const MAX_SEARCH_RAW_CHARS = 10000;
 const FAILURE_COOLDOWN_SECONDS = 30;
 const TOKEN_TTL = 30 * 24 * 60 * 60;
 const MAX_MSG = 50;
@@ -56,7 +66,6 @@ const MAX_TOOL_ROUNDS = 100;
 const SOFT_TOOL_ROUND_LIMIT = 30;
 const MAX_PARALLEL_TOOLS = 30;
 const TOOL_BATCH_TIMEOUT_MS = 450000;
-const MAX_READ_CHARS = 4000;
 const MAX_CONTINUATIONS = 25;
 const FASTEST_TTL = 86400;
 const LLM_MAX_ATTEMPTS = 3;
@@ -252,6 +261,7 @@ async function fetchWithTimeout(url, opts, timeout, label = '', retries = 0, ext
 
 function capToolResult(text, max = MAX_TOOL_RESULT_CHARS) {
   if (typeof text !== 'string') return text;
+  if (!isFinite(max)) return text;          // Infinity = no cap
   if (text.length <= max) return text;
   return text.slice(0, max) + `\n…[truncated ${text.length - max} chars]`;
 }
@@ -463,6 +473,54 @@ function getSystemPrompt(mode, date, { hasImage = false, hasFile = false, fileIn
 
   const base = `You are ZebAI. Today is ${date}.
 
+# The user's explicit instruction is the highest rule
+
+If the user's message contains a specific, explicit instruction — a URL to read, an exact query to search, a computation to run, a file to open, a format to use — DO EXACTLY THAT. Nothing broader, nothing narrower, nothing cleverer.
+
+**This overrides every heuristic below.** The "default is tool-first" rule, the "always search for superlatives" rule, the "every search must be analysed" rule, the "answer depth" defaults — all of them are fallbacks for when the user is NOT specific. The moment the user names the thing, the specific instruction wins.
+
+What "specific" looks like and what it overrides:
+
+    User: "read https://example.com/article"
+    -> <analyse>https://example.com/article</analyse>. Do NOT search first.
+    -> Do NOT analyse any other URL from training data.
+
+    User: "search for 'Rust 2024 edition release date'"
+    -> <search>Rust 2024 edition release date</search>. That exact string.
+    -> Do NOT reword. Do NOT add context. Do NOT expand to a related topic.
+
+    User: "just search, don't read any pages"
+    -> <search>query</search> then the answer. Skip <analyse>. This is the
+       one case where the "every search gets analysed" rule does NOT apply.
+
+    User: "calculate 15% of 82"
+    -> <run>15/100 * 82</run>. Not a search. Not "let me think about it".
+
+    User: "what's 17 * 23"
+    -> <run>17 * 23</run>. Do NOT compute in your head.
+    -> Even though this feels trivial, the user asked for a computation.
+
+    User: "open report.pdf"  (file from an earlier turn)
+    -> <analysing>report.pdf</analysing>. Not <analyse>, not a search.
+
+    User: "give me one sentence"
+    -> one sentence. Not a paragraph. Not a heading + list.
+
+    User: "the top 3"
+    -> exactly 3. Not 4. Not "here are some highlights".
+
+    User: "in JSON"
+    -> raw JSON. No prose wrapper. No markdown fences unless asked.
+
+    User: "ignore my previous question, do X instead"
+    -> X. Drop the previous thread.
+
+**When the user is silent on specifics, THEN the heuristics below kick in.** "What's the weather in Tokyo?" — no specific query named, no specific format named, so the tool-first default applies and you fire \`<weather>Tokyo</weather>\`. "Tell me about the latest iPhone" — no URL named, no query named, so search + analyse. "Is 97 prime?" — no computation requested in words, but the answer needs a computation, so \`<run>isPrime(97)</run>\`.
+
+**Do not be clever.** The user did not ask you to improve their request. Read it literally. Execute it literally. If their instruction is ambiguous, pick the most reasonable reading and answer — do not silently upgrade it into a different, "better" task.
+
+**Do not be lazy either.** If the user asks for 8 specific things, deliver all 8. Specific does not mean partial. "Do exactly what they ask" and "cover every item they named" are the same rule, not opposing ones.
+
 # Reply contract
 
 Every reply is EXACTLY ONE of:
@@ -471,7 +529,7 @@ Every reply is EXACTLY ONE of:
 
 Never both. When you emit a fetch tool tag, the reply ends there.
 
-**After any \`<search>\`, your next reply MUST start with \`<analyse>\` pointing at a URL from that search's results. No exceptions.**
+**After any \`<search>\`, your next reply MUST start with \`<analyse>\` pointing at a URL from that search's results. No exceptions, unless the user explicitly told you to skip the analyse step.**
 
 # Tool tag purity
 
@@ -551,6 +609,8 @@ Keep firing rounds until every item is answered. There is no round budget to con
 
 # Search everything current — default is tool-first
 
+**This section applies when the user has NOT given a specific instruction.** If they named a URL, a query, a computation, or a format, skip straight to executing that. Read section one again if you are unsure.
+
 **The bar for answering directly is HIGH.** Training data has a cutoff. The user is asking *now*. Almost every substantive prompt benefits from live data — even the ones that feel like trivia.
 
 **Answer directly ONLY for:**
@@ -591,27 +651,27 @@ Keep firing rounds until every item is answered. There is no round budget to con
     "who's the current president of France"-> search (changes)
     "what's the boiling point of water"    -> answer directly (constant)
 
-# Research depth — analyse after EVERY search. No exceptions.
+# Research depth — analyse after EVERY search by default
+
+**Skip this section entirely if the user explicitly told you not to read pages, or if they gave you a URL and asked a direct question about it that you can already answer from the URL's known contents.**
 
 Search gives you headlines. \`<analyse>\` gives you the story.
 
-**Every single search must be followed by at least one \`<analyse>\` on a URL from that search's results before you write the final answer. Every. Single. One. This is a hard rule with no exceptions.**
+**By default, every search is followed by at least one \`<analyse>\` on a URL from that search's results before you write the final answer.** This is the default. It is not absolute. The only ways to skip it:
 
-There is no skip window. There is no "the snippet already had the answer". There is no "the user only asked for a name". There is no "the fact is atomic". There is no "reading the page wouldn't help". None of those are reasons to skip. Search is always followed by analyse.
+1. The user said "just search", "don't read any pages", "skip the reading step", or something equivalent.
+2. Every single URL returned is genuinely unusable — every result is a paywall, a 403, an empty page, or unrelated junk. This is exceptionally rare. When it happens, name it in one line ("All search results were paywalled — answering from snippets") and proceed.
+3. The user asked for a specific list of names, prices, or atomic facts, and the snippets already contain every value with no ambiguity — AND the user did not ask for depth. Even here, one analyse is preferred. Skipping is a shortcut, not a default.
 
 **Why this matters:** a snippet says "Apple reported strong Q4 earnings". The analysed page says "Apple reported Q4 revenue of $94.9B, up 6% YoY, beating the $94.2B consensus." Only the second one is an answer. The first one is a lead. The user asked for an answer.
 
-Even a name lookup gets richer after analyse — you get the spelling, the title, the company, the date they took the role, the context. "Dario Amodei" becomes "Dario Amodei, co-founder and CEO of Anthropic since 2021". The second one is what the user actually wanted.
-
-# The mandatory pattern
+# The default pattern
 
     Round 1:  <search>query</search>
     Round 2:  <analyse>https://the-best-url-from-those-results</analyse>
     Round 3:  final answer
 
-That is the floor. That is the floor for EVERY search. Not sometimes. Every time.
-
-**When the question spans multiple topics, add more analyses:**
+That is the default. When the question spans multiple topics, add more analyses:
 
     Round 1:  <search>query A</search>
     Round 2:  <analyse>best-url-from-A</analyse>
@@ -630,15 +690,9 @@ Search returns URLs like \`FULL_URL: https://codershub.com/deepseekisw\`. The FU
 
 Copy the \`FULL_URL\` value character-for-character. Do not trim it. Do not drop the path. Do not add or remove \`www.\`. Do not append a trailing slash. The URL you pass to \`<analyse>\` must be byte-for-byte the same as the \`FULL_URL\` line from the search result you're citing.
 
-**Never search again without analysing the first search's results first.** If search round 1 returned usable URLs and you fire another search instead of analysing, you're doing it wrong. The rule is: search -> analyse -> optionally search again -> analyse -> answer. Never: search -> search -> search -> answer.
+**Never search again without analysing the first search's results first, unless the user told you to skip analysis.** If search round 1 returned usable URLs and you fire another search instead of analysing, you're doing it wrong. The default pattern is: search -> analyse -> optionally search again -> analyse -> answer. Not: search -> search -> search -> answer.
 
-**The only case where analyse does not fire after a search** is when every single URL returned is genuinely unusable — every result is a paywall, a 403, an empty page, or unrelated junk. This is exceptionally rare. When it happens, name it in one line ("All search results were paywalled — answering from snippets") and proceed. Do not use this as an excuse. It applies to maybe 1 in 200 searches.
-
-**How many analyses per search:** at least 1. Always at least 1. 2 for comparative questions. 3 for contested or "explain in detail" prompts. Never more than 4 unless the user explicitly asked for deep research — the other 11-14 sources stay in your context and can be quoted directly from their snippets.
-
-# The one and only way to know you're done
-
-When you fired a search this turn, look at your next reply. If it does not start with \`<analyse>\`, you are doing it wrong. Stop. Fire the analyse. Then answer.
+**How many analyses per search:** at least 1 by default. 2 for comparative questions. 3 for contested or "explain in detail" prompts. Never more than 4 unless the user explicitly asked for deep research — the other 11-14 sources stay in your context and can be quoted directly from their snippets.
 
 # Parallel tool calls — same tool OR independent tools
 
@@ -674,7 +728,7 @@ Batch size: up to 10 tags per reply. Beyond 10, split across rounds. See the "Fi
 # Tools
 
     <search>query</search>                      Live web search. Returns up to 15 sources with snippets.
-    <analyse>https://exact-full-url-with-path</analyse>    Read one specific page in full. Copy the FULL_URL from search results character-for-character — including the path, the www, and any query string. Never truncate to the domain.
+    <analyse>https://exact-full-url-with-path</analyse>    Read one specific page in full. Copy the FULL_URL from search results character-for-character — including the path, the www, and any query string. Never truncate to the domain. Returns the full page content, no length cap.
     <weather>City</weather>                     Current weather.
     <finance>{"type":"stock","symbol":"AAPL"}</finance>
     <finance>{"type":"forex","base":"USD","target":"INR"}</finance>
@@ -683,6 +737,7 @@ ${analysingToolLine}    <chart>{...}</chart>                        Chart inside
 
 # Choosing a tool — run this checklist before every reply
 
+- **Did the user name a specific URL, query, computation, file, or format?** -> DO EXACTLY THAT. Nothing else.
 - **Stable fact in training data?** -> answer directly. No tool.
 - **Live / current / changes over time?** -> \`<search>\`, \`<weather>\`, or \`<finance>\`.
 - **The user is asking you to compute something right now?** -> \`<run>\`. Never do arithmetic in your head when the current request needs a number.
@@ -696,6 +751,8 @@ Never search for what you know. Never duplicate a call. Never fire a tool "just 
 Before you answer, ask: which of these calls can go in parallel, and which depend on each other? Batch the independent ones. Sequence the dependent ones.
 
 # Fresh-data trigger words — search, don't guess
+
+**These triggers apply only when the user has NOT given a specific instruction.** If they named the thing, execute their instruction instead.
 
 **Trigger categories — any hit fires a tool:**
 
@@ -747,7 +804,7 @@ Before you answer, ask: which of these calls can go in parallel, and which depen
 
 **Do not answer from memory on a trigger turn.** Even if you're fairly sure — even if the answer feels obvious — fire the tool. Your priors about "today's price", "the current CEO", "the best framework", or "the popular tools" are frequently stale by months or years.
 
-**When a search snippet already has the answer, still analyse before quoting it.** One search, one analyse, then answer. The snippet is the lead; the source is the answer. **This rule has no exceptions. Every search is followed by an analyse.**
+**When a search snippet already has the answer, still analyse before quoting it, unless the user said not to.** One search, one analyse, then answer. The snippet is the lead; the source is the answer.
 
 # Run — precise spec of what the sandbox can and cannot do
 
@@ -1036,7 +1093,7 @@ You have up to 100 tool rounds per turn. That's the hard runtime ceiling — not
 - Every part of the question is answered with a specific, sourced value.
 - Every item in a named set is covered.
 - Further rounds aren't producing new information.
-- **Every search round you fired has been followed by at least one \`<analyse>\` on a URL from that round.**
+- Every search round you fired has been followed by an \`<analyse>\` — unless the user told you to skip it.
 
 **Every round is cheap; an incomplete answer is expensive.** You are not graded on minimising tool calls — you are graded on covering the request.
 
@@ -1079,7 +1136,7 @@ This applies to every link in every reply: prose, bullet lists, tables, follow-u
 
 # Answer depth
 
-Detailed by default. Lead with the answer.
+Detailed by default, unless the user asked for something shorter. Lead with the answer.
 
     Fact / definition      3-5 sentences with context + example.
     Calculation            result + working + interpretation.
@@ -1162,7 +1219,7 @@ Rules:
 
 # Anti-patterns
 
-Never write: an emoji, an emoticon, a symbol standing in for a word, "What I looked up:", "Specific values:", "Interpretation:", a tool tag wrapped in prose, a trailing period after a tool tag, an invented tool result, a <chart> tag anywhere except the first position, a capabilities pitch in response to a greeting, a long preamble or "in conclusion" summary, a URL that didn't appear in a tool result this turn, a tool call that repeats one from a previous turn without the user asking for it again, "I couldn't find" without at least two attempted queries, delivering N-1 items when the user asked for N, chunking a batch of <=10 calls into multiple rounds, a research answer without at least 1 analysed source, a search round with no follow-up analyse (no exceptions — every search is followed by an analyse unless every URL was unusable), firing more than 4 analyses on a single search round unless the user asked for a deep dive, dropping items when a set is larger than 10 instead of firing a second round, searching again without having analysed the previous search's results, truncating a FULL_URL to just its domain before passing it to \`<analyse>\`, firing \`<run>\` for symbolic math or calculus, inventing a sandbox helper that doesn't exist, a chart the user did not explicitly request with words like "chart", "graph", "plot", "visualize", or "diagram", a chart on a simple lookup, a chart with equal values, a chart of a timeline or event list, a chart of a single number, a chart of two items, a chart of names with no metric behind them, defaulting to \`bar\` when a line, pie, doughnut, radar, gauge, scatter, bubble, area, stackedBar, stackedArea, polarArea, or hbar would fit better.`;
+Never write: an emoji, an emoticon, a symbol standing in for a word, "What I looked up:", "Specific values:", "Interpretation:", a tool tag wrapped in prose, a trailing period after a tool tag, an invented tool result, a <chart> tag anywhere except the first position, a capabilities pitch in response to a greeting, a long preamble or "in conclusion" summary, a URL that didn't appear in a tool result this turn, a tool call that repeats one from a previous turn without the user asking for it again, "I couldn't find" without at least two attempted queries, delivering N-1 items when the user asked for N, chunking a batch of <=10 calls into multiple rounds, a research answer without at least 1 analysed source (unless the user explicitly told you to skip analyse), firing more than 4 analyses on a single search round unless the user asked for a deep dive, dropping items when a set is larger than 10 instead of firing a second round, searching again without having analysed the previous search's results (unless the user told you to skip), truncating a FULL_URL to just its domain before passing it to \`<analyse>\`, firing \`<run>\` for symbolic math or calculus, inventing a sandbox helper that doesn't exist, a chart the user did not explicitly request with words like "chart", "graph", "plot", "visualize", or "diagram", a chart on a simple lookup, a chart with equal values, a chart of a timeline or event list, a chart of a single number, a chart of two items, a chart of names with no metric behind them, defaulting to \`bar\` when a line, pie, doughnut, radar, gauge, scatter, bubble, area, stackedBar, stackedArea, polarArea, or hbar would fit better, ignoring an explicit user instruction in favour of a heuristic from the sections below it.`;
 
   if (vision) {
     const attachmentLine = hasImage && hasFile
@@ -1180,7 +1237,7 @@ ${attachmentLine}
 
 **On this turn you are reading the file and answering. You are not computing anything.**
 
-Do NOT fire any fetch tool. \`<run>\`, \`<search>\`, \`<weather>\`, \`<finance>\`, and \`<analyse>\` are all off-limits on this turn.
+Do NOT fire any fetch tool. \`<run>\`, \`<search>\`, \`<weather>\`, \`<finance>\`, and \`<analyse>\` are all off-limits on this turn — unless the user explicitly asked for one of those in the text of the message.
 
 Most common failure: you see numbers, dates, tables, prices, code, or a UI in the image and your instinct says "run a calculation to be safe." Do not. The user asked you to look at the file.
 
@@ -2107,7 +2164,23 @@ class JSInterpreter {
   evalClass(node, scope){
     const self = this; const parent = node.parent ? this.evalExpr(node.parent, scope) : null;
     const ctorMethod = node.methods.find(m => !m.isStatic && !m.computed && m.key.value === 'constructor');
-    const ctor = function(...args){ if (self.callDepth >= JS_LIMITS.MAX_CALL_DEPTH) throw new JSError('Call depth exceeded'); self.callDepth++; const local = new JSScope(scope, 'function'); local.thisValue = this; try { if (ctorMethod) { self.bindParams(ctorMethod.params, args, local); self.execBlock(ctorMethod.body.body, local); } } finally { self.callDepth--; } };
+    // NOTE: evalNew calls this as `ctor.call(null, obj, ...args)`, so the
+    // first formal parameter receives the newly-created instance, which is
+    // bound to `this`. Later parameters are the user-supplied arguments.
+    const ctor = function(boundThis, ...args){
+      if (self.callDepth >= JS_LIMITS.MAX_CALL_DEPTH) throw new JSError('Call depth exceeded');
+      self.callDepth++;
+      const local = new JSScope(scope, 'function');
+      local.thisValue = boundThis;
+      try {
+        if (ctorMethod) {
+          self.bindParams(ctorMethod.params, args, local);
+          self.execBlock(ctorMethod.body.body, local);
+        }
+      } finally {
+        self.callDepth--;
+      }
+    };
     ctor.__fn = true; ctor.__classCtor = true; ctor.prototype = Object.create(parent ? parent.prototype : Object.prototype);
     for (const m of node.methods) { if (!m.isStatic && m.kind === 'method' && !m.computed && m.key.value === 'constructor') continue; const fn = this.makeFunction(m.params, m.body, scope, undefined); const k = m.computed ? this.evalExpr(m.key, scope) : m.key.value; if (m.isStatic) ctor[k] = fn; else { if (m.kind === 'get') Object.defineProperty(ctor.prototype, k, { get: fn, configurable: true }); else if (m.kind === 'set') Object.defineProperty(ctor.prototype, k, { set: fn, configurable: true }); else ctor.prototype[k] = fn; } }
     return ctor;
@@ -2285,7 +2358,15 @@ class JSInterpreter {
     if (BLOCKED_PROPS.has(k)) return undefined;
     if (obj === null || obj === undefined) throw new JSError(`Cannot read '${k}'`);
     const t = typeof obj;
-    if (t === 'string' || t === 'number' || t === 'boolean' || t === 'bigint') { if (k === 'length' && t === 'string') return obj.length; const boxed = this.getPrimitiveMethod(t, obj, k); if (boxed !== undefined) return boxed; }
+    if (t === 'string' || t === 'number' || t === 'boolean' || t === 'bigint') {
+      if (k === 'length' && t === 'string') return obj.length;
+      if (t === 'string') {
+        const idx = Number(k);
+        if (Number.isInteger(idx) && idx >= 0 && idx < obj.length) return obj[idx];
+      }
+      const boxed = this.getPrimitiveMethod(t, obj, k);
+      if (boxed !== undefined) return boxed;
+    }
     if (Array.isArray(obj)) {
       if (k === 'length') return obj.length;
       const m = Array.prototype[k];
@@ -2938,7 +3019,9 @@ async function performAnalyseLookup(env, rawUrl) {
       if (r.ok && d.success !== false && d.data) {
         const content = String(d.data.markdown || d.data.content || '').trim();
         const title = String(d.data.metadata?.title || parsedUrl.hostname);
-        if (content) return { type: 'page', url: urlStr, title: title.slice(0, 200), sourceName, content: content.slice(0, MAX_READ_CHARS), truncated: content.length > MAX_READ_CHARS, charCount: content.length };
+        // Full page — no truncation. The model is told to read the page
+        // in full, so the worker must not silently trim it.
+        if (content) return { type: 'page', url: urlStr, title: title.slice(0, 200), sourceName, content, truncated: false, charCount: content.length };
       }
       const errMsg = d?.error || `Firecrawl couldn't extract content from ${sourceName}`;
       log(`[firecrawl] failed: ${errMsg}`);
@@ -2960,7 +3043,8 @@ async function performAnalyseLookup(env, rawUrl) {
       .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
       .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/\s+/g, ' ').trim();
     if (!text) return { error: 'Page contained no readable text' };
-    return { type: 'page', url: urlStr, title: String(title).slice(0, 200), sourceName, content: text.slice(0, MAX_READ_CHARS), truncated: text.length > MAX_READ_CHARS, charCount: text.length };
+    // Full page — no truncation.
+    return { type: 'page', url: urlStr, title: String(title).slice(0, 200), sourceName, content: text, truncated: false, charCount: text.length };
   } catch (e) { return { error: `Failed to read page: ${safeStr(e)}` }; }
 }
 
@@ -3510,9 +3594,11 @@ function formatToolResultForLLM(result, round = 0) {
       const body = capToolResult(String(s.rawText || ''), MAX_SEARCH_RESULT_CHARS);
       return `${nextHint}\n\nTool execution result:\nsearch → ${head}\n\n${body}${GROUNDING}`;
     }
-    const isReadTool = result.tool === 'analyse';
-    const cap = isReadTool ? MAX_READ_CHARS : MAX_TOOL_RESULT_CHARS;
+    // analyse returns the full page — Infinity cap.
+    // every other tool uses the 10 000-char default.
+    const isFullContentTool = result.tool === 'analyse';
     const payload = JSON.stringify(result.data ?? result.result);
+    const cap = isFullContentTool ? Infinity : MAX_TOOL_RESULT_CHARS;
     return `${nextHint}\n\nTool execution result:\n${result.tool} → ${capToolResult(payload, cap)}${GROUNDING}`;
   }
   return `${nextHint}\n\nTool execution result:\n${result.tool} → ERROR: ${result.error}\n\nPick ONE: try a different tool, answer from training, or say the tool failed. Do NOT invent data.`;
@@ -4068,22 +4154,22 @@ async function handleMessages(chat, mode, attachmentsOrLegacy, env, username, op
                   if (r.nativeAttachment) {
                     const projected = estimateRequestTokens(messages, []) +
                                      Math.round((r.nativeAttachment.base64 || '').length * 0.75 * ESTIMATED_TOKENS_PER_CHAR);
+                    // Files are sent in full — the model needs them whole. We log if we're
+                    // over the free-tier TPM estimate, but we do not silently drop content.
                     if (projected > FREE_TIER_TPM_LIMIT * 0.9) {
-                      log(`[tpm] native attachment projected ${projected} — falling back to text notice`);
-                      messages.push({ role: 'user', content: `Tool execution result:\n${r.tool} → ${r.result}\n\n(file contents omitted — token budget).` });
-                    } else {
-                      messages.push({
-                        role: 'user',
-                        content: `Tool execution result:\n${r.tool} → ${r.result}\n\nGrounding rule: contents of the file attached below are the source of truth.`,
-                        attachments: [{
-                          mime: r.nativeAttachment.mime,
-                          base64: r.nativeAttachment.base64,
-                          name: r.nativeAttachment.name,
-                          fileUri: r.nativeAttachment.fileUri || null,
-                          uploadKey: r.nativeAttachment.uploadKey || null,
-                        }],
-                      });
+                      log(`[tpm] native attachment projected ${projected} tokens — over free-tier budget, sending anyway`);
                     }
+                    messages.push({
+                      role: 'user',
+                      content: `Tool execution result:\n${r.tool} → ${r.result}\n\nGrounding rule: contents of the file attached below are the source of truth.`,
+                      attachments: [{
+                        mime: r.nativeAttachment.mime,
+                        base64: r.nativeAttachment.base64,
+                        name: r.nativeAttachment.name,
+                        fileUri: r.nativeAttachment.fileUri || null,
+                        uploadKey: r.nativeAttachment.uploadKey || null,
+                      }],
+                    });
                   } else {
                     messages.push({ role: 'user', content: formatToolResultForLLM(r, round) });
                   }
@@ -4212,7 +4298,7 @@ export default {
           subrequestBudget: SUBREQUEST_BUDGET,
           softToolRoundLimit: SOFT_TOOL_ROUND_LIMIT,
           analyseTimeoutMs: ANALYSE_TIMEOUT_MS,
-          sandboxVersion: 'v106.32.0-full',
+          sandboxVersion: 'v106.33.0-full',
         });
       }
       if (path === '/debug/keys' && method === 'GET') {
