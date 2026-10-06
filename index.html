@@ -112,12 +112,6 @@ svg.lucide{vertical-align:middle;display:inline-block}
 .trace-line > .trace-tool{margin-top:0;margin-bottom:0}
 .trace-line > .trace-block{margin-top:16px;margin-bottom:16px}
 
-/* Segmented timeline — each item draws its own connector. Nothing draws
-   above the first item's top edge, so the line cannot overshoot upward.
-   The dot (::after on .trace-reason) paints above its own ::before segment
-   thanks to z-index:50 vs z-index:-1. Tool/block cards paint above their
-   own ::before segment because they are in-flow while ::before is
-   negative-z-index inside the tool's stacking context. */
 .trace-line > *::before{
   content:'';
   position:absolute;
@@ -138,7 +132,6 @@ svg.lucide{vertical-align:middle;display:inline-block}
 }
 .trace-line > .trace-block::before{ display:none; }
 
-/* Nested trace-lines (inside an "Executions" wrapper) don't draw connectors */
 .trace-line > .trace-block .trace-line > *::before{ display:none !important; }
 
 .trace-line > .trace-tool + .trace-tool,.trace-line > .trace-tool + .trace-block,.trace-line > .trace-block + .trace-tool,.trace-line > .trace-tool + .trace-reason,.trace-line > .trace-reason + .trace-tool{margin-top:8px}
@@ -319,7 +312,7 @@ span.katex-inline-block{display:block;width:100%;text-align:center;margin:.8rem 
 span.katex-inline-block::-webkit-scrollbar{display:none;width:0;height:0}
 span.katex-inline-block > .katex{display:inline-block;text-align:center}
 
-/* TABLE — vertical scroll off, horizontal scroll on */
+/* TABLE */
 .table-scroll{display:block;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;margin:0.8rem 0;border-radius:var(--radius-sm);border:1px solid var(--border-color);width:100%;max-width:100%}
 .table-scroll table{width:max-content;min-width:100%;table-layout:auto;border-collapse:collapse}
 .message-bubble table{border-collapse:collapse;font-size:0.85rem;display:table;border-spacing:0}
@@ -2523,7 +2516,6 @@ const hasVisibleAnswer=msg=>{
   if(Array.isArray(msg.blocks)){
     if(msg.blocks.some(b=>b.type==='answer'&&b.text&&b.text.trim().length>0))return true;
     if(msg.blocks.some(b=>b.type==='chart'&&(b.spec||b.content)))return true;
-    if(msg.blocks.some(b=>['search','weather','finance','math','analyse','analysing'].includes(b.type)&&!b.active&&!b.error))return true;
   }
   const withoutThinking=String(msg.content||'').replace(/<thinking>[\s\S]*?<\/thinking>/g,'').trim();
   return withoutThinking.length>0;
@@ -2885,8 +2877,9 @@ const loadChatMessages=async cid=>{
       createdAt:state.chats.find(c=>c.id===cid)?.createdAt||Date.now(),
       messages:full.messages.filter(m=>String(m.content)!==REGENERATED_MARKER).map(m=>({
         id:m.id,role:m.role,content:String(m.content),mode:m.mode,timestamp:m.timestamp,
+        serverId:m.id,
         _generating:false,_completed:false,_phase:'done',_thinkingActive:false,_activeTool:null,
-        blocks:m.role==='assistant'?(Array.isArray(m.blocks)&&m.blocks.length?m.blocks:parseBlocksFromContent(String(m.content),m.search_block||null,m.finance_block||null,m.math_block||null,m.weather_block||null,m.chart_block||null)):null
+        blocks:m.role==='assistant'?(Array.isArray(m.blocks)&&m.blocks.length?m.blocks:parseBlocksFromContent(String(m.content))):null
       }))
     };
     if (full.mode === 'quick' || full.mode === 'expert') {
@@ -2897,7 +2890,7 @@ const loadChatMessages=async cid=>{
     return loaded;
   }catch(e){toast('Failed to load chat messages','error');return null;}
 };
-const parseBlocksFromContent=(content,searchBlock,financeBlock,mathBlock,weatherBlock,chartBlock)=>{
+const parseBlocksFromContent=(content)=>{
   const blocks=[];
   const text=String(content||'');
   let lastIndex=0;
@@ -2916,16 +2909,6 @@ const parseBlocksFromContent=(content,searchBlock,financeBlock,mathBlock,weather
       lastIndex=end+'</thinking>'.length;
     }else{lastIndex=tagStart;break;}
   }
-  const insertBeforeAnswer=block=>{
-    const answerIdx=blocks.findIndex(b=>b.type==='answer');
-    if(answerIdx===-1)blocks.push(block);
-    else blocks.splice(answerIdx,0,block);
-  };
-  if(searchBlock)insertBeforeAnswer({type:'search',active:false,query:searchBlock.query||'',results:searchBlock.results||null,sources:searchBlock.sources||null,error:searchBlock.error||null});
-  if(financeBlock)insertBeforeAnswer({type:'finance',active:false,financeType:financeBlock.financeType||'stock',symbol:financeBlock.symbol||'',base:financeBlock.base||'',target:financeBlock.target||'',data:financeBlock.data||null,error:financeBlock.error||null});
-  if(mathBlock)insertBeforeAnswer({type:'math',active:false,code:mathBlock.code||'',result:mathBlock.result||''});
-  if(weatherBlock)insertBeforeAnswer({type:'weather',active:false,query:weatherBlock.query||'',data:weatherBlock.data||null,error:weatherBlock.error||null});
-  if(chartBlock)insertBeforeAnswer({type:'chart',spec:chartBlock.spec||chartBlock,content:chartBlock});
   return blocks;
 };
 const selectChat=async(cid,force=false)=>{
@@ -2987,7 +2970,7 @@ const selectChat=async(cid,force=false)=>{
       })
         .then(res=>res.json())
         .then(data=>{
-          state.titleGeneratingChatId=null;
+          if(state.titleGeneratingChatId===cid)state.titleGeneratingChatId=null;
           let finalTitle=loadedChat.title;
           if(data.title&&data.title!=='New Chat'&&data.title!==loadedChat.title){
             loadedChat.title=data.title;
@@ -2996,7 +2979,7 @@ const selectChat=async(cid,force=false)=>{
           }
           updateChatTitleDisplay(cid,finalTitle,false);
         })
-        .catch(()=>{state.titleGeneratingChatId=null;updateChatTitleDisplay(cid,loadedChat.title,false);});
+        .catch(()=>{if(state.titleGeneratingChatId===cid)state.titleGeneratingChatId=null;updateChatTitleDisplay(cid,loadedChat.title,false);});
     }
   }
 };
@@ -3163,6 +3146,7 @@ const openFilePreview = async (opts) => {
       iframe.src = objUrl + '#toolbar=1&navpanes=0&view=FitH';
       iframe.setAttribute('title', name || 'PDF');
       iframe.className = 'preview-iframe';
+      iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin');
       wrap.appendChild(iframe);
       body.appendChild(wrap);
       return;
@@ -3255,16 +3239,16 @@ const stopStream=async(cidArg)=>{
     const msg=stream.msg;
     msg._generating=false;
     msg._phase='done';
-    const hasContent=(msg.blocks&&msg.blocks.some(b=>(b.type==='thinking'||b.type==='answer')&&b.text&&b.text.trim().length>0))||(msg.content&&msg.content.trim().length>0);
-    if(hasContent){
+    if(hasVisibleAnswer(msg)){
       const content=buildContentFromBlocks(msg.blocks);
       const payloadBlocks=Array.isArray(msg.blocks)?msg.blocks.filter(b=>b&&b.type!==META_BLOCK_TYPE):[];
       try{
-        await fetch(API_BASE+'/api/chats/'+cid+'/complete',{
+        const cr=await fetch(API_BASE+'/api/chats/'+cid+'/complete',{
           method:'POST',
           headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
           body:JSON.stringify({content,client_message_id:msg.id,mode:msg.mode||'text',blocks:payloadBlocks})
         });
+        if(cr&&cr.ok){const cd=await cr.json().catch(()=>({}));if(cd&&cd.id)msg.serverId=cd.id;}
       }catch(e){}
       scheduleStreamRender(msg,cid);
     }else{
@@ -3487,18 +3471,24 @@ const handleSend=async(content,attachments)=>{
       if(state.currentChatId===chatId && !rt.userScrolledUp)scrollToBottom();
     }
     {
-      if(!hasVisibleAnswer(placeholder))setBusyIfEmpty(placeholder,'No response received from the server.');
+      const hadContent=hasVisibleAnswer(placeholder);
+      if(!hadContent)setBusyIfEmpty(placeholder,'No response received from the server.');
       placeholder._generating=false;
       placeholder._phase='done';
       scheduleStreamRender(placeholder,chatId);
-      const payloadBlocks=Array.isArray(placeholder.blocks)?placeholder.blocks.filter(b=>b&&b.type!==META_BLOCK_TYPE):[];
-      await fetch(API_BASE+'/api/chats/'+chatId+'/complete',{
-        method:'POST',
-        headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-        body:JSON.stringify({content:buildContentFromBlocks(placeholder.blocks),client_message_id:genId(),mode,blocks:payloadBlocks})
-      });
-      const assistantCount=chat.messages.filter(m=>m.role==='assistant').length;
-      const isFirstAssistantMsg=assistantCount===1;
+      if(hadContent){
+        const payloadBlocks=Array.isArray(placeholder.blocks)?placeholder.blocks.filter(b=>b&&b.type!==META_BLOCK_TYPE):[];
+        try{
+          const cr=await fetch(API_BASE+'/api/chats/'+chatId+'/complete',{
+            method:'POST',
+            headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+            body:JSON.stringify({content:buildContentFromBlocks(placeholder.blocks),client_message_id:placeholder.id,mode,blocks:payloadBlocks})
+          });
+          if(cr&&cr.ok){const cd=await cr.json().catch(()=>({}));if(cd&&cd.id)placeholder.serverId=cd.id;}
+        }catch(e){}
+      }
+      const assistantCount=chat.messages.filter(m=>m.role==='assistant'&&m.id!==placeholder.id).length;
+      const isFirstAssistantMsg=hadContent&&assistantCount===0;
       if(isFirstAssistantMsg){
         state.titleGeneratingChatId=chatId;
         updateChatTitleDisplay(chatId,'',true);
@@ -3509,7 +3499,7 @@ const handleSend=async(content,attachments)=>{
         })
           .then(res=>res.json())
           .then(data=>{
-            state.titleGeneratingChatId=null;
+            if(state.titleGeneratingChatId===chatId)state.titleGeneratingChatId=null;
             let finalTitle=chat.title;
             if(data.title&&data.title!=='New Chat'&&data.title!==chat.title){
               chat.title=data.title;
@@ -3518,24 +3508,28 @@ const handleSend=async(content,attachments)=>{
             }
             updateChatTitleDisplay(chatId,finalTitle,false);
           })
-          .catch(()=>{state.titleGeneratingChatId=null;updateChatTitleDisplay(chatId,chat.title,false);});
+          .catch(()=>{if(state.titleGeneratingChatId===chatId)state.titleGeneratingChatId=null;updateChatTitleDisplay(chatId,chat.title,false);});
       }
     }
   }catch(err){
     if(!placeholder._generating)return;
     const errorMsg=err.message||'Server Busy, Please Try Again';
+    const hadContent=hasVisibleAnswer(placeholder);
     setBusyIfEmpty(placeholder,errorMsg);
     placeholder._generating=false;
     placeholder._phase='done';
     scheduleStreamRender(placeholder,chatId);
-    try{
-      const payloadBlocks=Array.isArray(placeholder.blocks)?placeholder.blocks.filter(b=>b&&b.type!==META_BLOCK_TYPE):[];
-      await fetch(API_BASE+'/api/chats/'+chatId+'/complete',{
-        method:'POST',
-        headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-        body:JSON.stringify({content:buildContentFromBlocks(placeholder.blocks),client_message_id:genId(),mode,blocks:payloadBlocks})
-      });
-    }catch(e){}
+    if(hadContent){
+      try{
+        const payloadBlocks=Array.isArray(placeholder.blocks)?placeholder.blocks.filter(b=>b&&b.type!==META_BLOCK_TYPE):[];
+        const cr=await fetch(API_BASE+'/api/chats/'+chatId+'/complete',{
+          method:'POST',
+          headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+          body:JSON.stringify({content:buildContentFromBlocks(placeholder.blocks),client_message_id:placeholder.id,mode,blocks:payloadBlocks})
+        });
+        if(cr&&cr.ok){const cd=await cr.json().catch(()=>({}));if(cd&&cd.id)placeholder.serverId=cd.id;}
+      }catch(e){}
+    }
   }finally{
     rt.isStreaming=false;
     rt.abortController=null;
@@ -3725,12 +3719,17 @@ const handleRegen=async()=>{
       placeholder._generating=false;
       placeholder._phase='done';
       scheduleStreamRender(placeholder,chatId);
-      const payloadBlocks=Array.isArray(placeholder.blocks)?placeholder.blocks.filter(b=>b&&b.type!==META_BLOCK_TYPE):[];
-      await fetch(API_BASE+'/api/chats/'+chatId+'/complete',{
-        method:'POST',
-        headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-        body:JSON.stringify({content:buildContentFromBlocks(placeholder.blocks),client_message_id:genId(),mode,blocks:payloadBlocks})
-      });
+      if(streamSucceeded){
+        const payloadBlocks=Array.isArray(placeholder.blocks)?placeholder.blocks.filter(b=>b&&b.type!==META_BLOCK_TYPE):[];
+        try{
+          const cr=await fetch(API_BASE+'/api/chats/'+chatId+'/complete',{
+            method:'POST',
+            headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+            body:JSON.stringify({content:buildContentFromBlocks(placeholder.blocks),client_message_id:placeholder.id,mode,blocks:payloadBlocks})
+          });
+          if(cr&&cr.ok){const cd=await cr.json().catch(()=>({}));if(cd&&cd.id)placeholder.serverId=cd.id;}
+        }catch(e){}
+      }
     }
   }catch(err){
     if(!placeholder._generating)return;
@@ -3739,14 +3738,6 @@ const handleRegen=async()=>{
     placeholder._generating=false;
     placeholder._phase='done';
     scheduleStreamRender(placeholder,chatId);
-    try{
-      const payloadBlocks=Array.isArray(placeholder.blocks)?placeholder.blocks.filter(b=>b&&b.type!==META_BLOCK_TYPE):[];
-      await fetch(API_BASE+'/api/chats/'+chatId+'/complete',{
-        method:'POST',
-        headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-        body:JSON.stringify({content:buildContentFromBlocks(placeholder.blocks),client_message_id:genId(),mode,blocks:payloadBlocks})
-      });
-    }catch(e){}
   }finally{
     rt.isStreaming=false;
     rt.abortController=null;
@@ -3758,9 +3749,43 @@ const handleRegen=async()=>{
         const targetChat=state.chats.find(c=>c.id===chatId);
         if(targetChat){targetChat.messages=targetChat.messages.filter(m=>m.id!==lastA.id);}
         if(oldARow&&oldARow.parentNode)oldARow.remove();
-        api('DELETE',`/api/chats/${chatId}/messages/${lastA.id}`).catch(()=>{});
+        const oldServerId=lastA.serverId||lastA.id;
+        api('DELETE',`/api/chats/${chatId}/messages/${oldServerId}`).catch(()=>{});
       }
       toast('Regenerated','success',1600);
+      try{
+        const targetChat=state.chats.find(c=>c.id===chatId);
+        if(targetChat){
+          const userCount=targetChat.messages.filter(m=>m.role==='user').length;
+          const assistantCount=targetChat.messages.filter(m=>m.role==='assistant').length;
+          const needsTitle=!targetChat.title||targetChat.title==='New Chat'||targetChat.title==='Untitled';
+          if(needsTitle&&userCount===1&&assistantCount===1){
+            const firstUser=targetChat.messages.find(m=>m.role==='user');
+            const firstAssistant=targetChat.messages.find(m=>m.role==='assistant');
+            if(firstUser&&firstAssistant){
+              state.titleGeneratingChatId=chatId;
+              updateChatTitleDisplay(chatId,'',true);
+              fetch(`${API_BASE}/api/chats/${chatId}/generate-title`,{
+                method:'POST',
+                headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+                body:JSON.stringify({userContent:firstUser.content,assistantContent:buildContentFromBlocks(firstAssistant.blocks||[])})
+              })
+                .then(res=>res.json())
+                .then(data=>{
+                  if(state.titleGeneratingChatId===chatId)state.titleGeneratingChatId=null;
+                  let finalTitle=targetChat.title;
+                  if(data.title&&data.title!=='New Chat'&&data.title!==targetChat.title){
+                    targetChat.title=data.title;
+                    finalTitle=data.title;
+                    if(state.currentChatId===chatId)document.title=`ZebAI - ${clampTitle(data.title,40)}`;
+                  }
+                  updateChatTitleDisplay(chatId,finalTitle,false);
+                })
+                .catch(()=>{if(state.titleGeneratingChatId===chatId)state.titleGeneratingChatId=null;updateChatTitleDisplay(chatId,targetChat.title,false);});
+            }
+          }
+        }
+      }catch(e){}
     }else{
       const targetChat=state.chats.find(c=>c.id===chatId);
       if(targetChat){targetChat.messages=targetChat.messages.filter(m=>m.id!==placeholder.id);}
@@ -3862,10 +3887,20 @@ const renderSettings=()=>{
   $('clear-btn').onclick = () => {
     confirmDialog('Delete ALL chats?', async ok => {
       if(!ok) return;
-      for(const c of state.chats) await api('DELETE','/api/chats/'+c.id);
-      state.chats=[]; state.currentChatId=null; state.chatModes={};
+      const ids = state.chats.map(c=>c.id);
+      const results = await Promise.allSettled(ids.map(id => api('DELETE','/api/chats/'+id)));
+      const survivors = [];
+      results.forEach((r, i) => { if (r.status === 'rejected') survivors.push(state.chats.find(c=>c.id===ids[i])); });
+      state.chats = survivors.filter(Boolean);
+      state.chatModes = {};
       chatRuntime.clear();
-      await createNewChat(true);
+      if (state.chats.length === 0) {
+        state.currentChatId = null;
+        await createNewChat(true);
+      } else {
+        state.currentChatId = state.chats[0].id;
+        await selectChat(state.currentChatId, true);
+      }
     });
   };
   queueIcons(ov);
@@ -3949,7 +3984,7 @@ const submitInput=()=>{
   const atts=rt.attachments.slice();
   if(!t&&!atts.length)return;
   const chat=state.chats.find(c=>c.id===chatId);
-  if(chat&&chat.messages.length>=MAX_MSG){toast('Chat limit reached — start a new chat to continue','warning',3200);return;}
+  if(chat&&chat.messages.length+2>MAX_MSG){toast('Chat limit reached — start a new chat to continue','warning',3200);return;}
   __zebSpeak.stop();
   i.value='';
   i.style.height='auto';
@@ -3959,6 +3994,15 @@ const submitInput=()=>{
   updateAttachmentPreviews();
   updateInputUI();
   handleSend(t||'',atts);
+};
+const base64FromBytes = (bytes) => {
+  let binary = '';
+  const CHUNK = 0x8000;
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    const slice = bytes.subarray(i, i + CHUNK);
+    binary += String.fromCharCode.apply(null, slice);
+  }
+  return btoa(binary);
 };
 const initApp=()=>{
   showScreen('app');
@@ -4027,6 +4071,11 @@ const initApp=()=>{
     e.preventDefault();
     const rt=currentRuntime();
     if(!rt)return;
+    if(rt.attachments.length>=MAX_ATTACHMENTS){toast(`Max ${MAX_ATTACHMENTS} attachments per message`,'warning');return;}
+    const pasteBytes = new TextEncoder().encode(pastedText);
+    const pasteSizeMB = pasteBytes.length / 1024 / 1024;
+    const currentTotalMB = rt.attachments.reduce((s, a) => s + (a.size || 0), 0) / 1024 / 1024;
+    if(currentTotalMB + pasteSizeMB > MAX_TOTAL_ATTACHMENT_MB){toast(`Total attachment size exceeds ${MAX_TOTAL_ATTACHMENT_MB}MB`,'warning');return;}
     const trimmed = pastedText.trim();
     let pName = 'pasted-text.txt', pMime = 'text/plain';
     if (/^\s*<!doctype\s+html/i.test(trimmed) || /^\s*<html[\s>]/i.test(trimmed)) {
@@ -4042,7 +4091,7 @@ const initApp=()=>{
     let blobId = null;
     let dataUrl = null;
     try {
-      const b64 = btoa(unescape(encodeURIComponent(pastedText)));
+      const b64 = base64FromBytes(pasteBytes);
       dataUrl = `data:${pMime};base64,${b64}`;
       blobId = await uploadBlobToServer(pName, pMime, dataUrl);
       if (blobId) cacheBlobUrl(blobId, dataUrl);
@@ -4052,7 +4101,7 @@ const initApp=()=>{
       mime: pMime,
       data: dataUrl,
       isImage: false,
-      size: new Blob([pastedText]).size,
+      size: pasteBytes.length,
       blobId,
     });
     updateAttachmentPreviews();
