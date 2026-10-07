@@ -299,6 +299,7 @@ svg.lucide{vertical-align:middle;display:inline-block}
 .message-bubble h4{font-size:1.1rem;font-weight:600;margin-top:1rem;margin-bottom:.3rem}
 .message-bubble h5{font-size:1rem;font-weight:500;margin-top:.9rem;margin-bottom:.2rem}
 .message-bubble h6{font-size:.9rem;font-weight:500;margin-top:.8rem;margin-bottom:.2rem}
+.message-bubble .msg-content{min-width:0;max-width:100%}
 .message-bubble .msg-content > .trace-tool{margin:6px 0}
 .message-bubble .msg-content > .trace-tool + p,.message-bubble .msg-content > .trace-tool + ul,.message-bubble .msg-content > .trace-tool + ol,.message-bubble .msg-content > .trace-tool + .trace-block{margin-top:10px}
 .message-bubble .msg-content > p + .trace-tool,.message-bubble .msg-content > ul + .trace-tool,.message-bubble .msg-content > ol + .trace-tool,.message-bubble .msg-content > .trace-block + .trace-tool{margin-top:8px}
@@ -313,7 +314,7 @@ span.katex-inline-block::-webkit-scrollbar{display:none;width:0;height:0}
 span.katex-inline-block > .katex{display:inline-block;text-align:center}
 
 /* TABLE */
-.table-scroll{display:block;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;margin:0.8rem 0;border-radius:var(--radius-sm);border:1px solid var(--border-color);width:100%;max-width:100%}
+.table-scroll{display:block;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;margin:0.8rem 0;border-radius:var(--radius-sm);border:1px solid var(--border-color);width:100%;max-width:100%;min-width:0}
 .table-scroll table{width:max-content;min-width:100%;table-layout:auto;border-collapse:collapse}
 .message-bubble table{border-collapse:collapse;font-size:0.85rem;display:table;border-spacing:0}
 .message-bubble thead{border-bottom:2px solid var(--border-color)}
@@ -392,8 +393,8 @@ span.katex-inline-block > .katex{display:inline-block;text-align:center}
 .toggle-sidebar-btn:hover{color:var(--text-primary);background:var(--bg-hover)}
 .toggle-sidebar-btn:active{transform:scale(.92)}
 .main-area{flex:1;display:flex;flex-direction:column;height:100%;min-width:0;background:var(--bg-chat)}
-.chat-container{flex:1;display:flex;flex-direction:column;min-height:0}
-.messages-area{flex:1;overflow-y:auto;padding:1rem .8rem;display:flex;flex-direction:column;gap:.9rem;-webkit-overflow-scrolling:touch}
+.chat-container{flex:1;display:flex;flex-direction:column;min-height:0;min-width:0}
+.messages-area{flex:1;overflow-y:auto;overflow-x:hidden;padding:1rem .8rem;display:flex;flex-direction:column;gap:.9rem;-webkit-overflow-scrolling:touch}
 .welcome-screen{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;text-align:center;gap:1.2rem}
 .welcome-screen h2{font-size:1.7rem;font-weight:700;letter-spacing:-.5px}
 .welcome-screen p{color:var(--text-secondary);font-size:.95rem;max-width:440px}
@@ -408,10 +409,10 @@ span.katex-inline-block > .katex{display:inline-block;text-align:center}
 .mode-card .mode-title{font-size:.9rem;font-weight:600;margin-bottom:.1rem}
 .mode-card .mode-desc{font-size:.72rem;color:var(--text-secondary);line-height:1.35}
 .mode-card.active .mode-desc{color:var(--text-primary);opacity:.85}
-.message-row{display:flex;flex-direction:column;gap:.3rem;max-width:1100px;width:100%;margin:0 auto}
+.message-row{display:flex;flex-direction:column;gap:.3rem;max-width:1100px;width:100%;margin:0 auto;min-width:0}
 .message-row.user{align-items:flex-end}
 .message-row.assistant{align-items:flex-start}
-.message-bubble{max-width:90%;padding:.9rem 1.1rem;border-radius:var(--radius-md);word-break:break-word;position:relative;line-height:1.7;font-size:.88rem;display:flex;flex-direction:column}
+.message-bubble{max-width:90%;padding:.9rem 1.1rem;border-radius:var(--radius-md);word-break:break-word;position:relative;line-height:1.7;font-size:.88rem;display:flex;flex-direction:column;min-width:0}
 .message-row.user .message-bubble{background:var(--accent);color:#fff;border-bottom-right-radius:4px;max-width:80%}
 .message-row.user .message-bubble .msg-content{white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere}
 .message-row.assistant .message-bubble{background:transparent !important;border:none !important;padding:0 !important;max-width:100%;width:100%;border-radius:0;box-shadow:none !important}
@@ -1149,13 +1150,16 @@ const compressImageFile=file=>new Promise((resolve,reject)=>{
       const canvas=document.createElement('canvas');
       canvas.width=w;canvas.height=h;
       canvas.getContext('2d').drawImage(img,0,0,w,h);
+      const preservePNG = (file.type === 'image/png');
+      const outMime = preservePNG ? 'image/png' : 'image/jpeg';
+      const quality = preservePNG ? undefined : 0.7;
       canvas.toBlob(blob=>{
         if(!blob){reject(new Error('Compression failed'));return;}
         const r=new FileReader();
         r.onload=e2=>resolve(e2.target.result);
         r.onerror=reject;
         r.readAsDataURL(blob);
-      },'image/jpeg',0.7);
+      },outMime,quality);
     };
     img.onerror=reject;
     img.src=ev.target.result;
@@ -1223,7 +1227,8 @@ const addAttachmentFromFile=async(file)=>{
   if (mime.startsWith('image/')) {
     try {
       data = await compressImageFile(file);
-      finalMime = 'image/jpeg';
+      const mm = String(data).match(/^data:([^;]+);/);
+      finalMime = mm ? mm[1] : 'image/jpeg';
     } catch (e) {
       toast('Failed to process image', 'error');
       return;
@@ -2429,9 +2434,9 @@ const updateAssistantBubble=(row,msg)=>{
     const savedScrolls=captureScrolls(msgDiv);
     msgDiv._lastHtml=html;
     msgDiv.innerHTML=html;
-    restoreScrolls(msgDiv,savedScrolls);
     addCodeBlockHeaders(msgDiv,{stillStreaming:streamingNow,rawText:getRawAnswerText(msg)});
     wrapTablesInContainer(msgDiv);
+    restoreScrolls(msgDiv,savedScrolls);
     forceCollapseUnopened(msgDiv);
     msgDiv.removeAttribute('data-mathRendered');
     if(/\$|\\\(|\\\[/.test(html)){
@@ -2485,7 +2490,7 @@ const scheduleStreamRender=(msg, chatId)=>{
 const wrapTablesInContainer=container=>{
   if(!container)return;
   container.querySelectorAll('table:not([data-wrapped])').forEach(table=>{
-    if(table.parentElement.classList.contains('table-scroll'))return;
+    if(table.closest('.table-scroll'))return;
     const scroll=document.createElement('div');
     scroll.className='table-scroll';
     table.parentNode.insertBefore(scroll,table);
@@ -2570,7 +2575,7 @@ const renderMessages=()=>{
   area.querySelectorAll('.message-bubble .msg-content').forEach(el=>{
     addCodeBlockHeaders(el,{stillStreaming:false,rawText:''});
     wrapTablesInContainer(el);
-    bulletproofRenderMath(el);
+    if(el.dataset.mathRendered!=='1') bulletproofRenderMath(el);
     applyExternalLinks(el);
   });
   queueIcons(area);
@@ -2821,7 +2826,8 @@ const deleteChat=async cid=>{
       const full=await loadChatMessages(state.currentChatId);
       if(full){const idx=state.chats.findIndex(c=>c.id===state.currentChatId);if(idx!==-1)state.chats[idx]=full;}
       renderSidebar();renderMessages();updateInputUI();updateAttachmentPreviews();
-      setInput(state.drafts?.[state.currentChatId]||'');
+      const _rt=getRuntime(state.currentChatId);
+      setInput(_rt&&_rt.draft?_rt.draft:'');
     }else{
       state.currentChatId=null;
       renderSidebar();
