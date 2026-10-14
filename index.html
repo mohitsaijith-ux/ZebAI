@@ -2536,6 +2536,23 @@ const setBusyIfEmpty=(msg,errorMsg=null)=>{
   msg._generating=false;
   msg._phase='done';
 };
+
+// v106.35.0 — new helper: clear any active:true state from tool blocks before
+// persisting. Without this, a mid-stream /complete (or an abort) would save
+// blocks that render as "Analysing…" forever on reload.
+const sweepActiveBlocks=(msg)=>{
+  if(!msg||!Array.isArray(msg.blocks))return;
+  for(const b of msg.blocks){
+    if(b&&b.active===true){
+      b.active=false;
+      if(!b.error&&!b.data&&!b.result&&!b.sources) b.error='Interrupted';
+    }
+  }
+  msg._thinkingActive=false;
+  msg._activeTool=null;
+  if(msg._phase!=='done') msg._phase='done';
+};
+
 const renderMessages=()=>{
   const area=$('messages-area');
   if(!area)return;
@@ -3245,6 +3262,8 @@ const stopStream=async(cidArg)=>{
     const msg=stream.msg;
     msg._generating=false;
     msg._phase='done';
+    // v106.35.0 — sweep any in-flight active blocks before persisting.
+    sweepActiveBlocks(msg);
     if(hasVisibleAnswer(msg)){
       const content=buildContentFromBlocks(msg.blocks);
       const payloadBlocks=Array.isArray(msg.blocks)?msg.blocks.filter(b=>b&&b.type!==META_BLOCK_TYPE):[];
@@ -3252,7 +3271,13 @@ const stopStream=async(cidArg)=>{
         const cr=await fetch(API_BASE+'/api/chats/'+cid+'/complete',{
           method:'POST',
           headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-          body:JSON.stringify({content,client_message_id:msg.id,mode:msg.mode||'text',blocks:payloadBlocks})
+          body:JSON.stringify({
+            content,
+            client_message_id:msg.id,
+            mode:msg.mode||'text',
+            blocks:payloadBlocks,
+            thought_signature: msg.thoughtSignature || null,
+          })
         });
         if(cr&&cr.ok){const cd=await cr.json().catch(()=>({}));if(cd&&cd.id)msg.serverId=cd.id;}
       }catch(e){}
@@ -3314,7 +3339,7 @@ const handleSend=async(content,attachments)=>{
   const mode = hasAttachments
     ? (expertMode ? 'vision-agent' : 'vision')
     : (expertMode ? 'code' : 'text');
-  const placeholder={id:genId(),role:'assistant',content:'',mode,timestamp:Date.now(),_generating:true,_completed:false,_phase:'thinking',_thinkingActive:false,_activeTool:null,blocks:[]};
+  const placeholder={id:genId(),role:'assistant',content:'',mode,timestamp:Date.now(),_generating:true,_completed:false,_phase:'thinking',_thinkingActive:false,_activeTool:null,blocks:[],thoughtSignature:null};
   chat.messages.push(placeholder);
   if(state.currentChatId===chatId){
     const area=$('messages-area');
@@ -3371,6 +3396,10 @@ const handleSend=async(content,attachments)=>{
       if(currentThinkingBlock){currentThinkingBlock.open=false;currentThinkingBlock=null;}
       placeholder._thinkingActive=false;
       scheduleStreamRender(placeholder,chatId);
+    }else if(parsed.type==='thought_signature'){
+      if(typeof parsed.signature==='string'&&parsed.signature.length>0){
+        placeholder.thoughtSignature=parsed.signature;
+      }
     }else if(parsed.type==='search_start'){
       const block={type:'search',active:true,blockId:parsed.blockId||genId(),query:parsed.query,results:null,sources:null,error:null};
       activeBlocks.search.push(block);insertBeforeAnswer(block);
@@ -3481,6 +3510,8 @@ const handleSend=async(content,attachments)=>{
       if(!hadContent)setBusyIfEmpty(placeholder,'No response received from the server.');
       placeholder._generating=false;
       placeholder._phase='done';
+      // v106.35.0 — sweep any lingering active blocks before persisting.
+      sweepActiveBlocks(placeholder);
       scheduleStreamRender(placeholder,chatId);
       if(hadContent){
         const payloadBlocks=Array.isArray(placeholder.blocks)?placeholder.blocks.filter(b=>b&&b.type!==META_BLOCK_TYPE):[];
@@ -3488,7 +3519,13 @@ const handleSend=async(content,attachments)=>{
           const cr=await fetch(API_BASE+'/api/chats/'+chatId+'/complete',{
             method:'POST',
             headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-            body:JSON.stringify({content:buildContentFromBlocks(placeholder.blocks),client_message_id:placeholder.id,mode,blocks:payloadBlocks})
+            body:JSON.stringify({
+              content:buildContentFromBlocks(placeholder.blocks),
+              client_message_id:placeholder.id,
+              mode,
+              blocks:payloadBlocks,
+              thought_signature: placeholder.thoughtSignature || null,
+            })
           });
           if(cr&&cr.ok){const cd=await cr.json().catch(()=>({}));if(cd&&cd.id)placeholder.serverId=cd.id;}
         }catch(e){}
@@ -3524,6 +3561,8 @@ const handleSend=async(content,attachments)=>{
     setBusyIfEmpty(placeholder,errorMsg);
     placeholder._generating=false;
     placeholder._phase='done';
+    // v106.35.0 — sweep before persisting on error path too.
+    sweepActiveBlocks(placeholder);
     scheduleStreamRender(placeholder,chatId);
     if(hadContent){
       try{
@@ -3531,7 +3570,13 @@ const handleSend=async(content,attachments)=>{
         const cr=await fetch(API_BASE+'/api/chats/'+chatId+'/complete',{
           method:'POST',
           headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-          body:JSON.stringify({content:buildContentFromBlocks(placeholder.blocks),client_message_id:placeholder.id,mode,blocks:payloadBlocks})
+          body:JSON.stringify({
+            content:buildContentFromBlocks(placeholder.blocks),
+            client_message_id:placeholder.id,
+            mode,
+            blocks:payloadBlocks,
+            thought_signature: placeholder.thoughtSignature || null,
+          })
         });
         if(cr&&cr.ok){const cd=await cr.json().catch(()=>({}));if(cd&&cd.id)placeholder.serverId=cd.id;}
       }catch(e){}
@@ -3568,7 +3613,7 @@ const handleRegen=async()=>{
     || (hasAttach ? (expertMode ? 'vision-agent' : 'vision') : (expertMode ? 'code' : 'text'));
   const oldARow=lastA?document.querySelector(`[data-message-id="${lastA.id}"]`):null;
   if(oldARow){oldARow.style.transition='opacity .3s ease';oldARow.style.opacity='0.35';}
-  const placeholder={id:genId(),role:'assistant',content:'',mode,timestamp:Date.now(),_generating:true,_completed:false,_phase:'thinking',_thinkingActive:false,_activeTool:null,blocks:[],_isRegen:true,_replacesAssistantId:lastA?lastA.id:null};
+  const placeholder={id:genId(),role:'assistant',content:'',mode,timestamp:Date.now(),_generating:true,_completed:false,_phase:'thinking',_thinkingActive:false,_activeTool:null,blocks:[],thoughtSignature:null,_isRegen:true,_replacesAssistantId:lastA?lastA.id:null};
   chat.messages.push(placeholder);
   const area=$('messages-area');
   const newRow=createAssistantBubble(placeholder);
@@ -3623,6 +3668,10 @@ const handleRegen=async()=>{
     }else if(parsed.type==='thinking_end'){
       if(currentThinkingBlock){currentThinkingBlock.open=false;currentThinkingBlock=null;}
       placeholder._thinkingActive=false;scheduleStreamRender(placeholder,chatId);
+    }else if(parsed.type==='thought_signature'){
+      if(typeof parsed.signature==='string'&&parsed.signature.length>0){
+        placeholder.thoughtSignature=parsed.signature;
+      }
     }else if(parsed.type==='search_start'){
       const block={type:'search',active:true,blockId:parsed.blockId||genId(),query:parsed.query,results:null,sources:null,error:null};
       activeBlocks.search.push(block);insertBeforeAnswer(block);
@@ -3724,6 +3773,8 @@ const handleRegen=async()=>{
       else{streamSucceeded=true;}
       placeholder._generating=false;
       placeholder._phase='done';
+      // v106.35.0 — sweep before persisting.
+      sweepActiveBlocks(placeholder);
       scheduleStreamRender(placeholder,chatId);
       if(streamSucceeded){
         const payloadBlocks=Array.isArray(placeholder.blocks)?placeholder.blocks.filter(b=>b&&b.type!==META_BLOCK_TYPE):[];
@@ -3731,7 +3782,13 @@ const handleRegen=async()=>{
           const cr=await fetch(API_BASE+'/api/chats/'+chatId+'/complete',{
             method:'POST',
             headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-            body:JSON.stringify({content:buildContentFromBlocks(placeholder.blocks),client_message_id:placeholder.id,mode,blocks:payloadBlocks})
+            body:JSON.stringify({
+              content:buildContentFromBlocks(placeholder.blocks),
+              client_message_id:placeholder.id,
+              mode,
+              blocks:payloadBlocks,
+              thought_signature: placeholder.thoughtSignature || null,
+            })
           });
           if(cr&&cr.ok){const cd=await cr.json().catch(()=>({}));if(cd&&cd.id)placeholder.serverId=cd.id;}
         }catch(e){}
@@ -3743,6 +3800,8 @@ const handleRegen=async()=>{
     setBusyIfEmpty(placeholder,errorMsg);
     placeholder._generating=false;
     placeholder._phase='done';
+    // v106.35.0 — sweep before persisting.
+    sweepActiveBlocks(placeholder);
     scheduleStreamRender(placeholder,chatId);
   }finally{
     rt.isStreaming=false;
