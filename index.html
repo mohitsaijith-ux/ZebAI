@@ -21,6 +21,7 @@
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 <style>
+/* ... [all original CSS up to and including .tool-summary-row] ... */
 :root{
   --bg-primary:#0f0f0f;--bg-chat:#131313;--bg-sidebar:#171717;--bg-input:#1c1c1c;--bg-hover:#232323;
   --border-color:#2c2c2c;--text-primary:#efefef;--text-secondary:#a4a4a4;--text-tertiary:#757575;
@@ -545,6 +546,65 @@ body.fullscreen-drag::after{content:'Drop files here';position:fixed;inset:12px;
 .tool-summary-row{display:flex;align-items:center;gap:.7rem;padding:.6rem .75rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-sm);font-size:.78rem}
 .tool-summary-label{font-weight:600;color:var(--text-secondary);flex-shrink:0;min-width:78px}
 .tool-summary-value{color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
+
+/* SOURCE CHIPS */
+.chip-group{
+  display:inline-flex;align-items:center;
+  margin:0 3px;vertical-align:-3px;
+  cursor:pointer;user-select:none;position:relative;
+  padding:2px 4px;
+  -webkit-tap-highlight-color:transparent;
+}
+.chip-group:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.chip-group .chip{margin:0}
+.chip-group.stacked .chip + .chip{margin-left:-7px}
+.chip-group.stacked .chip:nth-child(1){z-index:10}
+.chip-group.stacked .chip:nth-child(2){z-index:9}
+.chip-group.stacked .chip:nth-child(3){z-index:8}
+.chip-group.stacked .chip:nth-child(4){z-index:7}
+.chip-group.stacked .chip:nth-child(n+5){z-index:6}
+
+.chip{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:17px;height:17px;border-radius:50%;
+  background:var(--bg-hover);
+  border:1px solid var(--border-color);
+  overflow:hidden;padding:0;
+  transition:background .15s ease,border-color .15s ease,transform .15s ease;
+  flex-shrink:0;position:relative;
+  vertical-align:middle;
+}
+.chip:hover{
+  background:var(--bg-input);
+  border-color:var(--text-tertiary);
+  transform:translateY(-1px);
+}
+.chip .chip-well{
+  width:13px;height:13px;border-radius:50%;
+  background:#ffffff;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;flex-shrink:0;
+}
+.chip .chip-well img{
+  width:100%;height:100%;display:block;object-fit:contain;
+  background:#ffffff;
+}
+.chip .chip-fallback{
+  width:13px;height:13px;border-radius:50%;
+  background:var(--accent-subtle);color:var(--accent);
+  display:flex;align-items:center;justify-content:center;
+  font-size:7px;font-weight:700;text-transform:uppercase;
+  line-height:1;flex-shrink:0;
+}
+.chip-count{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:20px;height:17px;padding:0 5px;margin-left:-3px;
+  border-radius:999px;
+  background:var(--bg-hover);border:1px solid var(--border-color);
+  font-size:.66rem;font-weight:700;color:var(--text-secondary);
+  z-index:5;position:relative;
+}
+
 .toast-container{position:fixed;top:1.2rem;right:1.2rem;z-index:70;display:flex;flex-direction:column;gap:.55rem;pointer-events:none;max-width:min(400px,calc(100vw - 2rem))}
 .toast{pointer-events:auto;position:relative;display:flex;align-items:center;gap:.7rem;padding:.75rem 1.05rem .75rem .85rem;border-radius:14px;background:var(--bg-sidebar);border:1px solid var(--border-color);color:var(--text-primary);font-size:.82rem;font-weight:500;line-height:1.35;box-shadow:0 12px 36px rgba(0,0,0,.45);opacity:0;transform:translateX(20px) scale(.96);animation:toastIn .38s cubic-bezier(.21,1.02,.73,1) forwards;overflow:hidden}
 .toast-icon{width:22px;height:22px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border-radius:50%;background:var(--bg-hover);color:var(--text-secondary)}
@@ -2213,6 +2273,133 @@ const renderSourcesContent=blocks=>{
   if(!html)html='<div class="sources-empty">No sources for this message.</div>';
   return html;
 };
+
+/* SOURCE CHIPS — replaces trailing [Source](url) links with favicon chips */
+const MAX_SOURCE_LABEL_LEN = 40;
+const SOURCE_LABEL_RE = /^[\p{L}\p{N}\s\.\-_&'’]+$/u;
+
+function looksLikeSourceLink(a) {
+  if (!a || a.tagName !== 'A') return false;
+  const href = a.getAttribute('href') || '';
+  if (!/^https?:\/\//i.test(href)) return false;
+  const txt = (a.textContent || '').trim();
+  if (!txt) return false;
+  if (txt.length > MAX_SOURCE_LABEL_LEN) return false;
+  if (/^https?:\/\//i.test(txt)) return false;
+  if (!SOURCE_LABEL_RE.test(txt)) return false;
+  if (a.classList.contains('search-source-card')) return false;
+  return true;
+}
+
+function findSourceLinkRuns(block) {
+  const runs = [];
+  let current = [];
+  const children = Array.from(block.childNodes);
+  for (const node of children) {
+    if (node.nodeType === 3) {
+      if (/^\s*$/.test(node.textContent || '')) continue;
+      if (current.length) { runs.push(current); current = []; }
+      continue;
+    }
+    if (node.nodeType === 1) {
+      if (node.tagName === 'A' && looksLikeSourceLink(node)) {
+        current.push(node);
+        continue;
+      }
+      if (current.length) { runs.push(current); current = []; }
+    }
+  }
+  if (current.length) runs.push(current);
+  return runs;
+}
+
+function chipInitials(name) {
+  const t = String(name || '?').trim();
+  if (t.length <= 3) return t.toUpperCase();
+  return t.slice(0, 2).toUpperCase();
+}
+
+function makeChipElement(src) {
+  const chip = document.createElement('span');
+  chip.className = 'chip';
+  chip.title = src.name || '';
+  let domain = '';
+  try { domain = new URL(src.url).hostname.replace(/^www\./, ''); } catch {}
+  const fav = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=128`;
+  const init = chipInitials(src.name || domain);
+  const well = document.createElement('span');
+  well.className = 'chip-well';
+  const img = document.createElement('img');
+  img.src = fav;
+  img.alt = '';
+  img.loading = 'lazy';
+  img.referrerPolicy = 'no-referrer';
+  img.onerror = () => {
+    const fb = document.createElement('span');
+    fb.className = 'chip-fallback';
+    fb.textContent = init;
+    img.replaceWith(fb);
+  };
+  well.appendChild(img);
+  chip.appendChild(well);
+  return chip;
+}
+
+function makeChipGroupElement(sources, msgId) {
+  const group = document.createElement('span');
+  group.className = 'chip-group' + (sources.length >= 3 ? ' stacked' : '');
+  group.setAttribute('role', 'button');
+  group.setAttribute('tabindex', '0');
+  group.setAttribute('aria-label', sources.length === 1 ? `Open source` : `Show ${sources.length} sources`);
+  group.dataset.messageId = msgId;
+  group.dataset.sourceCount = String(sources.length);
+  group.dataset.sourceUrl = sources[0] && sources[0].url ? sources[0].url : '';
+  const visible = sources.length <= 3 ? sources : sources.slice(0, 3);
+  visible.forEach(src => group.appendChild(makeChipElement(src)));
+  if (sources.length > 3) {
+    const count = document.createElement('span');
+    count.className = 'chip-count';
+    count.textContent = String(sources.length);
+    group.appendChild(count);
+  }
+  return group;
+}
+
+function applySourceChips(container, msg) {
+  if (!container || !msg || !msg.id) return;
+  const paras = container.querySelectorAll('p, li');
+  paras.forEach(block => {
+    if (block.dataset.sourceChips === '1') return;
+    if (block.closest('.trace-block, .trace-tool, .search-block, .weather-block, .finance-block, .math-card, .analyse-block, .chart-block')) return;
+    const runs = findSourceLinkRuns(block);
+    if (!runs.length) return;
+    let changed = false;
+    runs.forEach(run => {
+      const sources = run.map(a => ({
+        url: a.getAttribute('href') || '',
+        name: (a.textContent || '').trim(),
+      })).filter(s => s.url && s.name);
+      if (!sources.length) return;
+      const groupEl = makeChipGroupElement(sources, msg.id);
+      const parent = run[0].parentNode;
+      if (!parent) return;
+      parent.insertBefore(groupEl, run[0]);
+      // Remove anchors and any whitespace text nodes between them
+      let cur = run[0];
+      const last = run[run.length - 1];
+      const toRemove = [];
+      while (cur) {
+        toRemove.push(cur);
+        if (cur === last) break;
+        cur = cur.nextSibling;
+      }
+      toRemove.forEach(n => { try { n.remove(); } catch {} });
+      changed = true;
+    });
+    if (changed) block.dataset.sourceChips = '1';
+  });
+}
+
 const openSourcesPanel=msg=>{
   const ov=$('sources-overlay');
   const body=$('sources-body');
@@ -2400,6 +2587,7 @@ const createAssistantBubble=msg=>{
     if(!msg._generating){
       bulletproofRenderMath(mc);
       applyExternalLinks(mc);
+      applySourceChips(mc, msg);
     }
   }
   setTimeout(()=>{row.dataset.animated='true';},400);
@@ -2434,6 +2622,7 @@ const updateAssistantBubble=(row,msg)=>{
     const savedScrolls=captureScrolls(msgDiv);
     msgDiv._lastHtml=html;
     msgDiv.innerHTML=html;
+    delete msgDiv.dataset.sourceChips;
     addCodeBlockHeaders(msgDiv,{stillStreaming:streamingNow,rawText:getRawAnswerText(msg)});
     wrapTablesInContainer(msgDiv);
     restoreScrolls(msgDiv,savedScrolls);
@@ -2447,6 +2636,7 @@ const updateAssistantBubble=(row,msg)=>{
       });
     }
     applyExternalLinks(msgDiv);
+    if(!streamingNow) applySourceChips(msgDiv, msg);
   }
   msgDiv._wasStreaming=streamingNow;
   const dots=bubble.querySelector('.pulsing-dots');
@@ -2536,10 +2726,6 @@ const setBusyIfEmpty=(msg,errorMsg=null)=>{
   msg._generating=false;
   msg._phase='done';
 };
-
-// v106.35.0 — new helper: clear any active:true state from tool blocks before
-// persisting. Without this, a mid-stream /complete (or an abort) would save
-// blocks that render as "Analysing…" forever on reload.
 const sweepActiveBlocks=(msg)=>{
   if(!msg||!Array.isArray(msg.blocks))return;
   for(const b of msg.blocks){
@@ -2589,11 +2775,16 @@ const renderMessages=()=>{
       area.appendChild(newRow);
     }
   });
-  area.querySelectorAll('.message-bubble .msg-content').forEach(el=>{
+  area.querySelectorAll('.message-row.assistant').forEach(row => {
+    const msgId = row.dataset.messageId;
+    const msg = chat.messages.find(m => m.id === msgId);
+    const el = row.querySelector('.msg-content');
+    if (!el || !msg) return;
     addCodeBlockHeaders(el,{stillStreaming:false,rawText:''});
     wrapTablesInContainer(el);
     if(el.dataset.mathRendered!=='1') bulletproofRenderMath(el);
     applyExternalLinks(el);
+    applySourceChips(el, msg);
   });
   queueIcons(area);
   toggleScrollBtn();
@@ -3262,7 +3453,6 @@ const stopStream=async(cidArg)=>{
     const msg=stream.msg;
     msg._generating=false;
     msg._phase='done';
-    // v106.35.0 — sweep any in-flight active blocks before persisting.
     sweepActiveBlocks(msg);
     if(hasVisibleAnswer(msg)){
       const content=buildContentFromBlocks(msg.blocks);
@@ -3510,7 +3700,6 @@ const handleSend=async(content,attachments)=>{
       if(!hadContent)setBusyIfEmpty(placeholder,'No response received from the server.');
       placeholder._generating=false;
       placeholder._phase='done';
-      // v106.35.0 — sweep any lingering active blocks before persisting.
       sweepActiveBlocks(placeholder);
       scheduleStreamRender(placeholder,chatId);
       if(hadContent){
@@ -3561,7 +3750,6 @@ const handleSend=async(content,attachments)=>{
     setBusyIfEmpty(placeholder,errorMsg);
     placeholder._generating=false;
     placeholder._phase='done';
-    // v106.35.0 — sweep before persisting on error path too.
     sweepActiveBlocks(placeholder);
     scheduleStreamRender(placeholder,chatId);
     if(hadContent){
@@ -3773,7 +3961,6 @@ const handleRegen=async()=>{
       else{streamSucceeded=true;}
       placeholder._generating=false;
       placeholder._phase='done';
-      // v106.35.0 — sweep before persisting.
       sweepActiveBlocks(placeholder);
       scheduleStreamRender(placeholder,chatId);
       if(streamSucceeded){
@@ -3800,7 +3987,6 @@ const handleRegen=async()=>{
     setBusyIfEmpty(placeholder,errorMsg);
     placeholder._generating=false;
     placeholder._phase='done';
-    // v106.35.0 — sweep before persisting.
     sweepActiveBlocks(placeholder);
     scheduleStreamRender(placeholder,chatId);
   }finally{
@@ -4226,6 +4412,24 @@ const initApp=()=>{
     for(const f of files) await addAttachmentFromFile(f);
   });
   $('messages-area').addEventListener('click',e=>{
+    const chipGroup=e.target.closest('.chip-group');
+    if(chipGroup){
+      e.preventDefault();
+      e.stopPropagation();
+      const count=parseInt(chipGroup.dataset.sourceCount||'0',10);
+      const url=chipGroup.dataset.sourceUrl||'';
+      if(count===1 && url){
+        window.open(url,'_blank','noopener,noreferrer');
+        return;
+      }
+      const rowEl=chipGroup.closest('.message-row');
+      const msgId=rowEl?.dataset.messageId;
+      if(!msgId)return;
+      const chat=state.chats.find(c=>c.id===state.currentChatId);
+      const msg=chat?.messages.find(m=>m.id===msgId);
+      if(msg)openSourcesPanel(msg);
+      return;
+    }
     const copyBtn=e.target.closest('.copy-code-btn');
     if(copyBtn){
       e.stopPropagation();
@@ -4289,6 +4493,12 @@ const initApp=()=>{
     if(fsBtn){e.stopPropagation();openChartFullscreen(fsBtn.dataset.chartId);return;}
     const dlChartBtn=e.target.closest('.chart-dl-btn');
     if(dlChartBtn){e.stopPropagation();downloadChart(dlChartBtn.dataset.chartId);return;}
+  });
+  $('messages-area').addEventListener('keydown',e=>{
+    if((e.key==='Enter'||e.key===' ') && e.target && e.target.classList && e.target.classList.contains('chip-group')){
+      e.preventDefault();
+      e.target.click();
+    }
   });
   $('run-modal-close').addEventListener('click',closePreviewModal);
   $('code-runner-overlay').addEventListener('click',e=>{if(e.target===$('code-runner-overlay'))closePreviewModal();});
