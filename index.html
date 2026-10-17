@@ -21,7 +21,6 @@
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 <style>
-/* ... [all original CSS up to and including .tool-summary-row] ... */
 :root{
   --bg-primary:#0f0f0f;--bg-chat:#131313;--bg-sidebar:#171717;--bg-input:#1c1c1c;--bg-hover:#232323;
   --border-color:#2c2c2c;--text-primary:#efefef;--text-secondary:#a4a4a4;--text-tertiary:#757575;
@@ -364,8 +363,19 @@ span.katex-inline-block > .katex{display:inline-block;text-align:center}
 .sidebar{width:280px;min-width:280px;height:100%;background:var(--bg-sidebar);border-right:1px solid var(--border-color);display:flex;flex-direction:column;transition:width var(--transition),min-width var(--transition),opacity var(--transition);z-index:30;overflow:hidden}
 .sidebar.collapsed{width:0;min-width:0;opacity:0;pointer-events:none;border-right:none}
 .sidebar-inner{width:280px;min-width:280px;height:100%;display:flex;flex-direction:column;padding:.8rem .6rem}
-.sidebar-logo{display:flex;align-items:center;gap:.5rem;padding:.4rem .5rem;margin-bottom:.8rem;font-weight:700;font-size:1.1rem;user-select:none}
-.sidebar-logo .logo-icon{width:26px;height:26px;flex-shrink:0;display:inline-block;background:var(--accent);-webkit-mask:url("logo-dark.png") center/contain no-repeat;mask:url("logo-dark.png") center/contain no-repeat;-webkit-mask-mode:luminance;mask-mode:luminance;}
+.sidebar-logo{display:flex;align-items:center;justify-content:flex-start;padding:.4rem .5rem;margin-bottom:.8rem;font-weight:700;font-size:1.1rem;user-select:none}
+.sidebar-logo .logo-icon{width:26px;height:26px;flex:0 0 26px;display:inline-block;background:var(--accent);-webkit-mask:url("logo-dark.png") center/contain no-repeat;mask:url("logo-dark.png") center/contain no-repeat;-webkit-mask-mode:luminance;mask-mode:luminance;margin-right:.4rem}
+.chat-actions-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:80;display:none;align-items:center;justify-content:center;opacity:0;transition:opacity .2s ease}
+.chat-actions-overlay.open{display:flex;opacity:1}
+.chat-actions-panel{background:var(--bg-sidebar);border:1px solid var(--border-color);border-radius:var(--radius-xl);width:90%;max-width:340px;display:flex;flex-direction:column;box-shadow:var(--shadow-md);transform:translateY(10px);transition:transform .2s ease;overflow:hidden}
+.chat-actions-overlay.open .chat-actions-panel{transform:translateY(0)}
+.chat-actions-header{padding:1rem;font-weight:600;text-align:center;border-bottom:1px solid var(--border-color);color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.95rem}
+.chat-actions-footer{display:flex}
+.chat-actions-footer button{flex:1;padding:1rem;background:transparent;border:none;color:var(--text-primary);font-size:.9rem;font-weight:500;cursor:pointer;transition:background .15s;font-family:inherit}
+.chat-actions-footer button:hover{background:var(--bg-hover)}
+.chat-actions-footer button.danger{color:var(--danger)}
+.chat-actions-footer button.danger:hover{background:rgba(239,68,68,.1)}
+.chat-actions-footer button:not(:last-child){border-right:1px solid var(--border-color)}
 .btn-new-chat{display:flex;align-items:center;gap:.5rem;width:100%;padding:.6rem .8rem;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-weight:500;font-size:.88rem;cursor:pointer;transition:all var(--transition-fast);margin-bottom:.6rem;font-family:inherit}
 .btn-new-chat:hover{background:var(--bg-hover);border-color:var(--text-tertiary)}
 .btn-new-chat:disabled{opacity:.5;cursor:not-allowed}
@@ -603,29 +613,19 @@ body.fullscreen-drag::after{content:'Drop files here';position:fixed;inset:12px;
   background:var(--bg-hover);border:1px solid var(--border-color);
   font-size:.66rem;font-weight:700;color:var(--text-secondary);
   z-index:5;position:relative;
+  transition:background .15s ease,border-color .15s ease,color .15s ease;
+}
+.chip-group:hover .chip-count{
+  background:var(--bg-input);border-color:var(--text-tertiary);color:var(--text-primary);
 }
 
-.toast-container{position:fixed;top:1.2rem;right:1.2rem;z-index:70;display:flex;flex-direction:column;gap:.55rem;pointer-events:none;max-width:min(400px,calc(100vw - 2rem))}
-.toast{pointer-events:auto;position:relative;display:flex;align-items:center;gap:.7rem;padding:.75rem 1.05rem .75rem .85rem;border-radius:14px;background:var(--bg-sidebar);border:1px solid var(--border-color);color:var(--text-primary);font-size:.82rem;font-weight:500;line-height:1.35;box-shadow:0 12px 36px rgba(0,0,0,.45);opacity:0;transform:translateX(20px) scale(.96);animation:toastIn .38s cubic-bezier(.21,1.02,.73,1) forwards;overflow:hidden}
-.toast-icon{width:22px;height:22px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border-radius:50%;background:var(--bg-hover);color:var(--text-secondary)}
-.toast-icon svg{width:13px;height:13px;display:block}
+.toast-container{position:fixed;top:1.2rem;right:1.2rem;z-index:70;display:flex;flex-direction:column;gap:.5rem;pointer-events:none;max-width:min(400px,calc(100vw - 2rem))}
+.toast{pointer-events:auto;position:relative;display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;background:var(--bg-input);border:1px solid var(--border-color);color:var(--text-primary);font-size:.82rem;font-weight:500;line-height:1.35;box-shadow:none;opacity:0;transform:translateX(20px);animation:toastIn .25s cubic-bezier(.21,1.02,.73,1) forwards}
+.toast-icon{display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--text-secondary)}
+.toast-icon svg{width:16px;height:16px;display:block;stroke-width:2.5}
 .toast-message{flex:1;min-width:0;word-break:break-word}
-.toast.success{border-color:rgba(34,197,94,.35)}
-.toast.success .toast-icon{background:rgba(34,197,94,.15);color:var(--success)}
-.toast.error{border-color:rgba(239,68,68,.35)}
-.toast.error .toast-icon{background:rgba(239,68,68,.15);color:var(--danger)}
-.toast.warning{border-color:rgba(245,158,11,.35)}
-.toast.warning .toast-icon{background:rgba(245,158,11,.15);color:var(--warning)}
-.toast.info{border-color:rgba(14,165,233,.35)}
-.toast.info .toast-icon{background:var(--accent-subtle);color:var(--accent)}
-.toast::after{content:'';position:absolute;bottom:0;left:0;height:2px;background:var(--text-tertiary);animation:toastProgress var(--dur,2400ms) linear forwards}
-.toast.success::after{background:var(--success)}
-.toast.error::after{background:var(--danger)}
-.toast.warning::after{background:var(--warning)}
-.toast.info::after{background:var(--accent)}
-.toast.out{opacity:0;transform:translateX(20px) scale(.96)}
-@keyframes toastIn{to{opacity:1;transform:translateX(0) scale(1)}}
-@keyframes toastProgress{from{width:100%}to{width:0}}
+.toast.out{opacity:0;transform:translateX(20px);transition:opacity .2s,transform .2s}
+@keyframes toastIn{to{opacity:1;transform:translateX(0)}}
 
 /* RUN MODAL / PREVIEW */
 .run-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;display:none;align-items:center;justify-content:center}
@@ -752,6 +752,25 @@ body.fullscreen-drag::after{content:'Drop files here';position:fixed;inset:12px;
   </div>
 </div>
 <div id="settings-overlay" class="settings-overlay"></div>
+<div id="chat-actions-overlay" class="chat-actions-overlay">
+  <div class="chat-actions-panel">
+    <div class="chat-actions-header" id="ca-chat-title">Chat Name</div>
+    <div class="chat-actions-footer">
+      <button id="ca-delete" class="danger">Delete Chat</button>
+      <button id="ca-rename">Rename Chat</button>
+    </div>
+  </div>
+</div>
+<div id="rename-chat-overlay" class="confirm-overlay" style="z-index: 210;">
+  <div class="confirm-dialog">
+    <p style="margin-bottom: 1rem; font-weight: 600; font-size: 1rem;">Rename Chat</p>
+    <input type="text" id="rename-chat-input" style="width: 100%; padding: 0.6rem; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: var(--radius-sm); color: var(--text-primary); font-family: inherit; font-size: 0.9rem; margin-bottom: 1.5rem; box-sizing: border-box;" />
+    <div class="confirm-actions">
+      <button id="rename-cancel">Cancel</button>
+      <button id="rename-save" class="btn-primary" style="border: none;">Save</button>
+    </div>
+  </div>
+</div>
 <div id="confirm-overlay" class="confirm-overlay">
   <div class="confirm-dialog"><p id="confirm-message"></p><div class="confirm-actions"><button id="confirm-cancel">Cancel</button><button id="confirm-ok" class="btn-confirm-danger">Confirm</button></div></div>
 </div>
@@ -950,8 +969,7 @@ const forceCollapseUnopened=(mc)=>{
   mc.querySelectorAll('.trace-block, .search-block, .weather-block, .finance-block, .math-card').forEach(el=>{
     const key=el.dataset.toggleKey;
     if(!key)return;
-    const isWeatherOrFinance=el.classList.contains('weather-block')||el.classList.contains('finance-block');
-    const wantOpen = openState[key]===undefined ? isWeatherOrFinance : openState[key]===true;
+    const wantOpen = openState[key]===true;
     if(wantOpen){
       const wasOpen=el.classList.contains('open');
       el.classList.add('open');
@@ -1961,7 +1979,7 @@ const renderCombinedSearchBlock=(searchBlocks,key)=>{
       const initial=sanitizeInitial((s.sourceName||'W').charAt(0));
       const ml=i===0?'0':'-5px';
       const z=String(10-i);
-      if(favUrl)return `<img src="${favUrl}" alt="" loading="lazy" referrerpolicy="no-referrer" style="margin-left:${ml};z-index:${z}" data-fallback="${initial}">`;
+      if(favUrl)return `<img src="${favUrl}" alt="" referrerpolicy="no-referrer" style="margin-left:${ml};z-index:${z}" data-fallback="${initial}">`;
       return `<span class="fav-stack-fallback" style="margin-left:${ml};z-index:${z}">${initial}</span>`;
     }).join('');
     favStack=`<span class="fav-stack">${stack}</span>`;
@@ -1978,7 +1996,7 @@ const renderCombinedSearchBlock=(searchBlocks,key)=>{
       const favUrl=getFaviconUrl(s.url,s.sourceName);
       const initial=sanitizeInitial((s.sourceName||'W').charAt(0));
       const safeHref=safeUrl(s.url);
-      const icon=favUrl?`<img class="search-source-icon" src="${favUrl}" alt="" loading="lazy" referrerpolicy="no-referrer" data-fallback="${initial}">`:`<span class="search-source-icon favicon-fallback">${initial}</span>`;
+      const icon=favUrl?`<img class="search-source-icon" src="${favUrl}" alt="" referrerpolicy="no-referrer" data-fallback="${initial}">`:`<span class="search-source-icon favicon-fallback">${initial}</span>`;
       return `<a class="search-source-card" href="${esc(safeHref)}" target="_blank" rel="noopener noreferrer">${icon}<div class="search-source-info"><div class="search-source-title">${esc(s.title)}</div><div class="search-source-meta">${esc(s.sourceName||'Web')}</div>${s.content?`<div class="search-source-snippet">${esc(s.content.slice(0,180))}${s.content.length>180?'…':''}</div>`:''}</div></a>`;
     }).join('')}</div>`;
   }
@@ -1991,7 +2009,7 @@ const renderCombinedSearchBlock=(searchBlocks,key)=>{
 };
 const renderWeatherStep=block=>{
   const key = block.__key || ('weather-' + (block.blockId || genId()));
-  const openClass = openState[key]===false ? '' : ' open';
+  const openClass = openState[key]===true ? ' open' : '';
   const chev = `<span class="swap-chevron">${CHEVRON_SVG_SM}</span>`;
   const icon = `<span class="swap-icon">${svgToolIcon('weather',13)}</span>`;
   if(block.active){
@@ -2020,7 +2038,7 @@ const renderWeatherStep=block=>{
 };
 const renderFinanceStep=block=>{
   const key = block.__key || ('finance-' + (block.blockId || genId()));
-  const openClass = openState[key]===false ? '' : ' open';
+  const openClass = openState[key]===true ? ' open' : '';
   const chev = `<span class="swap-chevron">${CHEVRON_SVG_SM}</span>`;
   const icon = `<span class="swap-icon">${svgToolIcon('finance',13)}</span>`;
   if(block.active){
@@ -2113,8 +2131,8 @@ const renderToolGroup=(tools,key)=>{
   if(!tools.length)return '';
   if(tools.length===1){
     const t=tools[0];
-    if(t.type==='search') return renderCombinedSearchBlock([t], `${key}-s0`);
-    return renderToolCard({...t, __key: t.__key || `${key}-single`});
+    if(t.type==='search') return renderCombinedSearchBlock([t], `${key}-s-${t.blockId||'x'}`);
+    return renderToolCard({...t, __key: `${key}-b-${t.blockId||'x'}`});
   }
   const groups=[];
   let currentSearchGroup=null;
@@ -2129,8 +2147,8 @@ const renderToolGroup=(tools,key)=>{
   });
   let inner='';
   groups.forEach((g,gi)=>{
-    if(g.kind==='search') inner+=renderCombinedSearchBlock(g.items, `${key}-s${gi}`);
-    else inner+=renderToolCard({...g.item, __key: g.item.__key || `${key}-b${gi}`});
+    if(g.kind==='search') inner+=renderCombinedSearchBlock(g.items, `${key}-s-${g.items[0].blockId||('g'+gi)}`);
+    else inner+=renderToolCard({...g.item, __key: `${key}-b-${g.item.blockId||('g'+gi)}`});
   });
   const openClass=openState[key]===true?' open':'';
   const visibleCount=groups.length;
@@ -2248,7 +2266,7 @@ const renderSourcesContent=blocks=>{
       const favUrl=getFaviconUrl(s.url,s.sourceName);
       const initial=sanitizeInitial((s.sourceName||'W').charAt(0));
       const safeHref=safeUrl(s.url);
-      const icon=favUrl?`<img class="search-source-icon" src="${favUrl}" alt="" loading="lazy" referrerpolicy="no-referrer" data-fallback="${initial}">`:`<span class="search-source-icon favicon-fallback">${initial}</span>`;
+      const icon=favUrl?`<img class="search-source-icon" src="${favUrl}" alt="" referrerpolicy="no-referrer" data-fallback="${initial}">`:`<span class="search-source-icon favicon-fallback">${initial}</span>`;
       return `<a class="search-source-card" href="${esc(safeHref)}" target="_blank" rel="noopener noreferrer">${icon}<div class="search-source-info"><div class="search-source-title">${esc(s.title||'Untitled')}</div><div class="search-source-meta">${esc(s.sourceName||'Web')}</div>${s.content?`<div class="search-source-snippet">${esc(s.content.slice(0,180))}${s.content.length>180?'…':''}</div>`:''}</div></a>`;
     }).join('')}</div></div>`;
   }
@@ -2276,7 +2294,7 @@ const renderSourcesContent=blocks=>{
 
 /* SOURCE CHIPS — replaces trailing [Source](url) links with favicon chips */
 const MAX_SOURCE_LABEL_LEN = 40;
-const SOURCE_LABEL_RE = /^[\p{L}\p{N}\s\.\-_&'’]+$/u;
+const SOURCE_LABEL_RE = /^[\p{L}\p{N}\s\.\-_&'’!?,:]+$/u;
 
 function looksLikeSourceLink(a) {
   if (!a || a.tagName !== 'A') return false;
@@ -2332,7 +2350,6 @@ function makeChipElement(src) {
   const img = document.createElement('img');
   img.src = fav;
   img.alt = '';
-  img.loading = 'lazy';
   img.referrerPolicy = 'no-referrer';
   img.onerror = () => {
     const fb = document.createElement('span');
@@ -2384,7 +2401,6 @@ function applySourceChips(container, msg) {
       const parent = run[0].parentNode;
       if (!parent) return;
       parent.insertBefore(groupEl, run[0]);
-      // Remove anchors and any whitespace text nodes between them
       let cur = run[0];
       const last = run[run.length - 1];
       const toRemove = [];
@@ -2636,7 +2652,7 @@ const updateAssistantBubble=(row,msg)=>{
       });
     }
     applyExternalLinks(msgDiv);
-    if(!streamingNow) applySourceChips(msgDiv, msg);
+    applySourceChips(msgDiv, msg);
   }
   msgDiv._wasStreaming=streamingNow;
   const dots=bubble.querySelector('.pulsing-dots');
@@ -2810,7 +2826,7 @@ const renderSidebar=()=>{
       item=document.createElement('div');
       item.className='chat-list-item';
       item.dataset.cid=c.id;
-      item.innerHTML='<span class="chat-title"></span><span class="chat-actions"><button class="rename-btn" data-id="'+esc(c.id)+'"><i data-lucide="edit-3" style="width:13px;height:13px"></i></button><button class="delete-btn danger" data-id="'+esc(c.id)+'"><i data-lucide="trash-2" style="width:13px;height:13px"></i></button></span>';
+      item.innerHTML='<span class="chat-title"></span><span class="chat-actions"><button class="chat-menu-btn" data-id="'+esc(c.id)+'"><i data-lucide="more-horizontal" style="width:16px;height:16px"></i></button></span>';
       existing.set(c.id,item);
       addedNew=true;
     }
@@ -2962,22 +2978,27 @@ const api=async(method,path,body)=>{
   return data;
 };
 const TOAST_ICONS={
-  success:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
-  error:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
-  warning:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="8" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
-  info:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="16" x2="12" y2="11"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'
+  success:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+  error:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+  warning:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="8" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+  info:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="16" x2="12" y2="11"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'
 };
 const toast=(msg,type='info',duration=2400)=>{
   const c=$('toast-container');
   if(!c)return;
   if(!type)type='info';
+  
+  // Deduplication: Prevent identical messages from stacking
+  const existing = Array.from(c.children).find(el => el.dataset.msg === msg);
+  if (existing) return;
+
   const d=document.createElement('div');
   d.className='toast '+type;
-  d.style.setProperty('--dur',duration+'ms');
+  d.dataset.msg = msg;
   d.innerHTML=`<span class="toast-icon">${TOAST_ICONS[type]||TOAST_ICONS.info}</span><span class="toast-message"></span>`;
   d.querySelector('.toast-message').textContent=msg;
   c.appendChild(d);
-  setTimeout(()=>{d.classList.add('out');setTimeout(()=>d.remove(),260);},duration);
+  setTimeout(()=>{d.classList.add('out');setTimeout(()=>d.remove(),200);},duration);
 };
 const confirmDialog=(msg,cb)=>{
   const ov=$('confirm-overlay');
@@ -4171,10 +4192,11 @@ const hexToRgba=(hex,alpha)=>{
 const handleSidebarClick=e=>{
   const item=e.target.closest('.chat-list-item');
   if(item&&!e.target.closest('button')&&!e.target.closest('input'))selectChat(item.dataset.cid);
-  const ren=e.target.closest('.rename-btn');
-  if(ren){e.stopPropagation();state.renamingChatId=ren.dataset.id;renderSidebar();}
-  const del=e.target.closest('.delete-btn');
-  if(del){e.stopPropagation();deleteChat(del.dataset.id);}
+  const menu=e.target.closest('.chat-menu-btn');
+  if(menu){
+    e.stopPropagation();
+    openChatActionsModal(menu.dataset.id);
+  }
   const nw=e.target.closest('#btn-new-chat');
   if(nw)createNewChat();
   const st=e.target.closest('#settings-btn');
@@ -4255,6 +4277,21 @@ const base64FromBytes = (bytes) => {
   }
   return btoa(binary);
 };
+let activeChatActionId = null;
+const openChatActionsModal = (cid) => {
+  activeChatActionId = cid;
+  const chat = state.chats.find(c => c.id === cid);
+  if (chat) {
+    $('ca-chat-title').textContent = chat.title;
+  }
+  $('chat-actions-overlay').classList.add('open');
+};
+const closeChatActionsModal = () => {
+  activeChatActionId = null;
+  $('chat-actions-overlay').classList.remove('open');
+  try { document.activeElement.blur(); } catch(e) {}
+};
+
 const initApp=()=>{
   showScreen('app');
   if(innerWidth<=768)state.sidebarOpen=false;
@@ -4500,6 +4537,46 @@ const initApp=()=>{
       e.target.click();
     }
   });
+
+  $('chat-actions-overlay').addEventListener('click', e => { if(e.target === $('chat-actions-overlay')) closeChatActionsModal(); });
+  
+  $('ca-rename').addEventListener('click', () => {
+    if(!activeChatActionId) return;
+    const chat = state.chats.find(c => c.id === activeChatActionId);
+    if(!chat) return;
+    closeChatActionsModal();
+    $('rename-chat-input').value = chat.title;
+    $('rename-chat-overlay').dataset.cid = chat.id; // store cid on the overlay
+    $('rename-chat-overlay').classList.add('open');
+    requestAnimationFrame(() => { $('rename-chat-input').focus(); $('rename-chat-input').select(); });
+  });
+
+  $('ca-delete').addEventListener('click', () => {
+    if(!activeChatActionId) return;
+    const cid = activeChatActionId;
+    closeChatActionsModal();
+    deleteChat(cid);
+  });
+
+  $('rename-cancel').addEventListener('click', () => {
+    $('rename-chat-overlay').classList.remove('open');
+  });
+
+  $('rename-save').addEventListener('click', () => {
+    const val = $('rename-chat-input').value.trim();
+    const cid = $('rename-chat-overlay').dataset.cid;
+    if(val && cid) {
+      renameChat(cid, val); // renameChat handles the API call and state update
+    }
+    $('rename-chat-overlay').classList.remove('open');
+  });
+
+  $('rename-chat-input').addEventListener('keydown', e => {
+    if(e.key === 'Enter') {
+      e.preventDefault();
+      $('rename-save').click();
+    }
+  });
   $('run-modal-close').addEventListener('click',closePreviewModal);
   $('code-runner-overlay').addEventListener('click',e=>{if(e.target===$('code-runner-overlay'))closePreviewModal();});
   $('profile-close').addEventListener('click',closeProfile);
@@ -4514,6 +4591,8 @@ const initApp=()=>{
   document.addEventListener('keydown',e=>{
     if(e.key==='Escape'){
       if($('chart-fullscreen-overlay').classList.contains('open'))closeChartFullscreen();
+      else if($('rename-chat-overlay').classList.contains('open')){ $('rename-chat-overlay').classList.remove('open'); }
+      else if($('chat-actions-overlay').classList.contains('open'))closeChatActionsModal();
       else if(state.settingsOpen)closeSettings(false);
       else if($('sources-overlay').classList.contains('open'))closeSourcesPanel();
       else if($('profile-overlay').classList.contains('open'))closeProfile();
